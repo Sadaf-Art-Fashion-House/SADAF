@@ -1,0 +1,6 @@
+{
+  "name": "SADAF | Art & Fashion House",
+  "description": "An immersive, cinematic luxury digital ecosystem blending Arabic culture and fine art with cutting-edge AI-powered fashion personalization.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
