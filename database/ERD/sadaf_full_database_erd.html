@@ -1,0 +1,245 @@
+<style>
+  #erd svg {
+    max-width: 100%;
+  }
+
+  #erd svg.erDiagram .row-rect-odd path,
+  #erd svg.erDiagram .row-rect-odd rect,
+  #erd svg.erDiagram .row-rect-even path,
+  #erd svg.erDiagram .row-rect-even rect {
+    stroke: none !important;
+  }
+</style>
+<div id="erd" style="padding: 1rem 0; overflow-x: auto;"></div>
+<script type="module">
+  import mermaid from 'https://esm.sh/mermaid@11/dist/mermaid.esm.min.mjs';
+  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  await document.fonts.ready;
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'base',
+    fontFamily: '"Anthropic Sans", sans-serif',
+    themeVariables: {
+      darkMode: dark,
+      fontSize: '12px',
+      fontFamily: '"Anthropic Sans", sans-serif',
+      lineColor: dark ? '#9c9a92' : '#73726c',
+      textColor: dark ? '#c2c0b6' : '#3d3d3a',
+      primaryColor: dark ? '#3C3489' : '#EEEDFE',
+      primaryBorderColor: dark ? '#AFA9EC' : '#534AB7',
+      primaryTextColor: dark ? '#EEEDFE' : '#26215C',
+      secondaryColor: dark ? '#085041' : '#E1F5EE',
+      secondaryBorderColor: dark ? '#5DCAA5' : '#0F6E56',
+      secondaryTextColor: dark ? '#E1F5EE' : '#04342C',
+      tertiaryColor: dark ? '#3B6D11' : '#EAF3DE',
+      tertiaryBorderColor: dark ? '#97C459' : '#3B6D11',
+      tertiaryTextColor: dark ? '#EAF3DE' : '#173404',
+    },
+  });
+  const diagram = `erDiagram
+  customers {
+    uuid id PK
+    string name
+    string email
+    string phone
+    timestamp created_at
+  }
+  measurements {
+    uuid id PK
+    uuid customer_id FK
+    float height
+    float weight
+    float shoulder
+    float chest
+    float waist
+    float hip
+  }
+  ai_studio {
+    uuid id PK
+    uuid customer_id FK
+    text prompt
+    string image_url
+    string style
+    timestamp created_at
+  }
+  ai_fitting_room {
+    uuid id PK
+    uuid customer_id FK
+    uuid measurement_id FK
+    uuid ai_studio_id FK
+    string result_image_url
+    timestamp created_at
+  }
+  atelier_orders {
+    uuid id PK
+    uuid customer_id FK
+    uuid measurement_id FK
+    uuid ai_studio_id FK
+    uuid employee_id FK
+    uuid coupon_id FK
+    string fabric
+    string colors
+    text notes
+    string status
+    timestamp created_at
+    timestamp updated_at
+  }
+  products {
+    uuid id PK
+    string name
+    text description
+    decimal price
+    string category
+    string image_url
+    boolean in_stock
+  }
+  orders {
+    uuid id PK
+    uuid customer_id FK
+    uuid coupon_id FK
+    decimal total_price
+    string status
+    timestamp created_at
+    timestamp updated_at
+  }
+  order_items {
+    uuid id PK
+    uuid order_id FK
+    uuid product_id FK
+    int quantity
+    decimal unit_price
+  }
+  messages {
+    uuid id PK
+    uuid customer_id FK
+    text message
+    text response
+    timestamp created_at
+  }
+  employees {
+    uuid id PK
+    string name
+    string role
+    string email
+    string phone
+    boolean is_active
+    timestamp created_at
+  }
+  payments {
+    uuid id PK
+    uuid customer_id FK
+    uuid order_id FK
+    uuid atelier_order_id FK
+    decimal amount
+    string method
+    string status
+    string transaction_ref
+    timestamp paid_at
+  }
+  shipping {
+    uuid id PK
+    uuid order_id FK
+    uuid atelier_order_id FK
+    string carrier
+    string tracking_number
+    string status
+    string address
+    timestamp shipped_at
+    timestamp delivered_at
+  }
+  coupons {
+    uuid id PK
+    string code
+    string type
+    decimal value
+    decimal min_order
+    int max_uses
+    int used_count
+    timestamp expires_at
+    boolean is_active
+  }
+  coupon_usage {
+    uuid id PK
+    uuid coupon_id FK
+    uuid customer_id FK
+    uuid order_id FK
+    timestamp used_at
+  }
+  reviews {
+    uuid id PK
+    uuid customer_id FK
+    uuid product_id FK
+    int rating
+    text comment
+    timestamp created_at
+  }
+  wishlist {
+    uuid id PK
+    uuid customer_id FK
+    uuid product_id FK
+    timestamp added_at
+  }
+  notifications {
+    uuid id PK
+    uuid customer_id FK
+    string type
+    string title
+    text body
+    boolean is_read
+    timestamp created_at
+  }
+  customers ||--o{ measurements : "has"
+  customers ||--o{ ai_studio : "creates"
+  customers ||--o{ ai_fitting_room : "tries"
+  customers ||--o{ atelier_orders : "places"
+  customers ||--o{ orders : "places"
+  customers ||--o{ messages : "sends"
+  customers ||--o{ payments : "pays"
+  customers ||--o{ reviews : "writes"
+  customers ||--o{ wishlist : "saves"
+  customers ||--o{ notifications : "receives"
+  customers ||--o{ coupon_usage : "uses"
+  measurements ||--o{ ai_fitting_room : "used in"
+  measurements ||--o{ atelier_orders : "used in"
+  ai_studio |o--o{ ai_fitting_room : "inspires"
+  ai_studio |o--o{ atelier_orders : "becomes"
+  employees ||--o{ atelier_orders : "handles"
+  orders ||--o{ order_items : "contains"
+  products ||--o{ order_items : "included in"
+  products ||--o{ reviews : "reviewed in"
+  products ||--o{ wishlist : "saved in"
+  orders |o--o| payments : "paid via"
+  atelier_orders |o--o| payments : "paid via"
+  orders |o--o| shipping : "shipped via"
+  atelier_orders |o--o| shipping : "shipped via"
+  coupons ||--o{ coupon_usage : "tracked in"
+  coupons |o--o{ orders : "applied to"
+  coupons |o--o{ atelier_orders : "applied to"
+  coupon_usage }o--o| orders : "linked to"
+`;
+  const { svg } = await mermaid.render('erd-svg', diagram);
+  document.getElementById('erd').innerHTML = svg;
+
+  document.querySelectorAll('#erd svg.erDiagram .node').forEach(node => {
+    const firstPath = node.querySelector('path[d]');
+    if (!firstPath) return;
+    const d = firstPath.getAttribute('d');
+    const nums = d.match(/-?[\d.]+/g)?.map(Number);
+    if (!nums || nums.length < 8) return;
+    const xs = [nums[0], nums[2], nums[4], nums[6]];
+    const ys = [nums[1], nums[3], nums[5], nums[7]];
+    const x = Math.min(...xs), y = Math.min(...ys);
+    const w = Math.max(...xs) - x, h = Math.max(...ys) - y;
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', x); rect.setAttribute('y', y);
+    rect.setAttribute('width', w); rect.setAttribute('height', h);
+    rect.setAttribute('rx', '8');
+    for (const a of ['fill', 'stroke', 'stroke-width', 'class', 'style']) {
+      if (firstPath.hasAttribute(a)) rect.setAttribute(a, firstPath.getAttribute(a));
+    }
+    firstPath.replaceWith(rect);
+  });
+  document.querySelectorAll('#erd svg.erDiagram .row-rect-odd path, #erd svg.erDiagram .row-rect-even path').forEach(p => {
+    p.setAttribute('stroke', 'none');
+  });
+</script>
