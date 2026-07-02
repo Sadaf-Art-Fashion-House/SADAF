@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ShoppingCart, Heart, Filter, ChevronRight, X, Star, CreditCard, ChevronDown, Check } from 'lucide-react';
-import { FashionProduct, CartItem, FashionCategory } from '../types';
+import { ShoppingCart, Heart, Filter, ChevronRight, X } from 'lucide-react';
+import { FashionProduct, CartItem } from '../types';
+import { useMarketplace } from '../features/marketplace/hooks/useMarketplace';
 
 interface StoreViewProps {
   products: FashionProduct[];
@@ -22,45 +23,31 @@ export default function StoreView({
   onToggleWishlist,
   onCheckout
 }: StoreViewProps) {
-  const [selectedCategory, setSelectedCategory] = useState<FashionCategory | 'All'>('All');
-  const [priceRange, setPriceRange] = useState<number>(3000);
-  const [activeProductDetail, setActiveProductDetail] = useState<FashionProduct | null>(null);
-  
-  // Customization selection state inside detail modal
-  const [selectedSize, setSelectedSize] = useState<string>('M');
-  const [selectedColor, setSelectedColor] = useState<string>('');
-
-  // Sizing assistant sidebar state
-  const [showCartDrawer, setShowCartDrawer] = useState<boolean>(false);
-  
-  // Coupon state
-  const [coupon, setCoupon] = useState<string>('');
-  const [discountPercent, setDiscountPercent] = useState<number>(0);
-  const [couponApplied, setCouponApplied] = useState<boolean>(false);
-
-  const categories: (FashionCategory | 'All')[] = ['All', 'Women', 'Men', 'Kids', 'Traditional Fusion', 'Limited Edition'];
-
-  const filteredProducts = products.filter(p => {
-    const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
-    const matchesPrice = p.price <= priceRange;
-    return matchesCategory && matchesPrice;
-  });
-
-  const applyCouponCode = () => {
-    if (coupon.trim().toUpperCase() === 'SADAF2026') {
-      setDiscountPercent(15);
-      setCouponApplied(true);
-      alert("Promotional coupon 'SADAF2026' successfully applied (15% deduction).");
-    } else {
-      alert("Invalid promotional code.");
-    }
-  };
-
-  // Cart Calculations
-  const cartSubtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
-  const discountAmount = (cartSubtotal * discountPercent) / 100;
-  const shippingFee = cartSubtotal > 1000 ? 0 : 75; // Free premium shipping for elite drops
-  const cartTotal = cartSubtotal - discountAmount + shippingFee;
+  const {
+    selectedCategory,
+    setSelectedCategory,
+    priceRange,
+    setPriceRange,
+    activeProductDetail,
+    setActiveProductDetail,
+    selectedSize,
+    setSelectedSize,
+    selectedColor,
+    setSelectedColor,
+    showCartDrawer,
+    setShowCartDrawer,
+    coupon,
+    setCoupon,
+    categories,
+    filteredProducts,
+    applyCouponCode,
+    cartSubtotal,
+    discountAmount,
+    shippingFee,
+    cartTotal,
+    couponApplied,
+    wishlistCount
+  } = useMarketplace(products, cart, wishlist);
 
   return (
     <div className="relative w-full overflow-hidden min-h-screen pb-20">
@@ -90,7 +77,7 @@ export default function StoreView({
 
       {/* Main Catalog with Filters Sidebar */}
       <section className="py-12 px-4 md:px-8 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
+
         {/* Filters Sidebar */}
         <div className="lg:col-span-3 flex flex-col gap-6 lg:border-r lg:border-[#C9A84C]/10 lg:pr-8 text-left font-sans">
           <div>
@@ -102,11 +89,10 @@ export default function StoreView({
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`px-3 py-2 rounded text-xs text-left font-medium transition-all duration-300 flex justify-between items-center cursor-pointer ${
-                    selectedCategory === cat
+                  className={`px-3 py-2 rounded text-xs text-left font-medium transition-all duration-300 flex justify-between items-center cursor-pointer ${selectedCategory === cat
                       ? 'bg-[#1B2A6B] text-[#4FC3F7]'
                       : 'text-slate-400 hover:text-white hover:bg-white/5'
-                  }`}
+                    }`}
                 >
                   <span>{cat}</span>
                   <ChevronRight size={10} className={selectedCategory === cat ? 'text-[#C9A84C]' : 'opacity-0'} />
@@ -139,6 +125,7 @@ export default function StoreView({
             <div className="p-4 rounded-xl bg-gradient-to-br from-[#12193E] to-[#0A0F2C] border border-[#C9A84C]/10 text-xs">
               <h4 className="font-serif text-[#C9A84C] font-semibold mb-1 uppercase tracking-wider">Promotional Offer</h4>
               <p className="text-slate-400 mb-2 leading-relaxed">Enter coupon code <strong className="text-white">SADAF2026</strong> at check out block to receive a 15% VIP discount on your entire collection order.</p>
+              <button onClick={applyCouponCode} className="mt-2 px-3 py-2 rounded bg-[#1B2A6B] text-white text-[10px] uppercase tracking-wider cursor-pointer">Apply Coupon</button>
             </div>
           </div>
         </div>
@@ -157,7 +144,7 @@ export default function StoreView({
                   className="group relative flex flex-col bg-[#0F1535] border border-white/5 hover:border-[#C9A84C]/35 rounded-xl overflow-hidden shadow-lg transition-all duration-500"
                 >
                   {/* Image Stage */}
-                  <div 
+                  <div
                     className="relative aspect-[3/4] overflow-hidden bg-black/40 cursor-pointer"
                     onClick={() => {
                       setActiveProductDetail(prod);
@@ -188,9 +175,9 @@ export default function StoreView({
                       }}
                       className="absolute top-4 right-4 p-2 rounded-full backdrop-blur-md bg-black/40 border border-white/10 text-white hover:text-red-400 active:scale-95 transition-all duration-300 cursor-pointer"
                     >
-                      <Heart 
-                        size={14} 
-                        fill={wishlist.some(w => w.id === prod.id) ? "red" : "none"} 
+                      <Heart
+                        size={14}
+                        fill={wishlist.some(w => w.id === prod.id) ? "red" : "none"}
                         className={wishlist.some(w => w.id === prod.id) ? "text-red-400" : ""}
                       />
                     </button>
@@ -265,12 +252,12 @@ export default function StoreView({
                     <span>&bull;</span>
                     <span>{activeProductDetail.fabric}</span>
                   </div>
-                  
+
                   <h2 className="font-serif text-2xl md:text-3xl text-white font-bold tracking-tight uppercase leading-none mt-2 mb-3">
                     {activeProductDetail.name}
                   </h2>
                   <p className="text-[#C9A84C] font-mono text-lg font-bold mb-4">${activeProductDetail.price.toLocaleString()}</p>
-                  
+
                   <p className="text-xs text-[#E8E0D5]/80 leading-relaxed mb-6 font-sans">
                     {activeProductDetail.description}
                   </p>
@@ -283,11 +270,10 @@ export default function StoreView({
                         <button
                           key={sz}
                           onClick={() => setSelectedSize(sz)}
-                          className={`w-9 h-9 border text-xs font-mono rounded cursor-pointer flex items-center justify-center transition ${
-                            selectedSize === sz
+                          className={`w-9 h-9 border text-xs font-mono rounded cursor-pointer flex items-center justify-center transition ${selectedSize === sz
                               ? 'bg-[#1B2A6B] text-white border-[#4FC3F7]'
                               : 'border-white/10 text-slate-400 hover:text-white'
-                          }`}
+                            }`}
                         >
                           {sz}
                         </button>
@@ -303,11 +289,10 @@ export default function StoreView({
                         <button
                           key={cl.name}
                           onClick={() => setSelectedColor(cl.name)}
-                          className={`px-3 py-1.5 rounded-full border text-xs flex items-center gap-1.5 transition cursor-pointer ${
-                            selectedColor === cl.name
+                          className={`px-3 py-1.5 rounded-full border text-xs flex items-center gap-1.5 transition cursor-pointer ${selectedColor === cl.name
                               ? 'border-[#C9A84C] text-[#C9A84C] bg-[#12193E]'
                               : 'border-white/10 text-gray-400 hover:text-white'
-                          }`}
+                            }`}
                         >
                           <span style={{ backgroundColor: cl.hex }} className="w-2.5 h-2.5 rounded-full inline-block border border-white/10" />
                           <span>{cl.name}</span>
@@ -386,7 +371,7 @@ export default function StoreView({
                   </div>
                 ) : (
                   cart.map((item) => (
-                    <div 
+                    <div
                       key={item.id}
                       className="p-4 rounded-xl bg-gradient-to-r from-white/5 to-transparent border border-white/5 flex gap-4 text-xs hover:border-[#4FC3F7]/20 transition duration-300"
                     >
@@ -413,7 +398,7 @@ export default function StoreView({
                               REMOVE
                             </button>
                           </div>
-                          
+
                           <div className="text-[10px] text-gray-400 space-y-0.5 mt-1 font-mono">
                             <div>Qty: {item.quantity} &bull; Size: {item.selectedSize}</div>
                             {item.selectedColor && <div>Dye: {item.selectedColor}</div>}
@@ -434,7 +419,7 @@ export default function StoreView({
               {/* Checkout pricing sum */}
               {cart.length > 0 && (
                 <div className="border-t border-[#C9A84C]/10 pt-6 space-y-4">
-                  
+
                   {/* Coupon implementation */}
                   <div className="flex gap-2">
                     <input
