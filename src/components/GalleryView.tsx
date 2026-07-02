@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ZoomIn, Camera, Compass, X, Calendar, Globe } from 'lucide-react';
+import { ZoomIn, Camera, Compass, X, Calendar, Globe, Copy, Check, Layers, LayoutGrid } from 'lucide-react';
 
 interface GalleryItem {
   id: string;
@@ -15,8 +15,28 @@ interface GalleryItem {
 export default function GalleryView() {
   const [selectedImage, setSelectedImage] = useState<GalleryItem | null>(null);
   const [filter, setFilter] = useState<string>('All');
+  const [copied, setCopied] = useState<boolean>(false);
 
-  const galleryCategories = ['All', 'Couture Campaigns', 'Artisan Studies', 'Architecture Shadows'];
+  const copyDesignTokens = () => {
+    const tokens = `
+/** SADAF Design System Variable Tokens **/
+--color-gold-lustrous: #C9A84C;
+--color-prussian-velvet: #0A0F2C;
+--color-royal-indigo: #111A45;
+--color-coastal-blue: #4FC3F7;
+--color-champagne-dust: #E8E0D5;
+
+/** Typography Setting **/
+--font-serif: "Space Grotesk", "Outfit", serif;
+--font-sans: "Inter", sans-serif;
+--font-mono: "JetBrains Mono", monospace;
+    `;
+    navigator.clipboard.writeText(tokens.trim());
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const galleryCategories = ['All', 'Couture Campaigns', 'Artisan Studies', 'Architecture Shadows', 'Figma UX Mockups'];
 
   const galleryItems: GalleryItem[] = [
     {
@@ -72,6 +92,42 @@ export default function GalleryView() {
       photographer: "Youssef Nabil",
       location: "Siwa Oasis Sands",
       campaign: "Al-Muizz Couture 2026"
+    },
+    {
+      id: "figma-1",
+      src: "/src/assets/images/cairo_geometry_room_figma_1779934153159.png",
+      category: "Figma UX Mockups",
+      title: "3D Virtual Museum Stage Blueprint",
+      photographer: "SADAF Lead UI Designer",
+      location: "Cairo Geometry Room UX Layout",
+      campaign: "Figma Design System"
+    },
+    {
+      id: "figma-2",
+      src: "/src/assets/images/ai_studio_design_figma_1779934171967.png",
+      category: "Figma UX Mockups",
+      title: "SADAF AI Creative Atelier Panel",
+      photographer: "SADAF Creative Tech Director",
+      location: "Generative Clothing Studio Canvas",
+      campaign: "Figma Design System"
+    },
+    {
+      id: "figma-3",
+      src: "/src/assets/images/store_figma_mockup_1779938205187.png",
+      category: "Figma UX Mockups",
+      title: "SADAF Boutique E-Commerce Grid",
+      photographer: "SADAF Lead UI Designer",
+      location: "SADAF Boutique Store Layout",
+      campaign: "Figma Design System"
+    },
+    {
+      id: "figma-4",
+      src: "/src/assets/images/lookbook_figma_mockup_1779938224411.png",
+      category: "Figma UX Mockups",
+      title: "Aesthetic Editorial Lookbook Capsule",
+      photographer: "SADAF Art Director",
+      location: "SADAF Cinematic Lookbook Grid",
+      campaign: "Figma Design System"
     }
   ];
 
@@ -185,46 +241,126 @@ export default function GalleryView() {
 
               {/* metadata and camera stats sidebar */}
               <div className="w-full md:w-80 flex flex-col justify-between py-2">
-                <div>
-                  <div className="flex items-center gap-1.5 text-[10px] text-[#C9A84C] uppercase font-mono tracking-widest mb-1">
-                    <Camera size={12} />
-                    <span>{selectedImage.campaign}</span>
-                  </div>
+                {selectedImage.category === "Figma UX Mockups" ? (
+                  <div className="flex flex-col h-full justify-between">
+                    <div>
+                      <div className="flex items-center gap-1.5 text-[10px] text-[#C9A84C] font-mono tracking-widest mb-1 font-bold">
+                        <LayoutGrid size={12} className="animate-pulse" />
+                        <span>{selectedImage.campaign}</span>
+                      </div>
 
-                  <h3 className="font-serif text-white text-xl font-semibold leading-tight mb-4 uppercase">
-                    {selectedImage.title}
-                  </h3>
+                      <h3 className="font-serif text-white text-xl font-semibold leading-tight mb-4 uppercase">
+                        {selectedImage.title}
+                      </h3>
 
-                  <div className="space-y-3 font-mono text-[11px] text-gray-400 border-t border-b border-white/10 py-4 mb-4">
-                    <div className="flex justify-between">
-                      <span className="text-gray-500 uppercase">Auteur Photographer</span>
-                      <span className="text-white">{selectedImage.photographer}</span>
+                      <p className="text-xs text-slate-400 font-sans leading-relaxed mb-4">
+                        Authentic CAD scale specs of SADAF's digital screens. These screens are built directly using high-fidelity vector layouts before tailoring front-end interfaces.
+                      </p>
+
+                      {/* Design Tokens list */}
+                      <div className="space-y-3 font-mono text-[10px] text-gray-400 border-t border-b border-white/10 py-4 mb-4">
+                        <div className="flex justify-between items-center text-slate-500 uppercase font-bold">
+                          <span>SADAF Colors</span>
+                          <span className="text-white text-[8px] border border-white/10 px-1 rounded">HEX Code</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#C9A84C]" /> Lustrous Gold</span>
+                          <span className="text-[#C9A84C] font-bold">#C9A84C</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#0A0F2C]" /> Prussian Velvet</span>
+                          <span className="text-white">#0A0F2C</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#4FC3F7]" /> Coastal Blue</span>
+                          <span className="text-[#4FC3F7]">#4FC3F7</span>
+                        </div>
+                        
+                        <div className="border-t border-white/5 pt-3 flex justify-between">
+                          <span className="text-slate-500 uppercase">Grid Layout</span>
+                          <span className="text-white text-right">12-Col Desktop Dynamic</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-500 uppercase">Fonts Setup</span>
+                          <span className="text-white text-right">Inter &amp; Space Grotesk</span>
+                        </div>
+                      </div>
+
+                      {/* Action trigger to copy CSS tokens */}
+                      <button
+                        onClick={copyDesignTokens}
+                        className={`w-full py-2.5 px-4 rounded text-[10px] font-mono uppercase tracking-widest font-bold flex items-center justify-center gap-2 transition-all duration-300 border cursor-pointer ${
+                          copied
+                            ? "bg-green-950/40 text-green-400 border-green-500/30"
+                            : "bg-[#C9A84C]/10 text-[#C9A84C] label-gold hover:bg-[#C9A84C] hover:text-[#0A0F2C] border-[#C9A84C]/25"
+                        }`}
+                      >
+                        {copied ? (
+                          <>
+                            <Check size={12} /> Copied Design Variables
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={12} /> Copy Design Tokens
+                          </>
+                        )}
+                      </button>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500 uppercase">Heritage Scene</span>
-                      <span className="text-white">{selectedImage.location}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500 uppercase">Visual Chapter</span>
-                      <span className="text-white font-serif italic text-xs text-[#ebd083]">{selectedImage.category}</span>
-                    </div>
-                  </div>
 
-                  <div className="p-3.5 bg-white/5 rounded-lg border border-white/10 text-xs text-slate-300 leading-relaxed font-sans flex items-start gap-2">
-                    <Compass size={14} className="text-[#4FC3F7] shrink-0 mt-0.5" />
-                    <span>This photographic exposure captures our design narrative directly in historic Egypt places. These visual shadows inspired the tailored cuts inside the active collections.</span>
+                    <div className="flex gap-2 text-[10px] text-gray-500 font-mono mt-6 border-t border-white/5 pt-4">
+                      <div className="flex items-center gap-1">
+                        <Layers size={10} /> <span>Vector Native Assets</span>
+                      </div>
+                      <span>&bull;</span>
+                      <div className="flex items-center gap-1">
+                        <Globe size={10} /> <span>SADAF Design Lab</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="flex flex-col h-full justify-between">
+                    <div>
+                      <div className="flex items-center gap-1.5 text-[10px] text-[#C9A84C] uppercase font-mono tracking-widest mb-1">
+                        <Camera size={12} />
+                        <span>{selectedImage.campaign}</span>
+                      </div>
 
-                <div className="flex gap-2 text-[10px] text-gray-500 font-mono mt-8 border-t border-white/5 pt-4">
-                  <div className="flex items-center gap-1">
-                    <Calendar size={10} /> <span>Captured 2026</span>
+                      <h3 className="font-serif text-white text-xl font-semibold leading-tight mb-4 uppercase">
+                        {selectedImage.title}
+                      </h3>
+
+                      <div className="space-y-3 font-mono text-[11px] text-gray-400 border-t border-b border-white/10 py-4 mb-4">
+                        <div className="flex justify-between">
+                          <span className="text-gray-500 uppercase">Auteur Photographer</span>
+                          <span className="text-white">{selectedImage.photographer}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500 uppercase">Heritage Scene</span>
+                          <span className="text-white">{selectedImage.location}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500 uppercase">Visual Chapter</span>
+                          <span className="text-white font-serif italic text-xs text-[#ebd083]">{selectedImage.category}</span>
+                        </div>
+                      </div>
+
+                      <div className="p-3.5 bg-white/5 rounded-lg border border-white/10 text-xs text-slate-300 leading-relaxed font-sans flex items-start gap-2">
+                        <Compass size={14} className="text-[#4FC3F7] shrink-0 mt-0.5" />
+                        <span>This photographic exposure captures our design narrative directly in historic Egypt places. These visual shadows inspired the tailored cuts inside the active collections.</span>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 text-[10px] text-gray-500 font-mono mt-8 border-t border-white/5 pt-4">
+                      <div className="flex items-center gap-1">
+                        <Calendar size={10} /> <span>Captured 2026</span>
+                      </div>
+                      <span>&bull;</span>
+                      <div className="flex items-center gap-1">
+                        <Globe size={10} /> <span>Heritage Preserved</span>
+                      </div>
+                    </div>
                   </div>
-                  <span>&bull;</span>
-                  <div className="flex items-center gap-1">
-                    <Globe size={10} /> <span>Heritage Preserved</span>
-                  </div>
-                </div>
+                )}
               </div>
 
             </motion.div>

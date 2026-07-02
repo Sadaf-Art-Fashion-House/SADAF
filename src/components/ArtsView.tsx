@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Sparkles, ShoppingCart, Tag, Eye, Layers } from 'lucide-react';
 import { ArtPiece, ArtCategory } from '../types';
+import { Compass, Grid } from 'lucide-react'; 
+import VirtualExhibition from './VirtualExhibition'; 
 
 interface ArtsViewProps {
   artworks: ArtPiece[];
@@ -12,6 +14,7 @@ interface ArtsViewProps {
 export default function ArtsView({ artworks, onAddToCart, onSelectArtPiece }: ArtsViewProps) {
   const [selectedCategory, setSelectedCategory] = useState<ArtCategory | 'All'>('All');
   const [showVirtualDetails, setShowVirtualDetails] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'metaverse' | 'catalog'>('metaverse');
 
   const categories: (ArtCategory | 'All')[] = ['All', 'Handmade', 'Oil Paintings', 'Calligraphy', 'Digital Art', 'Fashion Sketches'];
 
@@ -69,7 +72,33 @@ export default function ArtsView({ artworks, onAddToCart, onSelectArtPiece }: Ar
           Step into our high-end exhibit highlighting authentic Egyptian heritage, calligraphy paintings, and delicate copperware. Available for collectors or on custom apparel prints.
         </p>
 
-        {/* Filter Tabs */}
+        {/* View Mode Toggle Switch */}
+        <div className="flex items-center justify-center gap-4 mt-8">
+          <button
+            onClick={() => setViewMode('metaverse')}
+            className={`px-5 py-3 rounded-full text-xs font-mono uppercase tracking-widest font-bold flex items-center gap-2 transition-all duration-300 cursor-pointer ${
+              viewMode === 'metaverse'
+                ? 'bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/80 text-[#0A0F2C] shadow-lg shadow-[#C9A84C]/25'
+                : 'bg-white/5 text-[#E8E0D5]/60 hover:text-white border border-white/10'
+            }`}
+          >
+            <Compass size={13} className={viewMode === 'metaverse' ? 'animate-spin' : ''} /> 
+            3D Metaverse Museum
+          </button>
+          <button
+            onClick={() => setViewMode('catalog')}
+            className={`px-5 py-3 rounded-full text-xs font-mono uppercase tracking-widest font-bold flex items-center gap-2 transition-all duration-300 cursor-pointer ${
+              viewMode === 'catalog'
+                ? 'bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/80 text-[#0A0F2C] shadow-lg shadow-[#C9A84C]/25'
+                : 'bg-white/5 text-[#E8E0D5]/60 hover:text-white border border-white/10'
+            }`}
+          >
+            <Grid size={13} /> 
+            Standard Art Catalog
+          </button>
+        </div>
+
+        {/* Filter Tabs
         <div className="flex flex-wrap items-center justify-center gap-2 mt-12 max-w-4xl mx-auto px-4">
           {categories.map((cat) => (
             <button
@@ -83,10 +112,31 @@ export default function ArtsView({ artworks, onAddToCart, onSelectArtPiece }: Ar
               {cat}
             </button>
           ))}
-        </div>
+        </div> */}
+        {viewMode === 'catalog' && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-wrap items-center justify-center gap-2 mt-8 max-w-4xl mx-auto px-4"
+          >
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-5 py-2.5 rounded-full text-xs tracking-wider uppercase font-medium transition-all duration-300 cursor-pointer active:scale-95 ${
+                  selectedCategory === cat
+                    ? 'bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/80 text-[#0A0F2C] shadow-lg shadow-[#C9A84C]/10 font-semibold'
+                    : 'bg-[#0A0F2C]/60 text-[#E8E0D5]/70 hover:text-white border border-[#E8E0D5]/10 hover:border-[#4FC3F7]/40'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </motion.div>
+        )}
       </section>
-
-      {/* Masonry-Style Responsive Grid */}
+ 
+      Masonry-Style Responsive Grid
       <section className="py-16 px-4 md:px-8 max-w-7xl mx-auto">
         <motion.div
           layout
@@ -162,7 +212,7 @@ export default function ArtsView({ artworks, onAddToCart, onSelectArtPiece }: Ar
             ))}
           </AnimatePresence>
         </motion.div>
-      </section>
+      </section> 
 
       {/* Virtual Gallery Section */}
       <section className="py-20 px-4 md:px-8 max-w-7xl mx-auto">

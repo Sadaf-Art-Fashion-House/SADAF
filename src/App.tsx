@@ -5,69 +5,61 @@ import { ShoppingCart, Heart, ShieldCheck, Mail, ShieldAlert, Sparkles, AlertCir
 import { ArtPiece, FashionProduct, CartItem, Collection, AIClothingDesign } from './types';
 import { artDatabase, fashionDatabase, collections, lookbookItems } from './data';
 
-// Component Views
+// Feature-based view entrypoints
 import SadafLogo from './components/SadafLogo';
-import HomeView from './components/HomeView';
-import ArtsView from './components/ArtsView';
-import FashionView from './components/FashionView';
-import AIStudioView from './components/AIStudioView';
-import StoreView from './components/StoreView';
+import HomeView from './features/home/components/HomeView';
+import ArtsView from './features/arts/components/ArtsView';
+import FashionView from './features/fashion/components/FashionView';
+import AIStudioView from './features/ai/components/AIStudioView';
+import StoreView from './features/marketplace/components/StoreView';
 import GalleryView from './components/GalleryView';
 import AdminDashboard from './components/AdminDashboard';
 
-
-// import { useEffect, useState } from 'react'
-import { getFashionProducts, getArtworks } from './lib/supabase'
+// Supabase client and auth functions
+// Supabase client and auth functions
+import { supabase, isSupabaseConfigured, getFashionProducts, getArtworks, UserProfile, mockAuth } from './lib/supabase';
+import LoginView from './components/LoginView';
+import SignUpView from './components/SignUpView';
+import UserDashboardView from './components/UserDashboardView';
+import AdminDashboardView from './components/AdminDashboardView';
+import FounderDashboardView from './components/FounderDashboardView';
+import { APP_TABS } from './shared/constants';
+import { useAppNavigation } from './shared/hooks/useAppNavigation';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<string>('Home');
+  const { isActive } = useAppNavigation(currentTab);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<FashionProduct[]>([]);
   const [products, setProducts] = useState<FashionProduct[]>(fashionDatabase);
   const [artworks, setArtworks] = useState<ArtPiece[]>(artDatabase);
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(mockAuth.getCurrentUser());
+  const [authScreen, setAuthScreen] = useState<'login' | 'signup'>('login');
 
-//   useEffect(() => {
-//   getFashionProducts().then(data => {
-//     if (data && data.length > 0) setProducts(data as FashionProduct[])
-//   })
-//   getArtworks().then(data => {
-//     if (data && data.length > 0) setArtworks(data as ArtPiece[])
-//   })
-// }, [])
-  
-//   useEffect(() => {
-//   getFashionProducts().then(data => {
-//     if (data && data.length > 0) setProducts(data as FashionProduct[])
-//     else setProducts(fashionDatabase) // fallback
-//   })
-//   getArtworks().then(data => {
-//     if (data && data.length > 0) setArtworks(data as ArtPiece[])
-//     else setArtworks(artDatabase) // fallback
-//   })
-  // }, [])
-  
+
+
   useEffect(() => {
-  getFashionProducts().then(data => {
-    if (data && data.length > 0) {
-      const mapped = data.map((p: any) => ({
-        ...p,
-        image: p.image_url,
-        hoverImage: p.hover_image,
-      }))
-      setProducts(mapped as FashionProduct[])
-    } else setProducts(fashionDatabase)
-  })
-  getArtworks().then(data => {
-    if (data && data.length > 0) {
-      const mapped = data.map((p: any) => ({
-        ...p,
-        image: p.image_url,
-        title: p.name,
-      }))
-      setArtworks(mapped as ArtPiece[])
-    } else setArtworks(artDatabase)
-  })
-}, [])
+    getFashionProducts().then(data => {
+      if (data && data.length > 0) {
+        const mapped = data.map((p: any) => ({
+          ...p,
+          image: p.image_url,
+          hoverImage: p.hover_image,
+        }))
+        setProducts(mapped as FashionProduct[])
+      } else setProducts(fashionDatabase)
+    })
+    getArtworks().then(data => {
+      if (data && data.length > 0) {
+        const mapped = data.map((p: any) => ({
+          ...p,
+          image: p.image_url,
+          title: p.name,
+        }))
+        setArtworks(mapped as ArtPiece[])
+      } else setArtworks(artDatabase)
+    })
+  }, [])
 
 
   // Newsletter Subscription state
@@ -158,11 +150,11 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#0A0F2C] text-[#E8E0D5] flex flex-col font-sans select-none overflow-x-hidden relative">
-      
+
       {/* Absolute Header Overlay */}
       <header className="sticky top-0 z-40 w-full glass-panel border-b border-[#C9A84C]/10 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 md:px-8 h-20 flex items-center justify-between">
-          
+
           {/* Sadaf logotype */}
           <div className="cursor-pointer" onClick={() => setCurrentTab('Home')}>
             <SadafLogo size={38} withMarbleBackground={false} />
@@ -170,27 +162,18 @@ export default function App() {
 
           {/* Navigation Bar tabs */}
           <nav className="hidden lg:flex items-center gap-7">
-            {[
-              { id: 'Home', label: 'Home' },
-              { id: 'Arts', label: 'Arts' },
-              { id: 'Fashion', label: 'Fashion' },
-              { id: 'AI Studio', label: 'AI Studio' },
-              { id: 'Store', label: 'Store' },
-              { id: 'Gallery', label: 'Gallery' },
-              { id: 'Dashboard', label: 'Dashboard' }
-            ].map((tab) => (
+            {APP_TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setCurrentTab(tab.id)}
-                className={`text-xs uppercase tracking-[0.2em] font-medium transition-all duration-300 relative py-1 cursor-pointer ${
-                  currentTab === tab.id 
-                    ? 'text-[#C9A84C] font-semibold' 
+                className={`text-xs uppercase tracking-[0.2em] font-medium transition-all duration-300 relative py-1 cursor-pointer ${isActive(tab.id)
+                    ? 'text-[#C9A84C] font-semibold'
                     : 'text-[#E8E0D5]/70 hover:text-white'
-                }`}
+                  }`}
               >
                 {tab.label}
-                {currentTab === tab.id && (
-                  <motion.div 
+                {isActive(tab.id) && (
+                  <motion.div
                     layoutId="activeTabUnderline"
                     className="absolute bottom-0 inset-x-0 h-[1.5px] bg-[#C9A84C]"
                   />
@@ -251,8 +234,8 @@ export default function App() {
             className="w-full"
           >
             {currentTab === 'Home' && (
-              <HomeView 
-                onNavigate={setCurrentTab} 
+              <HomeView
+                onNavigate={setCurrentTab}
                 featuredProducts={products}
                 featuredArtwork={artworks}
                 collections={collections}
@@ -282,7 +265,7 @@ export default function App() {
             )}
 
             {currentTab === 'AI Studio' && (
-              <AIStudioView 
+              <AIStudioView
                 onAddCustomToCart={handleAddCustomToCart}
               />
             )}
@@ -304,13 +287,51 @@ export default function App() {
             )}
 
             {currentTab === 'Dashboard' && (
-              <AdminDashboard
-                products={products}
-                artworks={artworks}
-                collections={collections}
-                onAddProduct={(addedProd) => setProducts([addedProd, ...products])}
-                onAddArtPiece={(addedArt) => setArtworks([addedArt, ...artworks])}
-              />
+              !currentUser ? (
+                authScreen === 'login' ? (
+                  <LoginView
+                    onLoginSuccess={(usr) => setCurrentUser(usr)}
+                    onNavigateToSignUp={() => setAuthScreen('signup')}
+                  />
+                ) : (
+                  <SignUpView
+                    onSignUpSuccess={() => setAuthScreen('login')}
+                    onNavigateToLogin={() => setAuthScreen('login')}
+                  />
+                )
+              ) : (
+                currentUser.role === 'customer' ? (
+                  <UserDashboardView
+                    user={currentUser}
+                    wishlist={wishlist}
+                    onToggleWishlist={handleToggleWishlist}
+                    onAddToCart={handleAddToCart}
+                    onLogout={() => {
+                      mockAuth.setCurrentUser(null as any);
+                      setCurrentUser(null);
+                    }}
+                  />
+                ) : currentUser.role === 'admin' ? (
+                  <AdminDashboardView
+                    user={currentUser}
+                    products={products}
+                    onAddProduct={(addedProd) => setProducts([addedProd, ...products])}
+                    onDeleteProduct={(prodId) => setProducts(products.filter(p => p.id !== prodId))}
+                    onLogout={() => {
+                      mockAuth.setCurrentUser(null as any);
+                      setCurrentUser(null);
+                    }}
+                  />
+                ) : (
+                  <FounderDashboardView
+                    user={currentUser}
+                    onLogout={() => {
+                      mockAuth.setCurrentUser(null as any);
+                      setCurrentUser(null);
+                    }}
+                  />
+                )
+              )
             )}
           </motion.div>
         </AnimatePresence>
@@ -319,7 +340,7 @@ export default function App() {
       {/* Luxury Footer with gold highlights */}
       <footer className="bg-[#05081A] border-t border-[#C9A84C]/10 py-16 px-4 md:px-8 select-none text-left">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-10">
-          
+
           {/* Brand Col */}
           <div className="md:col-span-4 flex flex-col gap-4">
             <SadafLogo size={42} showText={true} />
@@ -368,7 +389,7 @@ export default function App() {
             </p>
 
             {newsletterSubscribed ? (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="p-3.5 rounded bg-[#1B2A6B]/30 border border-[#C9A84C]/30 text-[#C9A84C] font-mono text-[10px] uppercase tracking-wider text-center"

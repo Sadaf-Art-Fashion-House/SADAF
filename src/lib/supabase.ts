@@ -58,3 +58,90 @@ export async function getArtworks() {
     }
     return data
 }
+
+
+// Auth functions
+export async function signUp(email: string, password: string, role: string = 'customer') {
+    const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+            data: { role }
+        }
+    })
+    if (error) throw error
+    return data
+}
+
+export async function signIn(email: string, password: string) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+    })
+    if (error) throw error
+    return data
+}
+
+export async function signOut() {
+    const { error } = await supabase.auth.signOut()
+    if (error) throw error
+}
+
+export async function getCurrentUser() {
+    const { data: { user } } = await supabase.auth.getUser()
+    return user
+}
+
+
+export interface UserProfile {
+    id: string;
+    email: string;
+    role: 'customer' | 'admin' | 'founder';
+    name?: string;
+    fullName?: string;
+    createdAt: string;
+}
+
+
+// Check if Supabase is configured
+export const isSupabaseConfigured = !!(
+  config.supabaseUrl && 
+  config.supabaseAnonKey && 
+  config.supabaseUrl !== '' && 
+  config.supabaseAnonKey !== ''
+)
+
+// Mock auth functions for development without Supabase
+// MockAuth for sandbox mode
+const MOCK_USERS_KEY = 'sadaf_mock_users'
+const MOCK_CURRENT_KEY = 'sadaf_mock_current'
+
+const defaultUsers: UserProfile[] = [
+  { id: 'usr-1', email: 'customer@sadaf.luxury', role: 'customer', fullName: 'Customer Layla', createdAt: new Date().toISOString() },
+  { id: 'usr-2', email: 'admin@sadaf.luxury', role: 'admin', fullName: 'Admin Amir', createdAt: new Date().toISOString() },
+  { id: 'usr-3', email: 'founder@sadaf.luxury', role: 'founder', fullName: 'Founder Yasmine', createdAt: new Date().toISOString() },
+]
+
+export const mockAuth = {
+  getUsers: (): UserProfile[] => {
+    try {
+      const stored = localStorage.getItem(MOCK_USERS_KEY)
+      return stored ? JSON.parse(stored) : defaultUsers
+    } catch { return defaultUsers }
+  },
+  saveUsers: (users: UserProfile[]) => {
+    localStorage.setItem(MOCK_USERS_KEY, JSON.stringify(users))
+  },
+  setCurrentUser: (user: UserProfile) => {
+    localStorage.setItem(MOCK_CURRENT_KEY, JSON.stringify(user))
+  },
+  getCurrentUser: (): UserProfile | null => {
+    try {
+      const stored = localStorage.getItem(MOCK_CURRENT_KEY)
+      return stored ? JSON.parse(stored) : null
+    } catch { return null }
+  },
+  clearCurrentUser: () => {
+    localStorage.removeItem(MOCK_CURRENT_KEY)
+  }
+}
