@@ -4,14 +4,6 @@ import { config } from './config'
 
 export const supabase = createClient(config.supabaseUrl, config.supabaseAnonKey)
 
-// const supabaseUrl = 'https://gfqwkjbpumlhljkcpqsy.supabase.co'
-// const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmcXdramJwdW1saGxqa2NwcXN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MzA2MDYsImV4cCI6MjA5NjAwNjYwNn0.fgGgwBkOW2Lo2mZsA4rhVolG9Hpb7LOvzBtz8CaH-40'
-
-// const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? ''
-// const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_ANON_KEY ?? ''
-
-// export const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
 
 
 // Fetch all products
@@ -105,10 +97,10 @@ export interface UserProfile {
 
 // Check if Supabase is configured
 export const isSupabaseConfigured = !!(
-  config.supabaseUrl && 
-  config.supabaseAnonKey && 
-  config.supabaseUrl !== '' && 
-  config.supabaseAnonKey !== ''
+    config.supabaseUrl &&
+    config.supabaseAnonKey &&
+    config.supabaseUrl !== '' &&
+    config.supabaseAnonKey !== ''
 )
 
 // Mock auth functions for development without Supabase
@@ -117,31 +109,31 @@ const MOCK_USERS_KEY = 'sadaf_mock_users'
 const MOCK_CURRENT_KEY = 'sadaf_mock_current'
 
 const defaultUsers: UserProfile[] = [
-  { id: 'usr-1', email: 'customer@sadaf.luxury', role: 'customer', fullName: 'Customer Layla', createdAt: new Date().toISOString() },
-  { id: 'usr-2', email: 'admin@sadaf.luxury', role: 'admin', fullName: 'Admin Amir', createdAt: new Date().toISOString() },
-  { id: 'usr-3', email: 'founder@sadaf.luxury', role: 'founder', fullName: 'Founder Yasmine', createdAt: new Date().toISOString() },
+    { id: 'usr-1', email: 'customer@sadaf.luxury', role: 'customer', fullName: 'Customer Layla', createdAt: new Date().toISOString() },
+    { id: 'usr-2', email: 'admin@sadaf.luxury', role: 'admin', fullName: 'Admin Amir', createdAt: new Date().toISOString() },
+    { id: 'usr-3', email: 'founder@sadaf.luxury', role: 'founder', fullName: 'Founder Yasmine', createdAt: new Date().toISOString() },
 ]
 
 export const mockAuth = {
-  getUsers: (): UserProfile[] => {
-    try {
-      const stored = localStorage.getItem(MOCK_USERS_KEY)
-      return stored ? JSON.parse(stored) : defaultUsers
-    } catch { return defaultUsers }
-  },
-  saveUsers: (users: UserProfile[]) => {
-    localStorage.setItem(MOCK_USERS_KEY, JSON.stringify(users))
-  },
-  setCurrentUser: (user: UserProfile) => {
-    localStorage.setItem(MOCK_CURRENT_KEY, JSON.stringify(user))
-  },
-  getCurrentUser: (): UserProfile | null => {
-    try {
-      const stored = localStorage.getItem(MOCK_CURRENT_KEY)
-      return stored ? JSON.parse(stored) : null
-    } catch { return null }
-  },
-  clearCurrentUser: () => {
-    localStorage.removeItem(MOCK_CURRENT_KEY)
-  }
+    getUsers: (): UserProfile[] => {
+        try {
+            const stored = localStorage.getItem(MOCK_USERS_KEY)
+            return stored ? JSON.parse(stored) : defaultUsers
+        } catch { return defaultUsers }
+    },
+    saveUsers: (users: UserProfile[]) => {
+        localStorage.setItem(MOCK_USERS_KEY, JSON.stringify(users))
+    },
+    setCurrentUser: (user: UserProfile) => {
+        localStorage.setItem(MOCK_CURRENT_KEY, JSON.stringify(user))
+    },
+    getCurrentUser: (): UserProfile | null => {
+        try {
+            const stored = localStorage.getItem(MOCK_CURRENT_KEY)
+            return stored ? JSON.parse(stored) : null
+        } catch { return null }
+    },
+    clearCurrentUser: () => {
+        localStorage.removeItem(MOCK_CURRENT_KEY)
+    }
 }
