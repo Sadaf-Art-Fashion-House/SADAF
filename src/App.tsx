@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ShoppingCart, Heart, ShieldCheck, Mail, ShieldAlert, Sparkles, AlertCircle, Compass, Home, BookOpen, User, Grid, Cpu, ArrowUpRight } from 'lucide-react';

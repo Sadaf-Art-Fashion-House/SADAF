@@ -54,7 +54,7 @@ export interface AIClothingDesign {
   description: string;
   story: string; // Gemini generated narrative
   fabrics: string[];
-  printingOption: 'DTG' | 'Embroidery' | 'Screen Print' | 'Puff Print';
+  printingOption: string;
 }
 
 export interface MaqasaqRecommendation {
