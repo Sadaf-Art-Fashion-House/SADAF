@@ -15,6 +15,7 @@ import {
     Layers,
     Award,
     Activity,
+    Mic,
 } from 'lucide-react';
 import type { ArtPiece } from '@/shared/types';
 import type { ExhibitionRoom } from '../types';
@@ -462,6 +463,74 @@ export default function ExhibitionView({ artworks, onAddToCart, onSelectArtPiece
                                                     </div>
                                                 );
                                             })()}
+
+                                            {/* Voice Tuning Panel */}
+                                            <div className="mt-3 p-3 bg-[#090D2A]/70 border border-white/5 rounded-lg">
+                                                <div className="flex items-center gap-1.5 text-[8px] font-mono uppercase text-[#C9A84C] tracking-widest mb-2">
+                                                    <Mic size={10} /> Voice Tuning
+                                                </div>
+
+                                                {/* Voice Selector */}
+                                                <div className="mb-2">
+                                                    <label className="text-[8px] font-mono text-slate-500 uppercase block mb-1">Voice</label>
+                                                    <select
+                                                        value={tts.selectedVoice?.voiceURI || ''}
+                                                        onChange={(e) => tts.setVoice(e.target.value)}
+                                                        className="w-full bg-black/40 border border-white/10 rounded-lg p-1.5 text-[10px] text-white outline-none cursor-pointer"
+                                                    >
+                                                        <option value="">
+                                                            {tts.voices.length === 0 ? '⏳ Loading voices…' : '🎤 Auto (default voice)'}
+                                                        </option>
+                                                        {tts.voices.map((v) => (
+                                                            <option key={v.voiceURI} value={v.voiceURI}>
+                                                                {v.name} ({v.lang})
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+
+                                                {/* Speed Slider */}
+                                                <div className="mb-2">
+                                                    <div className="flex justify-between text-[8px] font-mono text-slate-500 uppercase mb-1">
+                                                        <span>Speed</span>
+                                                        <span className="text-[#C9A84C]">{tts.options.rate.toFixed(1)}x</span>
+                                                    </div>
+                                                    <input
+                                                        type="range"
+                                                        min="0.3"
+                                                        max="2.0"
+                                                        step="0.1"
+                                                        value={tts.options.rate}
+                                                        onChange={(e) => tts.setRate(parseFloat(e.target.value))}
+                                                        className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-[#C9A84C]"
+                                                    />
+                                                    <div className="flex justify-between text-[7px] font-mono text-slate-600 mt-0.5">
+                                                        <span>Slow</span>
+                                                        <span>Fast</span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Pitch Slider */}
+                                                <div>
+                                                    <div className="flex justify-between text-[8px] font-mono text-slate-500 uppercase mb-1">
+                                                        <span>Pitch</span>
+                                                        <span className="text-[#C9A84C]">{tts.options.pitch.toFixed(1)}</span>
+                                                    </div>
+                                                    <input
+                                                        type="range"
+                                                        min="0.3"
+                                                        max="2.0"
+                                                        step="0.1"
+                                                        value={tts.options.pitch}
+                                                        onChange={(e) => tts.setPitch(parseFloat(e.target.value))}
+                                                        className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-[#C9A84C]"
+                                                    />
+                                                    <div className="flex justify-between text-[7px] font-mono text-slate-600 mt-0.5">
+                                                        <span>Low</span>
+                                                        <span>High</span>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="pt-4 border-t border-white/10 mt-auto flex flex-col gap-2">
