@@ -18,6 +18,7 @@ const NAV_LINKS = [
     { href: "/fashion", label: "Fashion" },
     { href: "/store", label: "Store" },
     { href: "/gallery", label: "Gallery" },
+    { href: "/ai", label: "AI Studio" },
 ] as const;
 
 export default function Header() {
@@ -98,7 +99,7 @@ export default function Header() {
 
                 <div className="flex items-center gap-4">
                     <Link
-                        href="/store"
+                        href="/wishlist"
                         className="p-2 text-slate-300 hover:text-red-400 relative transition-colors duration-300"
                         title="View Wishlist"
                     >
@@ -113,7 +114,7 @@ export default function Header() {
                     </Link>
 
                     <Link
-                        href="/store"
+                        href="/cart"
                         className="p-2 text-slate-300 hover:text-[#C9A84C] relative transition-colors duration-300"
                         title="View Shopping Bag"
                     >
