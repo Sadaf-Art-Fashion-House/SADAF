@@ -1,7 +1,5 @@
 'use client';
 
-'use client';
-
 import { useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { motion } from 'motion/react';
@@ -19,7 +17,7 @@ import {
     Camera,
     Bot,
 } from 'lucide-react';
-import type { UserProfile } from '@/shared/types';
+import type { UserProfile, UserRole } from '@/shared/types';
 import { isCustomerRole, isAdminRole, getRoleCategory } from '@/shared/types';
 import { ROLE_BADGES, ROLE_BADGE_COLORS } from '@/features/auth/types';
 import { mockAuth } from '@/lib/supabase';
@@ -36,6 +34,20 @@ const quickLinks = [
     { href: '/gallery', label: 'Virtual Gallery', icon: ImageIcon },
     { href: '/ai', label: 'AI Studio', icon: Bot },
 ];
+
+/** Map a section title to the correct dashboard sub-route based on the user's role. */
+function getSectionLink(role: UserRole, title: string): string {
+    if (title === 'Admin Panel') return '/dashboard/admin';
+    if (title === 'Founder Controls') return '/dashboard/founder';
+    // Customer/Designer modules -> the user profile dashboard
+    if (title === 'My Orders' || title === 'Wishlist' || title === 'My Network' || title === 'My Collections') {
+        return '/dashboard/profile';
+    }
+    if (title === 'Design Studio') return '/ai';
+    if (title === 'Commission Dashboard' || title === 'Referral Network') return '/dashboard/profile';
+    if (title === 'Bulk Orders') return '/dashboard/profile';
+    return '/dashboard';
+}
 
 function getRoleSpecificSections(role: UserProfile['role']) {
     const cat = getRoleCategory(role);
@@ -94,12 +106,10 @@ export default function DashboardView({ user, onLogout }: DashboardViewProps) {
         reader.onload = () => {
             const base64 = reader.result as string;
             setAvatarUrl(base64);
-            // Persist to localStorage via mockAuth
             const stored = mockAuth.getCurrentUser();
             if (stored) {
-                const updated = { ...stored, avatarUrl: base64 };
+                const updated = { ...stored, avatarUrl: base64 } as UserProfile;
                 mockAuth.setCurrentUser(updated);
-                // Also update in the users list
                 const users = mockAuth.getUsers();
                 const idx = users.findIndex((u) => u.id === updated.id);
                 if (idx !== -1) {
@@ -142,7 +152,6 @@ export default function DashboardView({ user, onLogout }: DashboardViewProps) {
                                 ) : (
                                     user.fullName.charAt(0).toUpperCase()
                                 )}
-                                {/* Hover overlay */}
                                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                                     <Camera size={16} className="text-white" />
                                 </div>
@@ -164,17 +173,23 @@ export default function DashboardView({ user, onLogout }: DashboardViewProps) {
                             <p className="text-sm text-[#E8E0D5]/60 mb-3">{user.email}</p>
 
                             <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
-                                {/* Role badge */}
                                 <span className={`px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider border font-semibold ${badgeColor}`}>
                                     {badgeText}
                                 </span>
 
-                                {/* Designer access badge */}
                                 {user.hasDesignerAccess && (
                                     <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider border border-violet-500/30 text-violet-400 bg-violet-500/10 font-semibold">
                                         + Designer Access
                                     </span>
                                 )}
+
+                                <Link
+                                    href={isAdminRole(user.role) ? '/dashboard/admin' : user.role === 'founder' ? '/dashboard/founder' : '/dashboard/profile'}
+                                    className="px-4 py-1.5 rounded-full text-[10px] font-mono uppercase tracking-wider border border-[#C9A84C]/30 text-[#C9A84C] hover:bg-[#C9A84C]/10 transition-all duration-300 flex items-center gap-1.5"
+                                >
+                                    <LayoutDashboard size={11} />
+                                    Full Dashboard
+                                </Link>
 
                                 <button
                                     onClick={onLogout}
@@ -241,7 +256,6 @@ export default function DashboardView({ user, onLogout }: DashboardViewProps) {
                                 <p className="text-[11px] text-[#E8E0D5]/40">
                                     Invite your family and friends to join SADAF and earn exclusive rewards.
                                 </p>
-                                {/* TODO: Wire up the full connections / referral UI once the feature is built */}
                                 <button className="mt-4 px-5 py-2 bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/80 text-[#0A0F2C] text-[10px] font-mono font-bold uppercase tracking-wider rounded-lg transition-all duration-300 hover:scale-105 cursor-pointer">
                                     Invite Connections
                                 </button>
@@ -258,11 +272,10 @@ export default function DashboardView({ user, onLogout }: DashboardViewProps) {
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {availableSections.map((section) => (
-                        <motion.div
+                        <Link
                             key={section.title}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="p-6 rounded-xl bg-[#0A0F2C]/60 border border-[#C9A84C]/10 hover:border-[#C9A84C]/30 transition-all duration-300 group cursor-pointer"
+                            href={getSectionLink(user.role, section.title)}
+                            className="block p-6 rounded-xl bg-[#0A0F2C]/60 border border-[#C9A84C]/10 hover:border-[#C9A84C]/30 transition-all duration-300 group"
                         >
                             <div className="flex items-center gap-3 mb-2">
                                 <section.icon
@@ -274,11 +287,10 @@ export default function DashboardView({ user, onLogout }: DashboardViewProps) {
                             <p className="text-[11px] text-[#E8E0D5]/50 leading-relaxed">
                                 {section.desc}
                             </p>
-                            {/* TODO: Wire up these modules once dashboard feature is fully migrated */}
-                            <div className="mt-3 text-[9px] font-mono uppercase tracking-wider text-[#C9A84C]/60">
-                                Coming soon &rarr;
+                            <div className="mt-3 text-[9px] font-mono uppercase tracking-wider text-[#C9A84C]/60 group-hover:text-[#C9A84C] transition-colors">
+                                Open Panel &rarr;
                             </div>
-                        </motion.div>
+                        </Link>
                     ))}
                 </div>
             </section>

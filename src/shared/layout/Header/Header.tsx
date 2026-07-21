@@ -19,6 +19,7 @@ const NAV_LINKS = [
     { href: "/store", label: "Store" },
     { href: "/gallery", label: "Gallery" },
     { href: "/ai", label: "AI Studio" },
+    { href: "/exhibition", label: "Exhibition" },
 ] as const;
 
 export default function Header() {

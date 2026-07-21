@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
     Sparkles,
@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import type { ArtPiece } from '@/shared/types';
 import type { ExhibitionRoom } from '../types';
+import { useTextToSpeech } from '../hooks/useTextToSpeech';
 
 interface ExhibitionViewProps {
     artworks: ArtPiece[];
@@ -74,9 +75,8 @@ export default function ExhibitionView({ artworks, onAddToCart, onSelectArtPiece
     const activeRoom = ROOMS[activeRoomIndex];
     const [activeWall, setActiveWall] = useState<WallView>('center');
     const [zoomedArt, setZoomedArt] = useState<ArtPiece | null>(null);
+    const tts = useTextToSpeech();
     const [isAudioGuideActive, setIsAudioGuideActive] = useState<boolean>(false);
-    const [audioTranscript, setAudioTranscript] = useState<string>('');
-    const [transcriptCharacterIndex, setTranscriptCharacterIndex] = useState<number>(0);
 
     const activeRoomArtworks = activeRoom.artworkIds
         .map((id) => artworks.find((art) => art.id === id))
@@ -91,41 +91,37 @@ export default function ExhibitionView({ artworks, onAddToCart, onSelectArtPiece
     const currentWallArt = wallArtMap[activeWall];
     const currentCoords = MAP_COORDINATES[activeRoom.id]?.[activeWall] || { x: 50, y: 50 };
 
+    const handleStartNarration = useCallback(() => {
+        if (!zoomedArt) return;
+        const fullText = CURATORIAL_STORIES[zoomedArt.id] ||
+            "This luxury heritage masterpiece is preserved inside SADAF's Cairo archives.";
+        tts.speak(fullText);
+        setIsAudioGuideActive(true);
+    }, [zoomedArt, tts]);
+
+    const handleStopNarration = useCallback(() => {
+        tts.stop();
+        setIsAudioGuideActive(false);
+    }, [tts]);
+
+    // Sync isAudioGuideActive with TTS state
     useEffect(() => {
-        if (isAudioGuideActive && zoomedArt) {
-            setAudioTranscript('');
-            setTranscriptCharacterIndex(0);
-        } else {
-            setAudioTranscript('');
+        if (!tts.isSpeaking && isAudioGuideActive) {
             setIsAudioGuideActive(false);
         }
-    }, [isAudioGuideActive, zoomedArt]);
-
-    useEffect(() => {
-        let timer: ReturnType<typeof setTimeout>;
-        if (isAudioGuideActive && zoomedArt) {
-            const fullText = CURATORIAL_STORIES[zoomedArt.id] || "This luxury heritage masterpiece is preserved inside SADAF's Cairo archives, representing authentic historical lineages and master craftsmanship.";
-            if (transcriptCharacterIndex < fullText.length) {
-                timer = setTimeout(() => {
-                    setAudioTranscript((prev) => prev + fullText[transcriptCharacterIndex]);
-                    setTranscriptCharacterIndex((prev) => prev + 1);
-                }, 35);
-            }
-        }
-        return () => clearTimeout(timer);
-    }, [transcriptCharacterIndex, isAudioGuideActive, zoomedArt]);
+    }, [tts.isSpeaking, isAudioGuideActive]);
 
     const handleRoomSwitch = (index: number) => {
         setActiveRoomIndex(index);
         setActiveWall('center');
         setZoomedArt(null);
-        setIsAudioGuideActive(false);
+        handleStopNarration();
     };
 
     const handleWallSwitch = (wall: WallView) => {
         setActiveWall(wall);
         setZoomedArt(null);
-        setIsAudioGuideActive(false);
+        handleStopNarration();
     };
 
     return (
@@ -253,7 +249,7 @@ export default function ExhibitionView({ artworks, onAddToCart, onSelectArtPiece
                                                     <span className="p-2 rounded-full bg-[#C9A84C] text-[#0A0F2C]">
                                                         <Maximize2 size={16} />
                                                     </span>
-                                                    <span className="text-[10px] font-mono tracking-widest text-[#E8E0D5] uppercase font-bold">Zoom Masterpiece</span>
+                                                    <span className="text-[10px] font-mono tracking-widest text-[#E8E0D5] uppercase font-bold">Click to Inspect</span>
                                                 </div>
                                             </div>
 
@@ -393,7 +389,7 @@ export default function ExhibitionView({ artworks, onAddToCart, onSelectArtPiece
                                             <button
                                                 onClick={() => {
                                                     setZoomedArt(null);
-                                                    setIsAudioGuideActive(false);
+                                                    handleStopNarration();
                                                 }}
                                                 className="text-xs text-slate-400 hover:text-white font-mono uppercase tracking-wider cursor-pointer font-bold"
                                             >
@@ -420,7 +416,13 @@ export default function ExhibitionView({ artworks, onAddToCart, onSelectArtPiece
                                         {/* Audio guide */}
                                         <div className="mb-4">
                                             <button
-                                                onClick={() => setIsAudioGuideActive(!isAudioGuideActive)}
+                                                onClick={() => {
+                                                    if (isAudioGuideActive) {
+                                                        handleStopNarration();
+                                                    } else {
+                                                        handleStartNarration();
+                                                    }
+                                                }}
                                                 className={`w-full py-2.5 rounded text-xs font-mono uppercase tracking-widest font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
                                                     isAudioGuideActive
                                                         ? 'bg-red-950 text-red-200 border border-red-500/30'
@@ -429,7 +431,7 @@ export default function ExhibitionView({ artworks, onAddToCart, onSelectArtPiece
                                             >
                                                 {isAudioGuideActive ? (
                                                     <>
-                                                        <VolumeX size={13} /> Stop Virtual Narration
+                                                        <VolumeX size={13} /> Stop Narration
                                                     </>
                                                 ) : (
                                                     <>
@@ -437,17 +439,29 @@ export default function ExhibitionView({ artworks, onAddToCart, onSelectArtPiece
                                                     </>
                                                 )}
                                             </button>
-                                            {isAudioGuideActive && (
-                                                <div className="p-3 bg-black/50 border border-white/5 rounded-lg mt-2 text-[11px] text-gray-300 leading-relaxed h-24 overflow-y-auto">
-                                                    <div className="flex items-center gap-1.5 text-[8px] font-mono uppercase text-[#C9A84C] tracking-widest mb-1">
-                                                        <Activity size={10} className="animate-bounce" /> Live Audio guide play
+                                            {isAudioGuideActive && (() => {
+                                                const fullText = zoomedArt ? (CURATORIAL_STORIES[zoomedArt.id] || '') : '';
+                                                const words = fullText.split(' ');
+                                                const revealedCount = Math.min(tts.currentWordIndex, words.length);
+                                                return (
+                                                    <div className="p-3 bg-black/50 border border-white/5 rounded-lg mt-2 text-[11px] text-gray-300 leading-relaxed h-28 overflow-y-auto">
+                                                        <div className="flex items-center gap-1.5 text-[8px] font-mono uppercase text-[#C9A84C] tracking-widest mb-1">
+                                                            <Volume2 size={10} className="text-green-400 animate-pulse" />
+                                                            <span>Voice Narration Active</span>
+                                                            <span className="text-[8px] text-green-400/60 font-mono ml-auto">
+                                                                🔉 {words.length > 0 ? Math.round((revealedCount / words.length) * 100) : 0}%
+                                                            </span>
+                                                        </div>
+                                                        <span className="font-serif italic">
+                                                            &ldquo;{words.slice(0, revealedCount).join(' ')}
+                                                            {revealedCount < words.length && (
+                                                                <span className="w-1.5 h-3.5 bg-[#C9A84C] inline-block animate-pulse ml-0.5 align-middle" />
+                                                            )}
+                                                            {revealedCount >= words.length && '”'}
+                                                        </span>
                                                     </div>
-                                                    <span className="font-serif italic">&quot;{audioTranscript}&quot;</span>
-                                                    {transcriptCharacterIndex < (CURATORIAL_STORIES[zoomedArt.id]?.length || 0) && (
-                                                        <span className="w-1.5 h-3.5 bg-[#C9A84C] inline-block animate-pulse ml-0.5" />
-                                                    )}
-                                                </div>
-                                            )}
+                                                );
+                                            })()}
                                         </div>
                                     </div>
                                     <div className="pt-4 border-t border-white/10 mt-auto flex flex-col gap-2">
@@ -470,10 +484,19 @@ export default function ExhibitionView({ artworks, onAddToCart, onSelectArtPiece
                                     animate={{ opacity: 1 }}
                                     className="flex flex-col items-center justify-center h-full text-center py-10"
                                 >
-                                    <Eye className="text-[#C9A84C] mb-3 animate-pulse" size={28} />
-                                    <h4 className="font-serif text-[#E8E0D5] text-sm uppercase font-semibold mb-1">Interactive Wall Inspect</h4>
+                                    <button
+                                        onClick={() => currentWallArt && setZoomedArt(currentWallArt)}
+                                        className="flex flex-col items-center gap-1 group cursor-pointer"
+                                        title="Click to inspect the current artwork"
+                                    >
+                                        <Eye className="text-[#C9A84C] mb-1 animate-pulse group-hover:scale-110 transition-transform" size={28} />
+                                        <span className="text-[10px] font-mono text-[#C9A84C] underline group-hover:text-white transition-colors">
+                                            Click to Inspect
+                                        </span>
+                                    </button>
+                                    <h4 className="font-serif text-[#E8E0D5] text-sm uppercase font-semibold mb-1 mt-3">Interactive Wall Inspect</h4>
                                     <p className="text-[10px] text-gray-500 leading-relaxed max-w-[190px]">
-                                        Click on any floating gold artwork frame inside the viewport canvas to zoom, play live voice narratives, and purchase authentic Arabic crafts.
+                                        Click the artwork above or tap the <strong>eye icon</strong> to zoom, play live voice narratives, and acquire pieces.
                                     </p>
                                 </motion.div>
                             )}
