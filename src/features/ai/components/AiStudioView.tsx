@@ -3,10 +3,11 @@
 import { motion, AnimatePresence } from 'motion/react';
 import {
     Sparkles, Upload, Ruler, RefreshCw, Layers, Check,
-    ShoppingBag, Eye, Info,
+    ShoppingBag, Eye, Info, Save, Bookmark,
 } from 'lucide-react';
 import type { AIClothingDesign, MaqasaqRecommendation } from '@/shared/types';
 import { fabricsList, printingMethods } from '@/features/ai/data';
+
 
 interface AiStudioViewProps {
     activeStep: number;
@@ -45,6 +46,9 @@ interface AiStudioViewProps {
     handleGenerateDesign: () => Promise<void>;
     handleCalculateSize: () => Promise<void>;
     dispatchToCoutureAtelier: () => void;
+    onSaveDesign: () => void;
+    onViewSavedDesigns: () => void;
+    savedDraftsCount: number;
 }
 
 const COLOR_OPTIONS = ['#0A0F2C', '#1B2A6B', '#E8E0D5', '#0F1532', '#070A18'];
@@ -74,9 +78,22 @@ export default function AiStudioView({
     handleGenerateDesign,
     handleCalculateSize,
     dispatchToCoutureAtelier,
+    onSaveDesign,
+    onViewSavedDesigns,
+    savedDraftsCount,
 }: AiStudioViewProps) {
     return (
         <div className="relative w-full overflow-hidden min-h-screen pb-20">
+            {/* Saved drafts badge — top right */}
+            {savedDraftsCount > 0 && (
+                <button
+                    onClick={onViewSavedDesigns}
+                    className="fixed top-28 right-4 z-50 px-3 py-2 bg-[#1B2A6B]/90 border border-[#C9A84C]/30 rounded-xl text-[10px] font-mono text-[#C9A84C] hover:bg-[#1B2A6B] transition-all duration-300 cursor-pointer flex items-center gap-2 shadow-lg"
+                >
+                    <Bookmark size={12} />
+                    <span>Saved Designs ({savedDraftsCount})</span>
+                </button>
+            )}
             {/* AI Hero Banner */}
             <section className="relative py-16 px-4 md:px-8 border-b border-[#C9A84C]/10 bg-[#0A0F2C] text-center overflow-hidden">
                 <div className="absolute top-0 right-1/2 w-80 h-80 rounded-full bg-[#1B2A6B]/20 blur-[125px] pointer-events-none" />
@@ -344,6 +361,13 @@ export default function AiStudioView({
                                         Go Back
                                     </button>
                                     <button
+                                        onClick={onSaveDesign}
+                                        className="py-3.5 px-4 bg-[#1B2A6B]/80 border border-[#4FC3F7]/30 hover:bg-[#1B2A6B] text-xs text-white uppercase tracking-wider font-semibold rounded transition cursor-pointer flex items-center gap-1.5"
+                                        title="Save design for later review"
+                                    >
+                                        <Save size={12} /> Save
+                                    </button>
+                                    <button
                                         onClick={() => setActiveStep(3)}
                                         className="flex-1 py-3.5 bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/90 text-[#0A0F2C] text-xs uppercase tracking-wider font-bold rounded hover:scale-102 transition shadow-lg shadow-black/35 cursor-pointer"
                                     >
@@ -473,6 +497,13 @@ export default function AiStudioView({
                                         className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-xs text-white uppercase tracking-wider font-semibold rounded cursor-pointer"
                                     >
                                         Garment Styling
+                                    </button>
+                                    <button
+                                        onClick={onSaveDesign}
+                                        className="py-3 px-4 bg-[#1B2A6B]/80 border border-[#4FC3F7]/30 hover:bg-[#1B2A6B] text-xs text-white uppercase tracking-wider font-semibold rounded transition cursor-pointer flex items-center gap-1.5"
+                                        title="Save design for later review"
+                                    >
+                                        <Save size={12} /> Save
                                     </button>
                                     <button
                                         onClick={dispatchToCoutureAtelier}
