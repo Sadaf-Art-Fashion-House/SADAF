@@ -47,7 +47,7 @@ export default function HomeView({ featuredProducts, featuredArtwork, collection
                     </motion.p>
 
                     <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.2, delay: 0.9 }} className="flex flex-col sm:flex-row items-center gap-5">
-                        <Link href="/ai-studio" className="group relative px-8 py-4 overflow-hidden rounded-full border border-[#C9A84C] bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/90 text-[#0A0F2C] hover:text-white font-medium text-sm tracking-[0.14em] uppercase transition-all duration-300 shadow-xl shadow-[#C9A84C]/10 active:scale-95 cursor-pointer">
+                        <Link href="/ai" className="group relative px-8 py-4 overflow-hidden rounded-full border border-[#C9A84C] bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/90 text-[#0A0F2C] hover:text-white font-medium text-sm tracking-[0.14em] uppercase transition-all duration-300 shadow-xl shadow-[#C9A84C]/10 active:scale-95 cursor-pointer">
                             <div className="absolute inset-0 w-3 bg-white/20 transition-all duration-[600s] ease-out group-hover:w-full" />
                             <span className="relative z-10 flex items-center justify-center gap-2">
                                 Launch AI Studio <Sparkles size={16} className="text-[#0A0F2C] group-hover:text-white" />
@@ -141,7 +141,7 @@ export default function HomeView({ featuredProducts, featuredArtwork, collection
                         ))}
                     </div>
 
-                    <Link href="/ai-studio" className="px-8 py-4 rounded-full bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/90 text-[#0A0F2C] hover:scale-105 active:scale-95 transition-all duration-300 font-medium text-xs tracking-[0.15em] uppercase flex items-center gap-2 cursor-pointer shadow-lg shadow-black/40">
+                    <Link href="/ai" className="px-8 py-4 rounded-full bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/90 text-[#0A0F2C] hover:scale-105 active:scale-95 transition-all duration-300 font-medium text-xs tracking-[0.15em] uppercase flex items-center gap-2 cursor-pointer shadow-lg shadow-black/40">
                         Enter Creative Laboratory <ArrowRight size={14} />
                     </Link>
                 </div>
