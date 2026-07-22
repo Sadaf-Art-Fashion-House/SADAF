@@ -115,6 +115,7 @@ interface LangEntry {
     label: string;
     flag: string;
     dir: 'ltr' | 'rtl';
+    /** Does this language have a dedicated system voice? Pure info, never blocks selection. */
     hasVoices: (tts: ReturnType<typeof useTextToSpeech>) => boolean;
 }
 
@@ -125,12 +126,34 @@ const LANGUAGES: LangEntry[] = [
     { code: 'de', label: 'Deutsch', flag: '🇩🇪', dir: 'ltr', hasVoices: (tts) => tts.hasGermanVoices },
 ];
 
-const LANGUAGE_LABEL: Record<TtsLang, { name: string; tooltip: string }> = {
-    en: { name: 'English', tooltip: 'The curatorial story will play in English. Select a voice below.' },
-    ar: { name: 'عربي', tooltip: 'سيتم تشغيل القصة باللغة العربية. اختر صوتاً عربياً من القائمة أدناه.' },
-    fr: { name: 'Français', tooltip: 'L\'histoire sera jouée en français. Sélectionnez une voix dans la liste ci-dessous.' },
-    de: { name: 'Deutsch', tooltip: 'Die Geschichte wird auf Deutsch abgespielt. Wählen Sie unten eine Stimme aus.' },
+/**
+ * User-facing label for each language. The `status` field explains whether
+ * a dedicated system voice exists and what the browser will do.
+ */
+const LANGUAGE_STATUS: Record<TtsLang, { name: string; tooltip: string; noVoiceNote: string }> = {
+    en: {
+        name: 'English',
+        tooltip: 'The story plays in English using the selected voice.',
+        noVoiceNote: '',
+    },
+    ar: {
+        name: 'عربي',
+        tooltip: 'سيتم تشغيل القصة باللغة العربية مع الصوت المتاح.',
+        noVoiceNote: 'Your system has no Arabic voice installed. The browser will still attempt Arabic pronunciation with the selected voice. For better quality, install the Arabic language pack in Windows Settings → Time & Language → Speech.',
+    },
+    fr: {
+        name: 'Français',
+        tooltip: "L'histoire est lue en français avec la voix sélectionnée.",
+        noVoiceNote: '',
+    },
+    de: {
+        name: 'Deutsch',
+        tooltip: 'Die Geschichte wird mit der ausgewählten Stimme auf Deutsch vorgelesen.',
+        noVoiceNote: '',
+    },
 };
+
+
 
 // ─────────────────────── Component ───────────────────────
 
@@ -520,10 +543,16 @@ export default function ExhibitionView({ artworks, onAddToCart, onSelectArtPiece
                                                 {isAudioGuideActive ? (
                                                     <><VolumeX size={13} /> Stop Narration</>
                                                 ) : (
-                                                    <><Volume2 size={13} /> {LANGUAGE_LABEL[currentLangCode].name === 'عربي' ? 'استمع للجولة' : LANGUAGE_LABEL[currentLangCode].name === 'Français' ? 'Écouter la visite' : LANGUAGE_LABEL[currentLangCode].name === 'Deutsch' ? 'Tour anhören' : 'Listen to Curatorial Tour'}</>
+                                                    <><Volume2 size={13} /> {currentLangCode === 'ar' ? 'استمع للجولة' : currentLangCode === 'fr' ? 'Écouter la visite' : currentLangCode === 'de' ? 'Tour anhören' : 'Listen to Curatorial Tour'}</>
                                                 )}
                                             </button>
 
+                                            {currentLangCode === 'ar' && !tts.hasArabicVoices && !isAudioGuideActive && (
+                                                <p className="text-[7px] font-mono text-amber-500/80 mt-1.5 leading-relaxed px-1">
+                                                    ⚠️ لا يوجد صوت عربي مثبت. المتصفح سيحاول نطق العربية بالصوت المتاح.
+                                                    {tts.voices.length > 0 && ` (${tts.voices[0]?.name})`}
+                                                </p>
+                                            )}
                                             {isAudioGuideActive && (() => {
                                                 const stories = STORY_MAP[currentLangCode];
                                                 const fallback = STORY_MAP.en;
@@ -566,7 +595,7 @@ export default function ExhibitionView({ artworks, onAddToCart, onSelectArtPiece
                                             {/* ─── Voice Tuning Panel ─── */}
                                             <div className="mt-3 p-3 bg-[#090D2A]/70 border border-white/5 rounded-lg">
                                                 <div className="flex items-center gap-1.5 text-[8px] font-mono uppercase text-[#C9A84C] tracking-widest mb-2">
-                                                    <Mic size={10} /> Voice Tuning — {LANGUAGE_LABEL[currentLangCode].name}
+                                                    <Mic size={10} /> Voice Tuning — {LANGUAGE_STATUS[currentLangCode].name}
                                                 </div>
 
                                                 {/* Language Toggle — All 4 Languages */}
@@ -582,16 +611,13 @@ export default function ExhibitionView({ artworks, onAddToCart, onSelectArtPiece
                                                                 className={`flex items-center gap-1.5 py-1.5 px-2 rounded text-[9px] sm:text-[10px] font-mono font-bold uppercase tracking-wider transition cursor-pointer ${
                                                                     currentLangCode === lang.code
                                                                         ? 'bg-[#C9A84C] text-[#0A0F2C] shadow-sm'
-                                                                        : lang.hasVoices(tts)
-                                                                            ? 'bg-white/5 text-slate-400 hover:bg-white/10'
-                                                                            : 'bg-white/[0.03] text-slate-600 cursor-not-allowed'
+                                                                        : 'bg-white/5 text-slate-400 hover:bg-white/10'
                                                                 }`}
-                                                                title={
-                                                                    lang.hasVoices(tts)
-                                                                        ? `Switch to ${LANGUAGE_LABEL[lang.code].name}`
-                                                                        : `No ${LANGUAGE_LABEL[lang.code].name} voice available on this system`
-                                                                }
-                                                                disabled={!lang.hasVoices(tts)}
+                                                                title={`Switch to ${LANGUAGE_STATUS[lang.code].name}${
+                                                                    !lang.hasVoices(tts)
+                                                                        ? ' (no dedicated voice, browser will approximate)'
+                                                                        : ''
+                                                                }`}
                                                             >
                                                                 <span className="shrink-0">{lang.flag}</span>
                                                                 <span className="truncate">{lang.label}</span>
@@ -602,12 +628,11 @@ export default function ExhibitionView({ artworks, onAddToCart, onSelectArtPiece
                                                         ))}
                                                     </div>
                                                     <p className="text-[7px] font-mono text-slate-600 mt-1.5 leading-relaxed">
-                                                        {LANGUAGE_LABEL[currentLangCode].tooltip}
+                                                        {LANGUAGE_STATUS[currentLangCode].tooltip}
                                                     </p>
                                                     {currentLangCode === 'ar' && !tts.hasArabicVoices && (
                                                         <p className="text-[7px] font-mono text-amber-500/80 mt-1.5 leading-relaxed">
-                                                            💡 No Arabic voice detected on your system. To add one:
-                                                            Windows Settings → Time &amp; Language → Speech → Install Arabic.
+                                                            ⚠️ {LANGUAGE_STATUS.ar.noVoiceNote}
                                                         </p>
                                                     )}
                                                 </div>
