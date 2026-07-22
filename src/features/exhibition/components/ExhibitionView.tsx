@@ -63,6 +63,16 @@ const CURATORIAL_STORIES: Record<string, string> = {
     'art-6': "This post-modern painting 'Cairo Deco Facade' merges sands with oil textures. Karim Abdel-Malik captures how Cairo's 1920s Art Deco apartment grids intersect with the continuous desert winds.",
 };
 
+/** Arabic curatorial stories for bilingual audio support. */
+const CURATORIAL_STORIES_AR: Record<string, string> = {
+    'art-1': 'تأمل روعة \"اللوحة المزدوجة الديوانية الذهبية\" للفنان أحمد السعيد. منسوجة على أقمشة الكتان المصبوغة بالنيلي، يستخدم هذا الخط أحباراً من العصور الوسطى مصنوعة من الذهب الخالص عيار ٢٤ قيراطاً. ترمز التداخلات الخطية إلى الأمواج الكونية المتدفقة على كثبان القاهرة المسائية.',
+    'art-2': 'لاحظ التناسقات الهندسية المذهلة داخل \"طبق الفاطمي الثماني المطعم بالصدف\". صُنع يدوياً على مدار ٥٠ ساعة عمل مكثفة في أتيليه السعد في القاهرة القديمة، حيث تم وضع كل قطعة من الصدف بدقة متناهية على ألواح النحاس الأحمر الساخن، لتعكس التقاويم الفلكية القديمة.',
+    'art-3': 'تأمل عن قرب الطبقات السميكة من \"انعكاسات النيل داخل السحلية الملكية\". تستخدم فريدة حماد كثافات زيتية ثقيلة ممزوجة برمال ساحلية ناعمة، لإعادة خلق الأجواء الدافئة الرطبة التي تعلو قصور جاير أندرسون التاريخية.',
+    'art-4': 'تمثل التحفة الرقمية \"التدفق الأرابيسكي السائل\" مستقبلاً غير إقليدي. يصمم طارق الفيصل الزخارف الإسلامية التقليدية، ثم يجري محاكاة سائلة خوارزمية آلية ليُظهر كيف تتكيف الحدود الثقافية مع المساحات المعاصرة.',
+    'art-5': 'لاحظ اللفات الهيكلية في \"دراسة العباءة المذهبة\". تُظهر ألواح القطن الخام المنسوجة تصميماً مائياً رائعاً يعكس حركات واحة سيوة، مما يعكس الوضعية البدوية ومقاومة الرياح المصممة في تصاميم سدف الخارجية.',
+    'art-6': 'هذه اللوحة ما بعد الحداثة \"واجهة القاهرة الديكورية\" تمزج الرمال مع القوام الزيتي. يصور كريم عبد الملك كيفية تقاطع شبكات شقق القاهرة ذات الطراز الأرت ديكو من عشرينيات القرن الماضي مع الرياح الصحراوية المستمرة.',
+};
+
 const WALL_LABELS = ['left', 'center', 'right'] as const;
 type WallView = (typeof WALL_LABELS)[number];
 
@@ -441,24 +451,38 @@ export default function ExhibitionView({ artworks, onAddToCart, onSelectArtPiece
                                                 )}
                                             </button>
                                             {isAudioGuideActive && (() => {
-                                                const fullText = zoomedArt ? (CURATORIAL_STORIES[zoomedArt.id] || '') : '';
-                                                const words = fullText.split(' ');
+                                                const isAr = tts.isArabicText;
+                                                const stories = isAr ? CURATORIAL_STORIES_AR : CURATORIAL_STORIES;
+                                                const fullText = zoomedArt ? (stories[zoomedArt.id] || '') : '';
+                                                const words = fullText.split(/\s+/);
                                                 const revealedCount = Math.min(tts.currentWordIndex, words.length);
+                                                const progress = words.length > 0 ? Math.round((revealedCount / words.length) * 100) : 0;
                                                 return (
-                                                    <div className="p-3 bg-black/50 border border-white/5 rounded-lg mt-2 text-[11px] text-gray-300 leading-relaxed h-28 overflow-y-auto">
-                                                        <div className="flex items-center gap-1.5 text-[8px] font-mono uppercase text-[#C9A84C] tracking-widest mb-1">
-                                                            <Volume2 size={10} className="text-green-400 animate-pulse" />
-                                                            <span>Voice Narration Active</span>
-                                                            <span className="text-[8px] text-green-400/60 font-mono ml-auto">
-                                                                🔉 {words.length > 0 ? Math.round((revealedCount / words.length) * 100) : 0}%
+                                                    <div
+                                                        className={`p-3 bg-black/50 border border-white/5 rounded-lg mt-2 text-[11px] leading-relaxed h-28 overflow-y-auto ${
+                                                            isAr ? 'text-right' : 'text-left'
+                                                        }`}
+                                                        dir={isAr ? 'rtl' : 'ltr'}
+                                                    >
+                                                        <div className="flex items-center gap-1.5 text-[8px] font-mono uppercase tracking-widest mb-1">
+                                                            <Volume2 size={10} className="text-green-400 animate-pulse shrink-0" />
+                                                            <span className="text-[#C9A84C]">
+                                                                {isAr ? 'التعليق الصوتي نشط' : 'Voice Narration Active'}
+                                                            </span>
+                                                            <span className="text-green-400/60 font-mono ml-auto shrink-0">
+                                                                🔉 {progress}%
                                                             </span>
                                                         </div>
-                                                        <span className="font-serif italic">
-                                                            &ldquo;{words.slice(0, revealedCount).join(' ')}
+                                                        <span
+                                                            className={`font-serif ${isAr ? 'text-[13px] leading-[1.8]' : 'italic text-[11px]'}`}
+                                                            style={{ color: isAr ? '#E8E0D5' : '#d1d5db' }}
+                                                        >
+                                                            {isAr ? '«' : '\u201C'}
+                                                            {words.slice(0, revealedCount).join(' ')}
                                                             {revealedCount < words.length && (
                                                                 <span className="w-1.5 h-3.5 bg-[#C9A84C] inline-block animate-pulse ml-0.5 align-middle" />
                                                             )}
-                                                            {revealedCount >= words.length && '”'}
+                                                            {revealedCount >= words.length && (isAr ? '»' : '\u201D')}
                                                         </span>
                                                     </div>
                                                 );
@@ -467,7 +491,41 @@ export default function ExhibitionView({ artworks, onAddToCart, onSelectArtPiece
                                             {/* Voice Tuning Panel */}
                                             <div className="mt-3 p-3 bg-[#090D2A]/70 border border-white/5 rounded-lg">
                                                 <div className="flex items-center gap-1.5 text-[8px] font-mono uppercase text-[#C9A84C] tracking-widest mb-2">
-                                                    <Mic size={10} /> Voice Tuning
+                                                    <Mic size={10} /> Voice Tuning — {tts.options.lang === 'ar' ? 'عربي' : 'English'}
+                                                </div>
+
+                                                {/* Language Toggle */}
+                                                <div className="mb-3 p-2 bg-black/30 border border-white/5 rounded-lg">
+                                                    <label className="text-[8px] font-mono text-slate-500 uppercase block mb-1.5">
+                                                        {tts.options.lang === 'ar' ? 'اللغة' : 'Language'}
+                                                    </label>
+                                                    <div className="flex gap-1">
+                                                        <button
+                                                            onClick={() => tts.setLanguage('en')}
+                                                            className={`flex-1 py-1.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider transition cursor-pointer ${
+                                                                tts.options.lang === 'en'
+                                                                    ? 'bg-[#C9A84C] text-[#0A0F2C] shadow-sm'
+                                                                    : 'bg-white/5 text-slate-400 hover:bg-white/10'
+                                                            }`}
+                                                        >
+                                                            🇬🇧 English
+                                                        </button>
+                                                        <button
+                                                            onClick={() => tts.setLanguage('ar')}
+                                                            className={`flex-1 py-1.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider transition cursor-pointer ${
+                                                                tts.options.lang === 'ar'
+                                                                    ? 'bg-[#C9A84C] text-[#0A0F2C] shadow-sm'
+                                                                    : 'bg-white/5 text-slate-400 hover:bg-white/10'
+                                                            }`}
+                                                        >
+                                                            🇸🇦 عربي
+                                                        </button>
+                                                    </div>
+                                                    <p className="text-[7px] font-mono text-slate-600 mt-1.5 leading-relaxed">
+                                                        {tts.options.lang === 'ar'
+                                                            ? 'سيتم تشغيل القصة باللغة العربية. اختر صوتاً عربياً من القائمة أدناه.'
+                                                            : 'The curatorial story will play in English. Select a voice below.'}
+                                                    </p>
                                                 </div>
 
                                                 {/* Voice Selector */}
@@ -477,15 +535,36 @@ export default function ExhibitionView({ artworks, onAddToCart, onSelectArtPiece
                                                         value={tts.selectedVoice?.voiceURI || ''}
                                                         onChange={(e) => tts.setVoice(e.target.value)}
                                                         className="w-full bg-black/40 border border-white/10 rounded-lg p-1.5 text-[10px] text-white outline-none cursor-pointer"
+                                                        dir={tts.options.lang === 'ar' ? 'rtl' : 'ltr'}
                                                     >
                                                         <option value="">
-                                                            {tts.voices.length === 0 ? '⏳ Loading voices…' : '🎤 Auto (default voice)'}
+                                                            {tts.voices.length === 0
+                                                                ? '⏳ Loading voices…'
+                                                                : tts.options.lang === 'ar'
+                                                                    ? '🎤 الصوت الافتراضي'
+                                                                    : '🎤 Auto (default voice)'}
                                                         </option>
-                                                        {tts.voices.map((v) => (
-                                                            <option key={v.voiceURI} value={v.voiceURI}>
-                                                                {v.name} ({v.lang})
-                                                            </option>
-                                                        ))}
+                                                        {tts.voices
+                                                            .filter(
+                                                                (v) =>
+                                                                    tts.options.lang === 'ar'
+                                                                        ? v.lang.startsWith('ar')
+                                                                        : !v.lang.startsWith('ar')
+                                                            )
+                                                            .map((v) => (
+                                                                <option key={v.voiceURI} value={v.voiceURI}>
+                                                                    {v.name} ({v.lang})
+                                                                </option>
+                                                            ))}
+                                                        {/* Always show the currently-selected voice even if filter hides it */}
+                                                        {tts.selectedVoice &&
+                                                            !tts.selectedVoice.lang.startsWith(
+                                                                tts.options.lang === 'ar' ? 'ar' : 'en'
+                                                            ) && (
+                                                                <option value={tts.selectedVoice.voiceURI}>
+                                                                    {tts.selectedVoice.name} ({tts.selectedVoice.lang}) — current
+                                                                </option>
+                                                            )}
                                                     </select>
                                                 </div>
 

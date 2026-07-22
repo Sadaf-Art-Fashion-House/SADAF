@@ -12,6 +12,7 @@
  * - Speak / Stop / Pause / Resume
  * - Voice selection from available system voices
  * - Configurable rate (speed) and pitch
+ * - Language-aware: auto-detects Arabic text and sets lang accordingly
  * - Word-by-word progress tracking for transcript sync
  */
 
@@ -23,22 +24,29 @@ export interface TtsOptions {
     rate: number;
     pitch: number;
     voiceUri: string | null;
+    lang: string;
 }
 
 const DEFAULT_OPTIONS: TtsOptions = {
     rate: 0.85,
     pitch: 1.0,
     voiceUri: null,
+    lang: 'en',
 };
+
+/** Detect if text contains Arabic characters (Unicode range 0600-06FF, 0750-077F, 08A0-08FF, FB50-FDFF, FE70-FEFF). */
+function containsArabic(text: string): boolean {
+    const arabicRegex = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
+    return arabicRegex.test(text);
+}
 
 /**
  * React hook that manages the browser SpeechSynthesis lifecycle.
  *
  * @example
- *   const { isSpeaking, voices, selectedVoice, speak, stop, setVoice, setRate } = useTextToSpeech();
+ *   const { isSpeaking, voices, isArabicText, setLanguage, speak } = useTextToSpeech();
  *   speak("Hello, welcome to the museum.");
- *   setVoice(voices[0].voiceURI);
- *   setRate(1.2);
+ *   setLanguage('ar');
  */
 export function useTextToSpeech() {
     const [isSpeaking, setIsSpeaking] = useState(false);
@@ -46,23 +54,27 @@ export function useTextToSpeech() {
     const [currentWordIndex, setCurrentWordIndex] = useState(0);
     const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
     const [options, setOptions] = useState<TtsOptions>(DEFAULT_OPTIONS);
+    const [currentText, setCurrentText] = useState('');
     const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
     const wordCountRef = useRef(0);
     const optionsRef = useRef(options);
     optionsRef.current = options;
+
+    const isArabicText = containsArabic(currentText);
 
     /** Load available voices from the browser. */
     const loadVoices = useCallback(() => {
         const available = window.speechSynthesis.getVoices();
         if (available.length > 0) {
             setVoices(available);
-            // Auto-select first en-US voice if none selected
+            // Auto-select first voice matching current language if none selected
             setOptions((prev) => {
                 if (!prev.voiceUri) {
-                    const englishVoice = available.find(
-                        (v) => v.lang.startsWith('en') && v.localService
+                    const targetLang = prev.lang;
+                    const preferredVoice = available.find(
+                        (v) => v.lang.startsWith(targetLang) && v.localService
                     );
-                    return { ...prev, voiceUri: englishVoice?.voiceURI || available[0]?.voiceURI || null };
+                    return { ...prev, voiceUri: preferredVoice?.voiceURI || available[0]?.voiceURI || null };
                 }
                 return prev;
             });
@@ -71,7 +83,6 @@ export function useTextToSpeech() {
 
     // Load voices on mount and when they change (Chrome loads them async)
     useEffect(() => {
-        // Some browsers (Chrome) load voices asynchronously
         if (window.speechSynthesis.onvoiceschanged !== undefined) {
             window.speechSynthesis.onvoiceschanged = loadVoices;
         }
@@ -91,14 +102,23 @@ export function useTextToSpeech() {
         utteranceRef.current = null;
     }, []);
 
-    /** Speak the given text aloud using current options. */
+    /** Speak the given text aloud using current options. Automatically detects Arabic. */
     const speak = useCallback((text: string) => {
         window.speechSynthesis.cancel();
         if (!text.trim()) return;
 
+        setCurrentText(text);
+
         const opts = optionsRef.current;
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'en-US';
+
+        // Auto-detect language from text content
+        if (containsArabic(text)) {
+            utterance.lang = 'ar-SA';
+        } else {
+            utterance.lang = 'en-US';
+        }
+
         utterance.rate = opts.rate;
         utterance.pitch = opts.pitch;
 
@@ -181,6 +201,18 @@ export function useTextToSpeech() {
         setOptions((prev) => ({ ...prev, pitch: Math.max(0.1, Math.min(2.0, pitch)) }));
     }, []);
 
+    /** Toggle between English and Arabic language mode. Auto-selects the first matching voice. */
+    const setLanguage = useCallback((lang: 'en' | 'ar') => {
+        const targetVoice = voices.find(
+            (v) => v.lang.startsWith(lang) && v.localService
+        );
+        setOptions((prev) => ({
+            ...prev,
+            lang,
+            voiceUri: targetVoice?.voiceURI || prev.voiceUri,
+        }));
+    }, [voices]);
+
     /** Get the currently selected voice object. */
     const selectedVoice = voices.find((v) => v.voiceURI === options.voiceUri) || null;
 
@@ -198,6 +230,8 @@ export function useTextToSpeech() {
         voices,
         selectedVoice,
         options,
+        isArabicText,
+        currentText,
         speak,
         stop: cancelSpeech,
         pause,
@@ -206,5 +240,6 @@ export function useTextToSpeech() {
         setVoice,
         setRate,
         setPitch,
+        setLanguage,
     };
 }
