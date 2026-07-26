@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Header from "@/shared/layout/Header";
 import { AppProviders } from "@/shared/providers/AppProviders";
 import "./globals.css";
 
@@ -16,10 +15,7 @@ export default function RootLayout({
     return (
         <html lang="en" className="h-full antialiased">
             <body className="min-h-full flex flex-col">
-                <AppProviders>
-                    <Header />
-                    {children}
-                </AppProviders>
+                <AppProviders>{children}</AppProviders>
             </body>
         </html>
     );

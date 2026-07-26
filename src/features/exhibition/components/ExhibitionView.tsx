@@ -549,8 +549,10 @@ export default function ExhibitionView({ artworks, onAddToCart, onSelectArtPiece
 
                                             {currentLangCode === 'ar' && !tts.hasArabicVoices && !isAudioGuideActive && (
                                                 <p className="text-[7px] font-mono text-amber-500/80 mt-1.5 leading-relaxed px-1">
-                                                    ⚠️ لا يوجد صوت عربي مثبت. المتصفح سيحاول نطق العربية بالصوت المتاح.
-                                                    {tts.voices.length > 0 && ` (${tts.voices[0]?.name})`}
+                                                    ⚠️ لا يوجد صوت عربي مثبت.
+                                                    {tts.googleTtsConfigured
+                                                        ? 'سيتم استخدام Google Cloud TTS بصوت عربي احترافي.'
+                                                        : 'سيحاول المتصفح نطق العربية بالصوت المتاح.'}
                                                 </p>
                                             )}
                                             {isAudioGuideActive && (() => {
@@ -596,6 +598,19 @@ export default function ExhibitionView({ artworks, onAddToCart, onSelectArtPiece
                                             <div className="mt-3 p-3 bg-[#090D2A]/70 border border-white/5 rounded-lg">
                                                 <div className="flex items-center gap-1.5 text-[8px] font-mono uppercase text-[#C9A84C] tracking-widest mb-2">
                                                     <Mic size={10} /> Voice Tuning — {LANGUAGE_STATUS[currentLangCode].name}
+                                                    {tts.voiceSource === 'google-tts' && (
+                                                        <span
+                                                            className="ml-auto text-[7px] px-1.5 py-0.5 rounded-full bg-green-900/50 text-green-400 border border-green-500/30 font-mono"
+                                                            title="Using Google Cloud Text-to-Speech for high-quality Arabic audio"
+                                                        >
+                                                            ☁️ Google TTS
+                                                        </span>
+                                                    )}
+                                                    {tts.voiceSource === 'system' && tts.hasArabicVoices && (
+                                                        <span className="ml-auto text-[7px] px-1.5 py-0.5 rounded-full bg-blue-900/50 text-blue-400 border border-blue-500/30 font-mono">
+                                                            🖥️ System Voice
+                                                        </span>
+                                                    )}
                                                 </div>
 
                                                 {/* Language Toggle — All 4 Languages */}
@@ -630,9 +645,9 @@ export default function ExhibitionView({ artworks, onAddToCart, onSelectArtPiece
                                                     <p className="text-[7px] font-mono text-slate-600 mt-1.5 leading-relaxed">
                                                         {LANGUAGE_STATUS[currentLangCode].tooltip}
                                                     </p>
-                                                    {currentLangCode === 'ar' && !tts.hasArabicVoices && (
+                                                    {tts.isArabicWithoutVoice && (
                                                         <p className="text-[7px] font-mono text-amber-500/80 mt-1.5 leading-relaxed">
-                                                            ⚠️ {LANGUAGE_STATUS.ar.noVoiceNote}
+                                                            {tts.voiceStatusMessage || `⚠️ ${LANGUAGE_STATUS.ar.noVoiceNote}`}
                                                         </p>
                                                     )}
                                                 </div>
@@ -675,7 +690,9 @@ export default function ExhibitionView({ artworks, onAddToCart, onSelectArtPiece
                                                     </div>
                                                     <div className="flex justify-between text-[7px] font-mono text-slate-600 mt-1">
                                                         <span>
-                                                            {tts.voices.length} voice{tts.voices.length !== 1 ? 's' : ''} available
+                                                            {tts.isArabicWithoutVoice && tts.googleTtsConfigured
+                                                                ? '☁️ Google Cloud TTS · Arabic'
+                                                                : `${tts.voices.length} voice${tts.voices.length !== 1 ? 's' : ''} available`}
                                                             {tts.hasArabicVoices ? ' · 🇸🇦 AR' : ''}
                                                             {tts.hasFrenchVoices ? ' · 🇫🇷 FR' : ''}
                                                             {tts.hasGermanVoices ? ' · 🇩🇪 DE' : ''}
