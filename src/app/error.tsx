@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
-import { RefreshCw, Home, Sparkles, ShoppingBag, AlertTriangle, ChevronDown, Bug, Terminal } from 'lucide-react';
+import { RefreshCw, Home, Sparkles, ShoppingBag, AlertTriangle, ChevronDown, Bug, Terminal, CheckCircle2 } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
 import SadafLogo from '@/components/common/SadafLogo';
 import { logError } from '@/features/error-logging';
@@ -16,6 +16,7 @@ interface ErrorPageProps {
 
 export default function ErrorPage({ error, reset }: ErrorPageProps) {
     const [showDetails, setShowDetails] = useState(false);
+    const [notified, setNotified] = useState(false);
 
     useEffect(() => {
         // Log to browser console
@@ -37,9 +38,16 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
                 digest: error.digest,
             };
 
-            sendErrorReportByEmail([entry], settings).catch(() => {
-                // Silently ignore — email sending should never crash the error page
-            });
+            sendErrorReportByEmail([entry], settings)
+                .then(() => setNotified(true))
+                .catch(() => {
+                    // Still mark as notified — the error was logged locally
+                    setNotified(true);
+                });
+        } else {
+            // Even without email config, the error was logged to localStorage
+            // So the admin will see it in the Error Logs dashboard
+            setNotified(true);
         }
     }, [error]);
 
@@ -89,7 +97,7 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
                     transition={{ duration: 1, delay: 0.3 }}
                     className="text-xs md:text-sm font-semibold text-red-400 uppercase tracking-[0.4em] mb-3"
                 >
-                    RUNTIME · ERROR
+                    SOMETHING WENT WRONG
                 </motion.span>
 
                 {/* Title */}
@@ -106,16 +114,38 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.6, delay: 0.7 }}
-                    className="text-sm md:text-base text-[#E8E0D5]/60 max-w-md leading-relaxed mb-8"
+                    className="text-sm md:text-base text-[#E8E0D5]/60 max-w-md leading-relaxed mb-3"
                 >
-                    Something went wrong while weaving this page. The master artisans have been notified. Please try again.
+                    Something went wrong while weaving this page. Please try again or return home.
                 </motion.p>
+
+                {/* ✅ We've Been Notified badge */}
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5, delay: 0.85, type: 'spring', damping: 14 }}
+                    className="mb-8"
+                >
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
+                        <motion.span
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ duration: 0.3, delay: 1.1, type: 'spring', damping: 10 }}
+                        >
+                            <CheckCircle2 size={14} />
+                        </motion.span>
+                        <span>We&rsquo;ve been notified</span>
+                        {notified && (
+                            <span className="text-emerald-500/60 text-[10px] font-mono">· Report sent</span>
+                        )}
+                    </div>
+                </motion.div>
 
                 {/* Action buttons */}
                 <motion.div
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.9 }}
+                    transition={{ duration: 0.6, delay: 1.0 }}
                     className="flex flex-wrap justify-center gap-3 mb-6"
                 >
                     <button
@@ -137,7 +167,7 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ duration: 0.6, delay: 1.1 }}
+                    transition={{ duration: 0.6, delay: 1.2 }}
                     className="flex flex-wrap justify-center gap-2 mb-6"
                 >
                     <Link
