@@ -58,7 +58,7 @@ export default function CustomerSidebar() {
     return (
         <>
             {/* Desktop sidebar */}
-            <aside className="hidden md:flex md:flex-col sticky top-0 self-start w-16 bg-[#0A0F2C]/95 border-r border-[#C9A84C]/10 max-h-[calc(100vh-5rem)] items-center py-4 z-30">
+            <aside className="hidden md:flex md:flex-col sticky top-0 self-start w-16 bg-[#0A0F2C]/95 border-r border-[#C9A84C]/10 max-h-screen items-center py-4 z-30">
                 {sidebarContent}
             </aside>
 
