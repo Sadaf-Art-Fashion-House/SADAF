@@ -4,7 +4,7 @@
  * No site Header — founder views have their own full navigation.
  * Used for /dashboard/founder.
  */
-import AdminSidebar from "@/features/admin/components/AdminSidebar";
+import FounderSidebar from "@/features/admin/components/FounderSidebar";
 
 export default function FounderGroupLayout({
     children,
@@ -13,7 +13,7 @@ export default function FounderGroupLayout({
 }) {
     return (
         <div className="flex min-h-screen">
-            <AdminSidebar />
+            <FounderSidebar />
             <main className="flex-1 transition-all duration-300">
                 {children}
             </main>

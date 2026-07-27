@@ -1,18 +1,3 @@
-// import type { NextConfig } from "next";
-
-// const nextConfig: NextConfig = {
-//     images: {
-//         remotePatterns: [
-//             {
-//                 protocol: "https",
-//                 hostname: "images.unsplash.com",
-//             },
-//         ],
-//     },
-// };
-
-// export default nextConfig;
-
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -24,11 +9,26 @@ const nextConfig: NextConfig = {
             },
         ],
     },
-    experimental: {
-        turbo: {
-            sourceMaps: false,
-        },
-    },
 };
 
 export default nextConfig;
+
+// import type { NextConfig } from "next";
+
+// const nextConfig: NextConfig = {
+//     images: {
+//         remotePatterns: [
+//             {
+//                 protocol: "https",
+//                 hostname: "images.unsplash.com",
+//             },
+//         ],
+//     },
+//     experimental: {
+//         turbo: {
+//             sourceMaps: false,
+//         },
+//     },
+// };
+
+// export default nextConfig;
