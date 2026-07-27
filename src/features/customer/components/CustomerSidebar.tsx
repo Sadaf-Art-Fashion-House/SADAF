@@ -4,20 +4,22 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
-import { LayoutDashboard, LogOut, Compass, Menu, X } from 'lucide-react';
+import { LayoutDashboard, LogOut, Compass, Brush, Menu, X } from 'lucide-react';
+import { ROUTES } from '@/config/routes';
 
 export default function CustomerSidebar() {
     const pathname = usePathname();
     const [mobileOpen, setMobileOpen] = useState(false);
 
     const isActive = (href: string) => {
-        if (href === '/dashboard') return pathname === '/dashboard';
+        if (href === ROUTES.DASHBOARD) return pathname === ROUTES.DASHBOARD;
         return pathname.startsWith(href);
     };
 
     const links = [
-        { href: '/dashboard', label: 'Dashboard Home', icon: LayoutDashboard },
-        { href: '/dashboard/profile', label: 'Full Dashboard', icon: Compass },
+        { href: ROUTES.DASHBOARD, label: 'Dashboard Home', icon: LayoutDashboard },
+        { href: ROUTES.DASHBOARD_PROFILE, label: 'Full Dashboard', icon: Compass },
+        { href: ROUTES.ATELIER, label: 'Atelier', icon: Brush },
     ];
 
     const sidebarContent = (
@@ -60,7 +62,7 @@ export default function CustomerSidebar() {
             </nav>
 
             <Link
-                href="/auth"
+                href={ROUTES.AUTH}
                 className="flex items-center gap-3 py-2 w-full text-red-400/50 hover:text-red-400 hover:bg-red-950/20 transition-all duration-200"
                 title="Sign In"
             >
@@ -141,7 +143,7 @@ export default function CustomerSidebar() {
                                     })}
                                 </nav>
                                 <Link
-                                    href="/auth"
+                                    href={ROUTES.AUTH}
                                     className="flex items-center gap-3 w-full mt-4 px-3 py-2 rounded-lg text-red-400/50 hover:text-red-400 hover:bg-red-950/20 transition-all"
                                 >
                                     <LogOut size={16} className="shrink-0 rotate-180" />

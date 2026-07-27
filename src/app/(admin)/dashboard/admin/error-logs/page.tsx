@@ -1,0 +1,550 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { motion, AnimatePresence } from 'motion/react';
+import {
+    AlertTriangle,
+    CheckCheck,
+    Trash2,
+    RefreshCw,
+    ChevronDown,
+    ArrowLeft,
+    Clock,
+    Globe,
+    FileWarning,
+    Server,
+    Wifi,
+    WifiOff,
+    Download,
+    Mail,
+    Settings,
+    Send,
+} from 'lucide-react';
+import { ROUTES } from '@/config/routes';
+import {
+    getErrorLogs,
+    markErrorAsRead,
+    markAllErrorsAsRead,
+    deleteErrorLog,
+    clearErrorLogs,
+} from '@/features/error-logging';
+import { getEmailSettings, sendErrorReportByEmail } from '@/features/email-settings';
+import type { ErrorLogEntry } from '@/features/error-logging';
+
+/** Lightweight health-check endpoint that only the server indicator uses. */
+async function checkServerHealth(): Promise<boolean> {
+    try {
+        const res = await fetch('/api/error-logs', {
+            method: 'GET',
+            signal: AbortSignal.timeout(3000),
+        });
+        return res.ok;
+    } catch {
+        return false;
+    }
+}
+
+/** Trigger a browser download of the given data as a JSON file. */
+function downloadJson(data: ErrorLogEntry[], filename: string): void {
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(url);
+}
+
+export default function AdminErrorLogsPage() {
+    const pathname = usePathname();
+    const [logs, setLogs] = useState<ErrorLogEntry[]>([]);
+    const [expandedId, setExpandedId] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [serverConnected, setServerConnected] = useState(false);
+
+    // Email sending state
+    const [emailSending, setEmailSending] = useState(false);
+    const [emailResult, setEmailResult] = useState<{ ok: boolean; error?: string } | null>(null);
+
+    // Dynamic back link: founder → founder dashboard, admin → admin dashboard
+    const backHref = pathname.startsWith('/dashboard/founder')
+        ? ROUTES.DASHBOARD_FOUNDER
+        : ROUTES.DASHBOARD_ADMIN;
+
+    const refreshLogs = useCallback(async (background = false) => {
+        if (background) {
+            setIsRefreshing(true);
+        } else {
+            setIsLoading(true);
+        }
+
+        try {
+            const health = await checkServerHealth();
+            setServerConnected(health);
+
+            const fetchedLogs = await getErrorLogs();
+            setLogs(fetchedLogs);
+        } catch {
+            setServerConnected(false);
+        } finally {
+            setIsLoading(false);
+            setIsRefreshing(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        refreshLogs();
+    }, [refreshLogs]);
+
+    const unreadCount = logs.filter((l) => !l.read).length;
+
+    const handleMarkRead = async (id: string) => {
+        await markErrorAsRead(id);
+        refreshLogs(true);
+    };
+
+    const handleMarkAllRead = async () => {
+        await markAllErrorsAsRead();
+        refreshLogs(true);
+    };
+
+    const handleDelete = async (id: string) => {
+        await deleteErrorLog(id);
+        refreshLogs(true);
+    };
+
+    const handleClearAll = async () => {
+        if (logs.length === 0) return;
+        await clearErrorLogs();
+        refreshLogs(true);
+    };
+
+    const handleExportJson = () => {
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+        downloadJson(logs, `sadaf-error-logs-${timestamp}.json`);
+    };
+
+    const handleSendEmail = async () => {
+        setEmailSending(true);
+        setEmailResult(null);
+
+        const settings = getEmailSettings();
+        if (settings.recipients.length === 0) {
+            setEmailResult({ ok: false, error: 'No recipients configured. Add them in Email Settings.' });
+            setEmailSending(false);
+            return;
+        }
+
+        const result = await sendErrorReportByEmail(logs, settings);
+        setEmailResult(result);
+        setEmailSending(false);
+    };
+
+    const formatTimestamp = (iso: string) => {
+        const date = new Date(iso);
+        return date.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+        });
+    };
+
+    const timeAgo = (iso: string) => {
+        const diff = Date.now() - new Date(iso).getTime();
+        const minutes = Math.floor(diff / 60000);
+        if (minutes < 1) return 'Just now';
+        if (minutes < 60) return `${minutes}m ago`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours}h ago`;
+        const days = Math.floor(hours / 24);
+        return `${days}d ago`;
+    };
+
+    return (
+        <div className="min-h-screen bg-[#0A0F2C] p-6 md:p-10">
+            <div className="max-w-6xl mx-auto">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-8">
+                    <div>
+                        <div className="flex items-center gap-3 mb-1">
+                            <Link
+                                href={backHref}
+                                className="text-[10px] text-[#4FC3F7]/50 hover:text-[#4FC3F7] transition-colors font-mono uppercase tracking-wider flex items-center gap-1 cursor-pointer"
+                            >
+                                <ArrowLeft size={11} />
+                                Back to Dashboard
+                            </Link>
+
+                            {!isLoading && (
+                                <span
+                                    className={`flex items-center gap-1 text-[8px] font-mono tracking-wider uppercase ${
+                                        serverConnected
+                                            ? 'text-[#4FC3F7]/40'
+                                            : 'text-amber-500/40'
+                                    }`}
+                                    title={
+                                        serverConnected
+                                            ? 'Server logging active'
+                                            : 'Server unreachable — using local storage'
+                                    }
+                                >
+                                    {serverConnected ? (
+                                        <>
+                                            <Server size={9} />
+                                            <Wifi size={9} />
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Server size={9} />
+                                            <WifiOff size={9} />
+                                        </>
+                                    )}
+                                </span>
+                            )}
+                        </div>
+                        <h1 className="text-2xl md:text-3xl font-serif text-white tracking-wide flex items-center gap-3">
+                            <FileWarning size={22} className="text-red-400" />
+                            Error Logs
+                        </h1>
+                        <p className="text-xs text-[#E8E0D5]/40 font-mono mt-1">
+                            {logs.length} error{logs.length !== 1 ? 's' : ''} recorded
+                            {unreadCount > 0 && (
+                                <span className="text-red-400 ml-2">
+                                    &middot; {unreadCount} unread
+                                </span>
+                            )}
+                        </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        {/* Send via Email */}
+                        {logs.length > 0 && (
+                            <button
+                                onClick={handleSendEmail}
+                                disabled={emailSending}
+                                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border transition-all duration-200 text-[10px] font-mono uppercase tracking-wider cursor-pointer disabled:opacity-30 ${
+                                    emailResult?.ok
+                                        ? 'border-green-500/30 bg-green-500/10 text-green-400'
+                                        : 'border-[#4FC3F7]/15 hover:bg-[#4FC3F7]/10 text-[#4FC3F7]/60 hover:text-[#4FC3F7]'
+                                }`}
+                                title="Send error report via email"
+                            >
+                                {emailSending ? (
+                                    <>
+                                        <div className="w-3 h-3 border-2 border-[#4FC3F7]/30 border-t-[#4FC3F7] rounded-full animate-spin" />
+                                        Sending...
+                                    </>
+                                ) : emailResult?.ok ? (
+                                    <>
+                                        <Send size={12} className="text-green-400" />
+                                        Sent
+                                    </>
+                                ) : (
+                                    <>
+                                        <Mail size={12} />
+                                        Email Report
+                                    </>
+                                )}
+                            </button>
+                        )}
+
+                        {/* Email Settings link */}
+                        <Link
+                            href={ROUTES.DASHBOARD_EMAIL_SETTINGS}
+                            className="p-2 rounded-lg border border-white/5 hover:bg-white/5 text-[#E8E0D5]/30 hover:text-[#4FC3F7] transition-all duration-200"
+                            title="Email Notification Settings"
+                        >
+                            <Settings size={14} />
+                        </Link>
+
+                        {/* Export JSON */}
+                        {logs.length > 0 && (
+                            <button
+                                onClick={handleExportJson}
+                                className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#4FC3F7]/15 hover:bg-[#4FC3F7]/10 text-[#4FC3F7]/60 hover:text-[#4FC3F7] transition-all duration-200 text-[10px] font-mono uppercase tracking-wider cursor-pointer"
+                                title="Export all error logs as JSON"
+                            >
+                                <Download size={12} />
+                                Export JSON
+                            </button>
+                        )}
+
+                        <button
+                            onClick={() => refreshLogs(true)}
+                            disabled={isRefreshing || isLoading}
+                            className="p-2 rounded-lg border border-white/5 hover:bg-white/5 text-[#E8E0D5]/40 hover:text-[#4FC3F7] transition-all duration-200 cursor-pointer disabled:opacity-30"
+                            title="Refresh"
+                        >
+                            <RefreshCw
+                                size={14}
+                                className={isRefreshing ? 'animate-spin' : ''}
+                            />
+                        </button>
+
+                        {unreadCount > 0 && (
+                            <button
+                                onClick={handleMarkAllRead}
+                                disabled={isRefreshing}
+                                className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#4FC3F7]/20 hover:bg-[#4FC3F7]/10 text-[#4FC3F7]/70 hover:text-[#4FC3F7] transition-all duration-200 text-[10px] font-mono uppercase tracking-wider cursor-pointer disabled:opacity-30"
+                            >
+                                <CheckCheck size={12} />
+                                Mark All Read
+                            </button>
+                        )}
+
+                        {logs.length > 0 && (
+                            <button
+                                onClick={handleClearAll}
+                                disabled={isRefreshing}
+                                className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-red-500/10 hover:bg-red-950/20 text-red-400/50 hover:text-red-400 transition-all duration-200 text-[10px] font-mono uppercase tracking-wider cursor-pointer disabled:opacity-30"
+                            >
+                                <Trash2 size={12} />
+                                Clear All
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {/* Email result feedback */}
+                <AnimatePresence>
+                    {emailResult && !emailResult.ok && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="mb-4 bg-amber-500/5 border border-amber-500/20 rounded-xl p-3 flex items-center gap-2"
+                        >
+                            <div className="w-6 h-6 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0">
+                                <Mail size={12} className="text-amber-400" />
+                            </div>
+                            <p className="text-[10px] text-amber-400/70 font-mono">
+                                {emailResult.error || 'Failed to send email.'}
+                                {' '}
+                                <Link
+                                    href={ROUTES.DASHBOARD_EMAIL_SETTINGS}
+                                    className="text-[#4FC3F7]/70 hover:text-[#4FC3F7] underline underline-offset-2"
+                                >
+                                    Configure Email Settings →
+                                </Link>
+                            </p>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Loading state */}
+                {isLoading && (
+                    <div className="flex items-center justify-center py-24">
+                        <div className="flex flex-col items-center gap-3">
+                            <div className="w-8 h-8 border-2 border-[#4FC3F7]/30 border-t-[#4FC3F7] rounded-full animate-spin" />
+                            <span className="text-[10px] text-[#E8E0D5]/30 font-mono tracking-wider uppercase">
+                                Loading error logs...
+                            </span>
+                        </div>
+                    </div>
+                )}
+
+                {/* Empty state */}
+                {!isLoading && logs.length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-24 text-center">
+                        <div className="w-16 h-16 rounded-full bg-[#4FC3F7]/5 border border-[#4FC3F7]/10 flex items-center justify-center mb-4">
+                            <CheckCheck size={28} className="text-[#4FC3F7]/40" />
+                        </div>
+                        <h2 className="text-lg font-serif text-white mb-2">No Errors Recorded</h2>
+                        <p className="text-xs text-[#E8E0D5]/40 font-mono max-w-md">
+                            Your application is running smoothly. When an error occurs, it will appear here automatically.
+                        </p>
+                    </div>
+                )}
+
+                {/* Logs list */}
+                {!isLoading && logs.length > 0 && (
+                    <div className="space-y-3">
+                        <AnimatePresence>
+                            {logs.map((log, index) => (
+                                <motion.div
+                                    key={log.id}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.3, delay: index * 0.03 }}
+                                    className={`rounded-xl border transition-all duration-200 overflow-hidden ${
+                                        !log.read
+                                            ? 'bg-red-950/10 border-red-500/20'
+                                            : 'bg-[#05081A]/60 border-white/5 hover:border-white/10'
+                                    }`}
+                                >
+                                    {/* Log entry header */}
+                                    <div className="flex items-start gap-3 p-4">
+                                        <div className="pt-0.5">
+                                            {!log.read ? (
+                                                <div className="w-2 h-2 rounded-full bg-red-400 animate-pulse mt-1" />
+                                            ) : (
+                                                <div className="w-2 h-2 rounded-full bg-transparent mt-1" />
+                                            )}
+                                        </div>
+
+                                        <div
+                                            className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                                                !log.read
+                                                    ? 'bg-red-500/15 border border-red-500/20'
+                                                    : 'bg-white/5 border border-white/5'
+                                            }`}
+                                        >
+                                            <AlertTriangle
+                                                size={14}
+                                                className={!log.read ? 'text-red-400' : 'text-[#E8E0D5]/30'}
+                                            />
+                                        </div>
+
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div className="min-w-0">
+                                                    <p
+                                                        className={`text-xs font-mono truncate max-w-xl ${
+                                                            !log.read
+                                                                ? 'text-red-300 font-semibold'
+                                                                : 'text-[#E8E0D5]/60'
+                                                        }`}
+                                                    >
+                                                        {log.message}
+                                                    </p>
+                                                    <div className="flex items-center gap-3 mt-1.5">
+                                                        <span className="flex items-center gap-1 text-[9px] text-[#E8E0D5]/25 font-mono">
+                                                            <Clock size={9} />
+                                                            {timeAgo(log.timestamp)}
+                                                        </span>
+                                                        <span className="text-[9px] text-[#E8E0D5]/20 font-mono">
+                                                            {formatTimestamp(log.timestamp)}
+                                                        </span>
+                                                        {log.url && (
+                                                            <span className="flex items-center gap-1 text-[9px] text-[#E8E0D5]/20 font-mono truncate max-w-[200px]">
+                                                                <Globe size={9} />
+                                                                {log.url}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-1 shrink-0">
+                                                    {!log.read && (
+                                                        <button
+                                                            onClick={() => handleMarkRead(log.id)}
+                                                            disabled={isRefreshing}
+                                                            className="p-1.5 rounded-md hover:bg-[#4FC3F7]/10 text-[#E8E0D5]/20 hover:text-[#4FC3F7] transition-all duration-200 cursor-pointer disabled:opacity-30"
+                                                            title="Mark as read"
+                                                        >
+                                                            <CheckCheck size={12} />
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        onClick={() =>
+                                                            setExpandedId(expandedId === log.id ? null : log.id)
+                                                        }
+                                                        className={`p-1.5 rounded-md hover:bg-white/5 text-[#E8E0D5]/20 hover:text-[#E8E0D5]/60 transition-all duration-200 cursor-pointer ${
+                                                            expandedId === log.id ? 'rotate-180' : ''
+                                                        }`}
+                                                        title="Toggle details"
+                                                    >
+                                                        <ChevronDown size={12} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(log.id)}
+                                                        disabled={isRefreshing}
+                                                        className="p-1.5 rounded-md hover:bg-red-950/20 text-[#E8E0D5]/20 hover:text-red-400 transition-all duration-200 cursor-pointer disabled:opacity-30"
+                                                        title="Delete entry"
+                                                    >
+                                                        <Trash2 size={12} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Expanded details */}
+                                    <AnimatePresence>
+                                        {expandedId === log.id && (
+                                            <motion.div
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: 'auto', opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                transition={{ duration: 0.2 }}
+                                                className="overflow-hidden"
+                                            >
+                                                <div className="px-4 pb-4 pt-0 border-t border-white/5 mx-4">
+                                                    <div className="mt-3 space-y-3">
+                                                        <div>
+                                                            <span className="text-[9px] text-[#E8E0D5]/30 font-mono uppercase tracking-wider block mb-1">
+                                                                Full Message
+                                                            </span>
+                                                            <div className="bg-black/50 border border-white/5 rounded-lg p-3">
+                                                                <code className="text-[11px] text-red-300/80 font-mono break-all leading-relaxed">
+                                                                    {log.message}
+                                                                </code>
+                                                            </div>
+                                                        </div>
+
+                                                        {log.digest && (
+                                                            <div>
+                                                                <span className="text-[9px] text-[#E8E0D5]/30 font-mono uppercase tracking-wider block mb-1">
+                                                                    Digest ID
+                                                                </span>
+                                                                <code className="text-[10px] text-[#4FC3F7]/50 font-mono">
+                                                                    {log.digest}
+                                                                </code>
+                                                            </div>
+                                                        )}
+
+                                                        <div>
+                                                            <span className="text-[9px] text-[#E8E0D5]/30 font-mono uppercase tracking-wider block mb-1">
+                                                                URL at time of error
+                                                            </span>
+                                                            <code className="text-[10px] text-[#E8E0D5]/40 font-mono break-all">
+                                                                {log.url}
+                                                            </code>
+                                                        </div>
+
+                                                        {log.stack && (
+                                                            <div>
+                                                                <span className="text-[9px] text-[#E8E0D5]/30 font-mono uppercase tracking-wider block mb-1">
+                                                                    Stack Trace
+                                                                </span>
+                                                                <div className="bg-black/50 border border-white/5 rounded-lg p-3 max-h-64 overflow-y-auto">
+                                                                    <pre className="text-[9px] text-[#E8E0D5]/30 font-mono leading-relaxed whitespace-pre-wrap">
+                                                                        {log.stack}
+                                                                    </pre>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </motion.div>
+                            ))}
+                        </AnimatePresence>
+                    </div>
+                )}
+
+                {/* Footer info */}
+                {logs.length > 0 && (
+                    <div className="mt-6 text-center">
+                        <p className="text-[8px] text-[#E8E0D5]/15 font-mono tracking-wider">
+                            Errors are logged server-side (persist across restarts in production with a database).
+                            {!serverConnected && ' Currently falling back to local storage.'}
+                        </p>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}

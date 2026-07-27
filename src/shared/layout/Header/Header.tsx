@@ -1,32 +1,37 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Heart, ShoppingCart, User } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { Heart, ShoppingCart, User, ChevronDown } from "lucide-react";
 import SadafLogo from "@/components/common/SadafLogo";
 import { useCartStore } from "@/features/cart/store/useCartStore";
 import { useWishlistStore } from "@/features/wishlist/store/useWishlistStore";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { ROLE_BADGES } from "@/features/auth/types";
-
-/**
- * Global site navigation, shown on every page via the root layout.
- */
-const NAV_LINKS = [
-    { href: "/", label: "Home" },
-    { href: "/artworks", label: "Arts" },
-    { href: "/fashion", label: "Fashion" },
-    { href: "/store", label: "Store" },
-    { href: "/gallery", label: "Gallery" },
-    { href: "/ai", label: "AI Studio" },
-    { href: "/exhibition", label: "Exhibition" },
-] as const;
+import { NAV_LINKS, DROPDOWN_LINKS } from "@/config/routes";
 
 export default function Header() {
     const pathname = usePathname();
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
     const cartItemCount = useCartStore((state) => state.getTotalItems());
     const wishlistCount = useWishlistStore((state) => state.items.length);
     const { user } = useAuth();
+
+    // Close dropdown on click outside
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setDropdownOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const isDropdownActive = DROPDOWN_LINKS.some((link) => pathname.startsWith(link.href));
 
     return (
         <header className="sticky top-0 z-40 w-full border-b border-[#C9A84C]/10 bg-[#0A0F2C]/90 backdrop-blur-xl">
@@ -54,6 +59,62 @@ export default function Header() {
                             </Link>
                         );
                     })}
+
+                    {/* Dropdown: More */}
+                    <div ref={dropdownRef} className="relative">
+                        <button
+                            onClick={() => setDropdownOpen(!dropdownOpen)}
+                            className={`flex items-center gap-1 text-xs uppercase tracking-[0.2em] font-medium transition-all duration-300 relative py-1 cursor-pointer ${
+                                isDropdownActive
+                                    ? "text-[#C9A84C] font-semibold"
+                                    : "text-[#E8E0D5]/70 hover:text-white"
+                            }`}
+                        >
+                            More
+                            <ChevronDown
+                                size={10}
+                                className={`transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
+                            />
+                            {isDropdownActive && (
+                                <span className="absolute bottom-0 inset-x-0 h-[1.5px] bg-[#C9A84C]" />
+                            )}
+                        </button>
+
+                        <AnimatePresence>
+                            {dropdownOpen && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                                    transition={{ duration: 0.15, ease: "easeOut" }}
+                                    className="absolute top-full right-0 mt-2 w-56 bg-[#0A0F2C]/98 border border-[#C9A84C]/15 rounded-xl shadow-2xl shadow-black/60 backdrop-blur-xl overflow-hidden z-50"
+                                >
+                                    {DROPDOWN_LINKS.map((item, idx) => {
+                                        const isItemActive = pathname.startsWith(item.href);
+                                        return (
+                                            <Link
+                                                key={item.href}
+                                                href={item.href}
+                                                onClick={() => setDropdownOpen(false)}
+                                                className={`flex flex-col px-5 py-3.5 transition-all duration-200 group ${
+                                                    isItemActive
+                                                        ? "bg-[#C9A84C]/10 text-[#C9A84C]"
+                                                        : "text-[#E8E0D5]/70 hover:bg-white/5 hover:text-white"
+                                                } ${idx < DROPDOWN_LINKS.length - 1 ? "border-b border-white/5" : ""}`}
+                                            >
+                                                <span className="text-xs uppercase tracking-[0.15em] font-semibold">
+                                                    {item.label}
+                                                </span>
+                                                <span className="text-[10px] text-[#E8E0D5]/40 group-hover:text-[#E8E0D5]/60 mt-0.5">
+                                                    {item.desc}
+                                                </span>
+                                            </Link>
+                                        );
+                                    })}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
 
                     {/* Auth link */}
                     {user ? (

@@ -1,26 +1,60 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
-import { LayoutDashboard, Cpu, Store, Shirt, LogOut, Shield, Compass, Menu, X } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import {
+    LayoutDashboard,
+    Cpu,
+    Store,
+    Shirt,
+    LogOut,
+    Shield,
+    Compass,
+    Brush,
+    Menu,
+    X,
+    FileWarning,
+    Mail,
+} from 'lucide-react';
+import { ROUTES } from '@/config/routes';
+import { getUnreadErrorCount } from '@/features/error-logging';
 
 export default function AdminSidebar() {
     const pathname = usePathname();
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [unreadErrors, setUnreadErrors] = useState(0);
+
+    // Refresh unread count every 15 seconds
+    useEffect(() => {
+        getUnreadErrorCount().then(setUnreadErrors);
+        const interval = setInterval(() => {
+            getUnreadErrorCount().then(setUnreadErrors);
+        }, 15_000);
+        return () => clearInterval(interval);
+    }, []);
 
     const isActive = (href: string) => {
-        if (href === '/dashboard') return pathname === '/dashboard';
+        if (href === ROUTES.DASHBOARD) return pathname === ROUTES.DASHBOARD;
         return pathname.startsWith(href);
     };
 
-    const links = [
-        { href: '/dashboard', label: 'Dashboard Home', icon: LayoutDashboard },
-        { href: '/dashboard/admin', label: 'Full Dashboard', icon: Compass },
-        { href: '/store', label: 'Store', icon: Store },
-        { href: '/ai', label: 'AI Studio', icon: Cpu },
-        { href: '/artworks', label: 'Artworks', icon: Shirt },
+    const links: Array<{
+        href: string;
+        label: string;
+        icon: LucideIcon;
+        badge?: number;
+    }> = [
+        { href: ROUTES.DASHBOARD, label: 'Dashboard Home', icon: LayoutDashboard },
+        { href: ROUTES.DASHBOARD_ADMIN, label: 'Full Dashboard', icon: Compass },
+        { href: ROUTES.DASHBOARD_ERROR_LOGS, label: 'Error Logs', icon: FileWarning, badge: unreadErrors },
+        { href: ROUTES.DASHBOARD_EMAIL_SETTINGS, label: 'Email Settings', icon: Mail },
+        { href: ROUTES.STORE, label: 'Store', icon: Store },
+        { href: ROUTES.AI_STUDIO, label: 'AI Studio', icon: Cpu },
+        { href: ROUTES.ATELIER, label: 'Atelier', icon: Brush },
+        { href: ROUTES.ARTWORKS, label: 'Artworks', icon: Shirt },
     ];
 
     const sidebarContent = (
@@ -39,23 +73,32 @@ export default function AdminSidebar() {
             <nav className="flex flex-col gap-1 w-full flex-1">
                 {links.map((link) => {
                     const active = isActive(link.href);
+                    const hasBadge = link.badge !== undefined && link.badge > 0;
                     return (
                         <Link
                             key={link.href}
                             href={link.href}
                             onClick={() => setMobileOpen(false)}
-                            className={`flex items-center gap-3 py-2 w-full transition-all duration-200 ${
+                            className={`flex items-center gap-3 py-2 w-full transition-all duration-200 relative ${
                                 active
                                     ? 'bg-[#4FC3F7]/10 text-[#4FC3F7]'
                                     : 'text-[#E8E0D5]/40 hover:text-white hover:bg-white/5'
                             }`}
                             title={link.label}
                         >
-                            <span className="w-16 flex justify-center shrink-0">
+                            <span className="w-16 flex justify-center shrink-0 relative">
                                 <link.icon size={16} />
+                                {hasBadge && (
+                                    <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-400 animate-pulse" />
+                                )}
                             </span>
-                            <span className="text-[10px] font-mono uppercase tracking-wider truncate opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <span className="text-[10px] font-mono uppercase tracking-wider truncate opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-2">
                                 {link.label}
+                                {hasBadge && (
+                                    <span className="inline-flex items-center justify-center min-w-[14px] h-[14px] px-1 rounded-full bg-red-500/20 text-red-400 text-[7px] font-bold font-mono">
+                                        {link.badge! > 9 ? '9+' : link.badge}
+                                    </span>
+                                )}
                             </span>
                         </Link>
                     );
@@ -63,7 +106,7 @@ export default function AdminSidebar() {
             </nav>
 
             <Link
-                href="/auth"
+                href={ROUTES.AUTH}
                 className="flex items-center gap-3 py-2 w-full text-red-400/50 hover:text-red-400 hover:bg-red-950/20 transition-all duration-200"
                 title="Sign In"
             >
@@ -76,6 +119,38 @@ export default function AdminSidebar() {
             </Link>
         </>
     );
+
+    const mobileLink = (link: (typeof links)[number]) => {
+        const active = isActive(link.href);
+        const hasBadge = link.badge !== undefined && link.badge > 0;
+        return (
+            <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileOpen(false)}
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${
+                    active
+                        ? 'bg-[#4FC3F7]/10 text-[#4FC3F7]'
+                        : 'text-[#E8E0D5]/40 hover:text-white hover:bg-white/5'
+                }`}
+            >
+                <div className="relative">
+                    <link.icon size={16} className="shrink-0" />
+                    {hasBadge && (
+                        <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-400" />
+                    )}
+                </div>
+                <span className="text-[10px] font-mono uppercase tracking-wider truncate flex items-center gap-2">
+                    {link.label}
+                    {hasBadge && (
+                        <span className="inline-flex items-center justify-center min-w-[14px] h-[14px] px-1 rounded-full bg-red-500/20 text-red-400 text-[7px] font-bold font-mono">
+                            {link.badge && link.badge > 9 ? '9+' : link.badge}
+                        </span>
+                    )}
+                </span>
+            </Link>
+        );
+    };
 
     return (
         <>
@@ -124,27 +199,10 @@ export default function AdminSidebar() {
                                     <span className="text-[9px] font-mono font-bold text-[#4FC3F7] uppercase tracking-widest">Admin</span>
                                 </div>
                                 <nav className="flex flex-col gap-1 w-full">
-                                    {links.map((link) => {
-                                        const active = isActive(link.href);
-                                        return (
-                                            <Link
-                                                key={link.href}
-                                                href={link.href}
-                                                onClick={() => setMobileOpen(false)}
-                                                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${
-                                                    active
-                                                        ? 'bg-[#4FC3F7]/10 text-[#4FC3F7]'
-                                                        : 'text-[#E8E0D5]/40 hover:text-white hover:bg-white/5'
-                                                }`}
-                                            >
-                                                <link.icon size={16} className="shrink-0" />
-                                                <span className="text-[10px] font-mono uppercase tracking-wider truncate">{link.label}</span>
-                                            </Link>
-                                        );
-                                    })}
+                                    {links.map(mobileLink)}
                                 </nav>
                                 <Link
-                                    href="/auth"
+                                    href={ROUTES.AUTH}
                                     className="flex items-center gap-3 w-full mt-4 px-3 py-2 rounded-lg text-red-400/50 hover:text-red-400 hover:bg-red-950/20 transition-all"
                                 >
                                     <LogOut size={16} className="shrink-0 rotate-180" />
