@@ -19,6 +19,7 @@ export const ROUTES = {
     CART: '/cart',
     CHECKOUT: '/checkout',
     WISHLIST: '/wishlist',
+    ORDERS: '/orders',
 
     // Auth
     AUTH: '/auth',
@@ -27,6 +28,7 @@ export const ROUTES = {
     // Dashboard
     DASHBOARD: '/dashboard',
     DASHBOARD_PROFILE: '/dashboard/profile',
+    DASHBOARD_ORDERS: '/dashboard/orders',
     DASHBOARD_ADMIN: '/dashboard/admin',
     DASHBOARD_FOUNDER: '/dashboard/founder',
     DASHBOARD_ERROR_LOGS: '/dashboard/admin/error-logs',
