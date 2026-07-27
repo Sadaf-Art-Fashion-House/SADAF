@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import UserDashboardPageClient from './UserDashboardPageClient';
+import ProfilePageClient from '@/features/profile/components/ProfilePageClient';
 
 export const metadata: Metadata = {
     title: 'My Profile | SADAF Atelier',
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function ProfilePage() {
-    return <UserDashboardPageClient />;
+    return <ProfilePageClient />;
 }
