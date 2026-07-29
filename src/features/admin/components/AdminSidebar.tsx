@@ -18,6 +18,7 @@ import {
     X,
     FileWarning,
     Mail,
+    TrendingUp,
 } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
 import { getUnreadErrorCount } from '@/features/error-logging';
@@ -49,6 +50,7 @@ export default function AdminSidebar() {
     }> = [
         { href: ROUTES.DASHBOARD, label: 'Dashboard Home', icon: LayoutDashboard },
         { href: ROUTES.DASHBOARD_ADMIN, label: 'Full Dashboard', icon: Compass },
+        { href: ROUTES.DASHBOARD_ADMIN_ANALYTICS, label: 'Analytics', icon: TrendingUp },
         { href: ROUTES.DASHBOARD_ERROR_LOGS, label: 'Error Logs', icon: FileWarning, badge: unreadErrors },
         { href: ROUTES.DASHBOARD_EMAIL_SETTINGS, label: 'Email Settings', icon: Mail },
         { href: ROUTES.STORE, label: 'Store', icon: Store },

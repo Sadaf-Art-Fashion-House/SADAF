@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import type { LucideIcon } from 'lucide-react';
-import { LayoutDashboard, Cpu, Store, Shirt, LogOut, Crown, Compass, Brush, Menu, X, FileWarning, Mail } from 'lucide-react';
+import { LayoutDashboard, Cpu, Store, Shirt, LogOut, Crown, Compass, Brush, Menu, X, FileWarning, Mail, TrendingUp } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
 import { getUnreadErrorCount } from '@/features/error-logging';
 
@@ -36,6 +36,7 @@ export default function FounderSidebar() {
     }> = [
         { href: ROUTES.DASHBOARD, label: 'Dashboard Home', icon: LayoutDashboard },
         { href: ROUTES.DASHBOARD_FOUNDER, label: 'Full Dashboard', icon: Compass },
+        { href: ROUTES.DASHBOARD_FOUNDER_ANALYTICS, label: 'Analytics', icon: TrendingUp },
         { href: ROUTES.DASHBOARD_FOUNDER_ERROR_LOGS, label: 'Error Logs', icon: FileWarning, badge: unreadErrors },
         { href: ROUTES.DASHBOARD_FOUNDER_EMAIL_SETTINGS, label: 'Email Settings', icon: Mail },
         { href: ROUTES.STORE, label: 'Store', icon: Store },

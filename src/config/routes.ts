@@ -38,6 +38,10 @@ export const ROUTES = {
     DASHBOARD_EMAIL_SETTINGS: '/dashboard/admin/email-settings',
     DASHBOARD_FOUNDER_EMAIL_SETTINGS: '/dashboard/founder/email-settings',
     DASHBOARD_NOTIFICATIONS: '/dashboard/notifications',
+    DASHBOARD_COMMUNITY: '/dashboard/community',
+    DASHBOARD_ADMIN_ANALYTICS: '/dashboard/admin/analytics',
+    DASHBOARD_FOUNDER_ANALYTICS: '/dashboard/founder/analytics',
+    DASHBOARD_SETTINGS: '/dashboard/settings',
 } as const;
 
 // ─── Navigation (public header) ─────────────────────────────────────────────
