@@ -14,6 +14,8 @@ export const ROUTES = {
     STORE: '/store',
     GALLERY: '/gallery',
     AI_STUDIO: '/ai',
+    SEARCH: '/search',
+    REVIEWS: '/reviews',
     EXHIBITION: '/exhibition',
     ATELIER: '/atelier',
     CART: '/cart',
@@ -35,6 +37,7 @@ export const ROUTES = {
     DASHBOARD_FOUNDER_ERROR_LOGS: '/dashboard/founder/error-logs',
     DASHBOARD_EMAIL_SETTINGS: '/dashboard/admin/email-settings',
     DASHBOARD_FOUNDER_EMAIL_SETTINGS: '/dashboard/founder/email-settings',
+    DASHBOARD_NOTIFICATIONS: '/dashboard/notifications',
 } as const;
 
 // ─── Navigation (public header) ─────────────────────────────────────────────
@@ -57,4 +60,5 @@ export const NAV_LINKS = [
 export const DROPDOWN_LINKS = [
     { href: ROUTES.EXHIBITION, label: 'Exhibition', desc: 'Virtual 3D art gallery' },
     { href: ROUTES.ATELIER, label: 'Atelier', desc: 'Design workshop & crafts' },
+    { href: ROUTES.REVIEWS, label: 'Reviews', desc: 'Customer reviews & ratings' },
 ] as const;

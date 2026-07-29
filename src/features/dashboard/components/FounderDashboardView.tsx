@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
     Crown,
@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import type { UserProfile } from '@/shared/types';
+import { useWSFounderDashboardData } from '@/features/dashboard/hooks/useDashboardData';
 
 interface TeamMember {
     id: string;
@@ -30,6 +31,10 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
     const [founderTab, setFounderTab] = useState<'analytics' | 'revenue' | 'team'>('analytics');
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
+    // ── WebSocket real-time data ──
+    const { data: apiData, wsState } = useWSFounderDashboardData(true);
+    const isLive = wsState.status === 'connected';
+
     // Team state
     const [team, setTeam] = useState<TeamMember[]>([
         { id: 'tm-1', name: 'Yasmine Sadaf', role: 'Founder & Art Director', specialty: 'Haute Imperial Couture', status: 'In-Atelier', location: 'Zamalik Quarters, Cairo' },
@@ -42,6 +47,12 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
     // Invite state
     const [inviteName, setInviteName] = useState('');
     const [inviteRole, setInviteRole] = useState('Apprentice Weaver');
+    const [transactions, setTransactions] = useState([
+        { ref: 'TXN-9021-X', client: 'Layla Al-Khouri', value: '$1,250', type: 'Haute Abaya Purchase', details: 'Cairo central credit card auth' },
+        { ref: 'TXN-4512-B', client: 'Layla Al-Khouri', value: '$3,400', type: 'Golden Diwani Fine Artwork', details: 'Escrow Alexandria verified' },
+        { ref: 'TXN-8812-C', client: 'Karim Mansour', value: '$580', type: 'Calligraphy Streetcoach Jacket', details: 'Stripe transaction verified' },
+        { ref: 'TXN-1104-Y', client: 'Dr. Farida Hammad', value: '$6,800', type: 'Nile Oil Reflections Fine Art', details: 'Collector private wire bank' },
+    ]);
 
     const handleInviteTeam = useCallback((e: React.FormEvent) => {
         e.preventDefault();
@@ -62,19 +73,24 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
         setTimeout(() => setSuccessMsg(null), 3500);
     }, [inviteName, inviteRole]);
 
-    const transactions = [
-        { ref: 'TXN-9021-X', client: 'Layla Al-Khouri', value: '$1,250', type: 'Haute Abaya Purchase', details: 'Cairo central credit card auth' },
-        { ref: 'TXN-4512-B', client: 'Layla Al-Khouri', value: '$3,400', type: 'Golden Diwani Fine Artwork', details: 'Escrow Alexandria verified' },
-        { ref: 'TXN-8812-C', client: 'Karim Mansour', value: '$580', type: 'Calligraphy Streetcoach Jacket', details: 'Stripe transaction verified' },
-        { ref: 'TXN-1104-Y', client: 'Dr. Farida Hammad', value: '$6,800', type: 'Nile Oil Reflections Fine Art', details: 'Collector private wire bank' },
-    ];
-
-    const kpis = [
+    // KPIs from WebSocket (with hardcoded fallback)
+    const kpis = apiData?.kpis?.length ? apiData.kpis : [
         { label: 'GROSS COUTURE REVENUE', val: '$124,400', pct: '+14% MoM', color: 'text-green-400' },
         { label: 'FINE ART SALES', val: '$24,100', pct: '+32% MoM', color: 'text-[#C9A84C]' },
         { label: 'AI CREATED SHAPES', val: '1,492', pct: 'Active stencils', color: 'text-[#4FC3F7]' },
         { label: 'CURATOR RETENTION', val: '98.4%', pct: 'Gold VIP members', color: 'text-purple-400' },
     ];
+
+    // Sync transactions + team from WebSocket
+    useEffect(() => {
+        if (!apiData?.transactions?.length) return;
+        setTransactions(apiData.transactions as any[]);
+    }, [apiData?.transactions]);
+
+    useEffect(() => {
+        if (!apiData?.team?.length) return;
+        setTeam(apiData.team as any[]);
+    }, [apiData?.team]);
 
     return (
         <div className="relative w-full min-h-screen pb-20">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
     Users,
@@ -24,6 +24,19 @@ import type { UserProfile, FashionProduct, ArtPiece, AIClothingDesign, Collectio
 import { fashionDatabase, artDatabase, collections } from '@/data';
 import { useDesignDraftStore } from '@/features/ai/store/useDesignDraftStore';
 import { designPublisher } from '@/features/ai/services/designPublisher';
+import { useWSAdminDashboardData } from '@/features/dashboard/hooks/useDashboardData';
+
+// ─── Dynamic icon resolver for API-driven KPIs ────────────────────────────
+function DynamicKpiIcon({ name, size, className }: { name: string; size: number; className: string }) {
+    const icons: Record<string, React.ReactNode> = {
+        TrendingUp: <TrendingUp size={size} className={className} />,
+        Cpu: <Cpu size={size} className={className} />,
+        LayoutGrid: <LayoutGrid size={size} className={className} />,
+        Shirt: <Shirt size={size} className={className} />,
+        Users: <Users size={size} className={className} />,
+    };
+    return <>{icons[name] || <TrendingUp size={size} className={className} />}</>;
+}
 
 interface SimulatedOrder {
     id: string;
@@ -69,7 +82,7 @@ export default function AdminDashboardView({ user, onLogout }: AdminDashboardVie
     ]);
 
     // Customers
-    const [customers] = useState([
+    const [customers, setCustomers] = useState([
         { id: 'cst-1', name: 'Layla Al-Khouri', email: 'customer@sadaf.luxury', level: 'Gold Lineage VVIP', joinDate: '2026-01-14' },
         { id: 'cst-2', name: 'Karim Mansour', email: 'karim@mansour.eg', level: 'Silver Collector member', joinDate: '2026-02-19' },
         { id: 'cst-3', name: 'Sherif El-Bialy', email: 'sherif@bialy-group.com', level: 'Elite Art Patron', joinDate: '2026-03-02' },
@@ -88,6 +101,21 @@ export default function AdminDashboardView({ user, onLogout }: AdminDashboardVie
     const [existingCollectionId, setExistingCollectionId] = useState('');
     const [publishMsg, setPublishMsg] = useState<string | null>(null);
     const [addToExistingMode, setAddToExistingMode] = useState(false);
+
+    // ── WebSocket real-time data ──
+    const { data: apiData, loading: apiLoading, wsState } = useWSAdminDashboardData(true);
+    const isLive = wsState.status === 'connected';
+
+    // Sync orders/customers from WebSocket when fresh data arrives
+    useEffect(() => {
+        if (!apiData?.orders) return;
+        setAllOrders(apiData.orders as any[]);
+    }, [apiData?.orders]);
+
+    useEffect(() => {
+        if (!apiData?.customers) return;
+        setCustomers(apiData.customers as any[]);
+    }, [apiData?.customers]);
 
     // AI Moderation rules
     const moderationRules = [
@@ -253,28 +281,43 @@ export default function AdminDashboardView({ user, onLogout }: AdminDashboardVie
                             exit={{ opacity: 0, y: -10 }}
                             className="space-y-8"
                         >
-                            {/* KPI Grid */}
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                {[
-                                    { label: 'Bespoke Sales Vol', value: '$48,930', growth: '+18.2%', icon: TrendingUp, color: 'text-green-400' },
-                                    { label: 'AI Generations', value: '1,294 runs', growth: '+24.8%', icon: Cpu, color: 'text-[#4FC3F7]' },
-                                    { label: 'Museum Registries', value: '32 pieces', growth: 'Stable', icon: LayoutGrid, color: 'text-[#C9A84C]' },
-                                    { label: 'VIP Active Collectors', value: '481 profiles', growth: '+9.4%', icon: Users, color: 'text-pink-400' },
-                                ].map((kpi) => (
-                                    <div
-                                        key={kpi.label}
-                                        className="p-5 rounded-xl bg-[#0F1435]/80 border border-white/5 shadow flex justify-between items-center"
-                                    >
-                                        <div>
-                                            <span className="text-[10px] uppercase font-mono text-gray-400 tracking-wider block">{kpi.label}</span>
-                                            <span className="text-2xl font-serif text-white font-bold block mt-1.5">{kpi.value}</span>
-                                            <span className="text-[10px] text-green-400 font-mono mt-0.5 inline-block">{kpi.growth} vs prev month</span>
+                            {/* KPI Grid — WebSocket real-time with hardcoded fallback */}
+                            <div className="space-y-1.5">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[8px] font-mono uppercase tracking-widest text-gray-600">
+                                        ATELIER METRICS
+                                    </span>
+                                    <span className={`inline-flex items-center gap-1 text-[8px] font-mono uppercase tracking-widest ${
+                                        isLive ? 'text-green-400' : 'text-yellow-500'
+                                    }`}>
+                                        <span className={`w-1.5 h-1.5 rounded-full ${
+                                            isLive ? 'bg-green-400 animate-pulse' : 'bg-yellow-500'
+                                        }`} />
+                                        {isLive ? 'LIVE via WebSocket' : 'Polling 15s'}
+                                    </span>
+                                </div>
+                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                    {(apiData?.kpis?.length ? apiData.kpis : [
+                                        { label: 'Bespoke Sales Vol', value: '$48,930', growth: '+18.2%', icon: 'TrendingUp', color: 'text-green-400' },
+                                        { label: 'AI Generations', value: '1,294 runs', growth: '+24.8%', icon: 'Cpu', color: 'text-[#4FC3F7]' },
+                                        { label: 'Museum Registries', value: '32 pieces', growth: 'Stable', icon: 'LayoutGrid', color: 'text-[#C9A84C]' },
+                                        { label: 'VIP Active Collectors', value: '481 profiles', growth: '+9.4%', icon: 'Users', color: 'text-pink-400' },
+                                    ]).map((kpi: any) => (
+                                        <div
+                                            key={kpi.label}
+                                            className="p-5 rounded-xl bg-[#0F1435]/80 border border-white/5 shadow flex justify-between items-center"
+                                        >
+                                            <div>
+                                                <span className="text-[10px] uppercase font-mono text-gray-400 tracking-wider block">{kpi.label}</span>
+                                                <span className="text-2xl font-serif text-white font-bold block mt-1.5">{kpi.value}</span>
+                                                <span className="text-[10px] text-green-400 font-mono mt-0.5 inline-block">{kpi.growth} vs prev month</span>
+                                            </div>
+                                            <div className="p-3 rounded-full bg-white/5 border border-white/10 shrink-0">
+                                                <DynamicKpiIcon name={kpi.icon} size={18} className={kpi.color} />
+                                            </div>
                                         </div>
-                                        <div className="p-3 rounded-full bg-white/5 border border-white/10 shrink-0">
-                                            <kpi.icon size={18} className={kpi.color} />
-                                        </div>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
                             </div>
 
                             {/* Charts + Moderation */}
