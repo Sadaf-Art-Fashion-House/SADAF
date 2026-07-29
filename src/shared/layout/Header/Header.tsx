@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
-import { Heart, ShoppingCart, User, ChevronDown } from "lucide-react";
+import { Heart, ShoppingCart, User, ChevronDown, Search, MessageSquare } from "lucide-react";
 import SadafLogo from "@/components/common/SadafLogo";
 import { useCartStore } from "@/features/cart/store/useCartStore";
 import { useWishlistStore } from "@/features/wishlist/store/useWishlistStore";
@@ -160,6 +160,22 @@ export default function Header() {
                 </nav>
 
                 <div className="flex items-center gap-4">
+                    <Link
+                        href="/search"
+                        className="p-2 text-slate-300 hover:text-[#C9A84C] relative transition-colors duration-300"
+                        title="Search Atelier"
+                    >
+                        <Search size={16} />
+                    </Link>
+
+                    <Link
+                        href="/reviews"
+                        className="p-2 text-slate-300 hover:text-[#C9A84C] relative transition-colors duration-300"
+                        title="Customer Reviews"
+                    >
+                        <MessageSquare size={16} />
+                    </Link>
+
                     <Link
                         href="/wishlist"
                         className="p-2 text-slate-300 hover:text-red-400 relative transition-colors duration-300"
