@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import SadafLogo from '@/components/common/SadafLogo';
+import { ErrorGuidance } from '@/shared/ui/ErrorGuidance';
 
 interface LoginViewProps {
     onLogin: (email: string, password: string) => Promise<void>;
@@ -98,10 +99,14 @@ export default function LoginView({
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="mb-5 p-3.5 bg-red-950/40 border border-red-500/30 text-red-200 rounded-xl text-xs flex items-center gap-2"
+                        className="mb-5 p-3.5 bg-red-950/40 border border-red-500/30 text-red-200 rounded-xl text-xs"
+                        role="alert"
                     >
-                        <AlertCircle size={14} className="shrink-0" />
-                        <span>{error}</span>
+                        <div className="flex items-center gap-2">
+                            <AlertCircle size={14} className="shrink-0" />
+                            <span>{error}</span>
+                        </div>
+                        <ErrorGuidance className="text-[9px]" />
                     </motion.div>
                 )}
 

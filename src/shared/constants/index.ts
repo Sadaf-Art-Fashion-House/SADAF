@@ -7,3 +7,6 @@ export const APP_TABS = [
     { id: 'Gallery', label: 'Gallery' },
     { id: 'Dashboard', label: 'Dashboard' },
 ] as const;
+
+/** Support contact shown to non-admin users in export-error guidance. */
+export const SUPPORT_EMAIL = 'support@sadaf-art.com';

@@ -13,7 +13,10 @@ import {
 } from 'lucide-react';
 import SadafLogo from '@/components/common/SadafLogo';
 import type { UserRole } from '@/features/auth/types';
-import { ELEVATED_ROLES, ROLE_LABELS, REFERRAL_REQUIRED_ROLES, APPLICATION_REQUIRED_ROLES, APPLICATION_FIELDS } from '@/features/auth/types';interface SignUpViewProps {
+import { ELEVATED_ROLES, ROLE_LABELS, REFERRAL_REQUIRED_ROLES, APPLICATION_REQUIRED_ROLES, APPLICATION_FIELDS } from '@/features/auth/types';
+import { ErrorGuidance } from '@/shared/ui/ErrorGuidance';
+
+interface SignUpViewProps {
     onSignUp: (data: {
         fullName: string;
         email: string;
@@ -156,10 +159,14 @@ export default function SignUpView({
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="mb-5 p-3.5 bg-red-950/40 border border-red-500/30 text-red-200 rounded-xl text-xs flex items-center gap-2"
+                        className="mb-5 p-3.5 bg-red-950/40 border border-red-500/30 text-red-200 rounded-xl text-xs"
+                        role="alert"
                     >
-                        <AlertCircle size={14} className="shrink-0 text-red-400 shrink-0" />
-                        <span>{localError || error}</span>
+                        <div className="flex items-center gap-2">
+                            <AlertCircle size={14} className="shrink-0 text-red-400" />
+                            <span>{localError || error}</span>
+                        </div>
+                        <ErrorGuidance className="text-[9px]" />
                     </motion.div>
                 )}
 
