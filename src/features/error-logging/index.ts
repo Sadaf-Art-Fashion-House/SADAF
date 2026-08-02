@@ -1,6 +1,7 @@
 export {
     getErrorLogs,
     logError,
+    logExportError,
     markErrorAsRead,
     markAllErrorsAsRead,
     deleteErrorLog,

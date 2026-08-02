@@ -8,10 +8,12 @@ import {
     Coins,
     CheckCircle,
     UserPlus,
+    AlertTriangle,
 } from 'lucide-react';
 import Link from 'next/link';
 import type { UserProfile } from '@/shared/types';
 import { useWSFounderDashboardData } from '@/features/dashboard/hooks/useDashboardData';
+import { ErrorGuidance } from '@/shared/ui/ErrorGuidance';
 
 interface TeamMember {
     id: string;
@@ -32,7 +34,7 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
     // ── WebSocket real-time data ──
-    const { data: apiData, wsState } = useWSFounderDashboardData(true);
+    const { data: apiData, wsState, error: dataError } = useWSFounderDashboardData(true);
     const isLive = wsState.status === 'connected';
 
     // Team state
@@ -156,6 +158,22 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
 
             {/* Main content */}
             <section className="py-12 px-4 md:px-8 max-w-7xl mx-auto">
+                {/* Real-time data degradation banner */}
+                {dataError && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="mb-6 p-3.5 bg-yellow-950/30 border border-yellow-500/35 text-yellow-100 rounded-xl text-xs"
+                        role="alert"
+                    >
+                        <div className="flex items-center gap-2">
+                            <AlertTriangle size={14} className="shrink-0 text-yellow-400" />
+                            <span>Live data is degraded: {dataError}</span>
+                        </div>
+                        <ErrorGuidance className="text-[9px]" />
+                    </motion.div>
+                )}
+
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     {/* Left sidebar */}
                     <div className="lg:col-span-3 space-y-4">

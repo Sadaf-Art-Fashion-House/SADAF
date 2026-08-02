@@ -25,6 +25,7 @@ import { fashionDatabase, artDatabase, collections } from '@/data';
 import { useDesignDraftStore } from '@/features/ai/store/useDesignDraftStore';
 import { designPublisher } from '@/features/ai/services/designPublisher';
 import { useWSAdminDashboardData } from '@/features/dashboard/hooks/useDashboardData';
+import { ErrorGuidance } from '@/shared/ui/ErrorGuidance';
 
 // ─── Dynamic icon resolver for API-driven KPIs ────────────────────────────
 function DynamicKpiIcon({ name, size, className }: { name: string; size: number; className: string }) {
@@ -103,7 +104,7 @@ export default function AdminDashboardView({ user, onLogout }: AdminDashboardVie
     const [addToExistingMode, setAddToExistingMode] = useState(false);
 
     // ── WebSocket real-time data ──
-    const { data: apiData, loading: apiLoading, wsState } = useWSAdminDashboardData(true);
+    const { data: apiData, wsState, error: dataError } = useWSAdminDashboardData(true);
     const isLive = wsState.status === 'connected';
 
     // Sync orders/customers from WebSocket when fresh data arrives
@@ -271,6 +272,22 @@ export default function AdminDashboardView({ user, onLogout }: AdminDashboardVie
             </section>
 
             <section className="py-12 px-4 md:px-8 max-w-7xl mx-auto">
+                {/* Real-time data degradation banner */}
+                {dataError && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="mb-6 p-3.5 bg-yellow-950/30 border border-yellow-500/35 text-yellow-100 rounded-xl text-xs"
+                        role="alert"
+                    >
+                        <div className="flex items-center gap-2">
+                            <AlertTriangle size={14} className="shrink-0 text-yellow-400" />
+                            <span>Live data is degraded: {dataError}</span>
+                        </div>
+                        <ErrorGuidance className="text-[9px]" />
+                    </motion.div>
+                )}
+
                 <AnimatePresence mode="wait">
                     {/* Analytics Tab */}
                     {mainTab === 'analytics' && (

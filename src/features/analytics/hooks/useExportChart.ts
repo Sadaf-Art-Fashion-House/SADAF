@@ -8,6 +8,14 @@ import {
 } from '@/features/watermark/store/useWatermarkStore';
 import type { WatermarkPosition } from '@/features/watermark/store/useWatermarkStore';
 import { captureElementWithOklabFix } from '@/shared/utils/captureElementWithOklabFix';
+import { logExportError } from '@/features/error-logging';
+import { recordExport } from '@/shared/utils/exportHistory';
+import type { ExportSource } from '@/shared/utils/exportHistory';
+import {
+    buildExportErrorMessage,
+    buildExportUserMessage,
+    EXPORT_NO_ELEMENTS_DETAIL,
+} from '@/shared/utils/exportErrors';
 
 // ─── Watermark overlay ─────────────────────────────────────────────────────
 
@@ -217,19 +225,35 @@ export async function captureElementWithWatermark(element: HTMLElement): Promise
 /**
  * useExportChart — provides functions to capture a DOM element (e.g. a chart
  * container) and download it as PNG or PDF with an embedded watermark.
+ *
+ * Loading state is tracked per format (`isExportingPNG` / `isExportingPDF`)
+ * so buttons can show exactly which export is in progress, while
+ * `isExporting` remains available for disabling both at once.
+ *
+ * Each export function resolves to a boolean — `true` on success, `false`
+ * on failure (or when the target element is missing). Consumers can use this
+ * to keep UI (e.g. an open dropdown) open on failure so the error message is
+ * immediately visible.
+ *
+ * Every result is also recorded in the local export history (last 10
+ * operations) so the dashboard can show what was exported, when, and
+ * whether it succeeded. Failures are additionally reported through the
+ * shared error-logging system (digest `export:<format>:<filename>`).
  */
 export function useExportChart(
     elementRef: React.RefObject<HTMLDivElement | null>,
     filename: string,
+    source: ExportSource = 'chart',
 ) {
-    const [isExporting, setIsExporting] = useState(false);
+    const [isExportingPNG, setIsExportingPNG] = useState(false);
+    const [isExportingPDF, setIsExportingPDF] = useState(false);
     const [exportError, setExportError] = useState<string | null>(null);
 
-    const exportAsPNG = useCallback(async () => {
+    const exportAsPNG = useCallback(async (): Promise<boolean> => {
         const element = elementRef.current;
-        if (!element) return;
+        if (!element) return false;
 
-        setIsExporting(true);
+        setIsExportingPNG(true);
         setExportError(null);
 
         try {
@@ -238,19 +262,24 @@ export function useExportChart(
             link.download = `${filename}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
+            recordExport({ filename, format: 'png', status: 'success', source });
+            return true;
         } catch (err) {
             console.error('PNG export failed:', err);
-            setExportError('Failed to export PNG. Please try again.');
+            setExportError(buildExportUserMessage('png', filename));
+            logExportError('png', filename, err);
+            recordExport({ filename, format: 'png', status: 'failure', source });
+            return false;
         } finally {
-            setIsExporting(false);
+            setIsExportingPNG(false);
         }
-    }, [elementRef, filename]);
+    }, [elementRef, filename, source]);
 
-    const exportAsPDF = useCallback(async () => {
+    const exportAsPDF = useCallback(async (): Promise<boolean> => {
         const element = elementRef.current;
-        if (!element) return;
+        if (!element) return false;
 
-        setIsExporting(true);
+        setIsExportingPDF(true);
         setExportError(null);
 
         try {
@@ -262,18 +291,25 @@ export function useExportChart(
             const imgHeight = (canvas.height * imgWidth) / canvas.width;
             pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
             pdf.save(`${filename}.pdf`);
+            recordExport({ filename, format: 'pdf', status: 'success', source });
+            return true;
         } catch (err) {
             console.error('PDF export failed:', err);
-            setExportError('Failed to export PDF. Please try again.');
+            setExportError(buildExportUserMessage('pdf', filename));
+            logExportError('pdf', filename, err);
+            recordExport({ filename, format: 'pdf', status: 'failure', source });
+            return false;
         } finally {
-            setIsExporting(false);
+            setIsExportingPDF(false);
         }
-    }, [elementRef, filename]);
+    }, [elementRef, filename, source]);
 
     return {
         exportAsPNG,
         exportAsPDF,
-        isExporting,
+        isExporting: isExportingPNG || isExportingPDF,
+        isExportingPNG,
+        isExportingPDF,
         exportError,
         clearError: () => setExportError(null),
     };
@@ -285,12 +321,18 @@ export function useExportChart(
  * exportElementsAsPDF — standalone utility that captures multiple DOM elements
  * (by their IDs), applies the watermark to each, and saves them as a
  * multi-page PDF.
+ *
+ * Resolves to `true` when the PDF was saved, `false` when it failed — so
+ * callers can surface a visible error instead of failing silently. Every
+ * result is recorded in the local export history; failures are additionally
+ * reported through the shared error-logging system.
  */
 export async function exportElementsAsPDF(
     elementIds: string[],
     filename: string,
     setIsExporting?: (v: boolean) => void,
-): Promise<void> {
+    source: ExportSource = 'report',
+): Promise<boolean> {
     setIsExporting?.(true);
 
     try {
@@ -298,6 +340,7 @@ export async function exportElementsAsPDF(
         const pageWidth = pdf.internal.pageSize.getWidth();
         const margin = 10;
         const imgMaxWidth = pageWidth - margin * 2;
+        let capturedAny = false;
 
         for (let i = 0; i < elementIds.length; i++) {
             const el = document.getElementById(elementIds[i]);
@@ -312,11 +355,25 @@ export async function exportElementsAsPDF(
             }
 
             pdf.addImage(imgData, 'PNG', margin, margin, imgMaxWidth, imgHeight);
+            capturedAny = true;
+        }
+
+        if (!capturedAny) {
+            const message = buildExportErrorMessage('pdf', filename, EXPORT_NO_ELEMENTS_DETAIL);
+            console.error(message);
+            logExportError('pdf', filename, EXPORT_NO_ELEMENTS_DETAIL);
+            recordExport({ filename, format: 'pdf', status: 'failure', source });
+            return false;
         }
 
         pdf.save(`${filename}.pdf`);
+        recordExport({ filename, format: 'pdf', status: 'success', source });
+        return true;
     } catch (err) {
         console.error('Multi-page PDF export failed:', err);
+        logExportError('pdf', filename, err);
+        recordExport({ filename, format: 'pdf', status: 'failure', source });
+        return false;
     } finally {
         setIsExporting?.(false);
     }

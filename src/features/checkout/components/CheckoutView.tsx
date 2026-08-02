@@ -18,6 +18,7 @@ import {
     Sparkles,
     Palette,
     Shirt,
+    AlertCircle,
 } from 'lucide-react';
 import type { CartItem } from '@/shared/types';
 import type {
@@ -27,6 +28,7 @@ import type {
     CheckoutStep,
     OrderPayload,
 } from '../types';
+import { ErrorGuidance } from '@/shared/ui/ErrorGuidance';
 
 interface CheckoutViewProps {
     items: CartItem[];
@@ -374,6 +376,22 @@ export default function CheckoutView({
                                     onSubmit={handleShippingSubmit}
                                     className="space-y-5"
                                 >
+                                    {/* Validation summary banner */}
+                                    {Object.keys(errors).length > 0 && (
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.95 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            className="p-3.5 bg-red-950/40 border border-red-500/30 text-red-200 rounded-xl text-xs"
+                                            role="alert"
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <AlertCircle size={14} className="shrink-0 text-red-400" />
+                                                <span>Please fix the highlighted fields below to continue.</span>
+                                            </div>
+                                            <ErrorGuidance className="text-[9px]" />
+                                        </motion.div>
+                                    )}
+
                                     <div className="p-6 rounded-xl bg-[#0A0F2C]/80 border border-[#C9A84C]/10">
                                         <h2 className="font-serif text-lg text-white mb-5 flex items-center gap-2">
                                             <Truck size={16} className="text-[#C9A84C]" /> Shipping Information

@@ -10,6 +10,8 @@
  * The admin dashboard reads from both sources and merges them.
  */
 
+import { buildExportErrorMessage } from '@/shared/utils/exportErrors';
+
 const STORAGE_KEY = 'sadaf_error_logs';
 const MAX_LOGS = 200;
 const API_ENDPOINT = '/api/error-logs';
@@ -154,6 +156,45 @@ export async function logError(error: Error & { digest?: string }): Promise<void
         trimmed.push(entry);
         saveLocalLogs(trimmed);
     }
+}
+
+/**
+ * Log an export failure (PNG/PDF) through the shared error-logging system so
+ * it appears in the Admin/Founder Error Logs dashboard with a clear digest
+ * (e.g. `export:png:revenue-chart`) plus timestamp and URL context.
+ *
+ * The message is built here (via the shared exportErrors helper) from the
+ * format + filename (+ optional detail), so callers never construct it
+ * themselves. `detail` accepts:
+ * - a string — appended as the failure reason (`Failed to export PNG (file.png): <detail>.`)
+ * - an `Error` — treated as the cause (its stack is preserved) and the
+ *   message stays the generic one, so catch-blocks stay one clean call:
+ *   `logExportError('png', filename, err)`
+ * - `unknown`/`undefined` — the generic message is used
+ *
+ * Fire-and-forget by design — never throws and never breaks the export flow.
+ */
+export function logExportError(
+    format: 'png' | 'pdf',
+    filename: string,
+    detail?: unknown,
+    cause?: unknown,
+): void {
+    // Narrow `unknown` internally so call sites can pass a catch-block `err`
+    // directly (typed `unknown`) without any cast, while still supporting a
+    // descriptive string detail or a cause in the 4th position.
+    const resolvedDetail = typeof detail === 'string' ? detail : undefined;
+    const resolvedCause = detail instanceof Error ? detail : cause;
+
+    const message = buildExportErrorMessage(format, filename, resolvedDetail);
+
+    const taggedError = Object.assign(new Error(message), {
+        digest: `export:${format}:${filename}`,
+        stack: resolvedCause instanceof Error ? resolvedCause.stack : undefined,
+    });
+    logError(taggedError).catch(() => {
+        // Logging must never break the export flow.
+    });
 }
 
 /**

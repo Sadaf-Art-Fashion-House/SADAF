@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     Eye,
     EyeOff,
@@ -24,10 +24,20 @@ import {
     MoveDownRight,
     Plus,
     PenLine,
+    AlertTriangle,
 } from 'lucide-react';
 import { useWatermarkStore, DEFAULT_WATERMARK_SETTINGS } from '../store/useWatermarkStore';
 import type { WatermarkSettings, WatermarkType, WatermarkPosition, LogoEntry } from '../store/useWatermarkStore';
 import { captureElementWithOklabFix } from '@/shared/utils/captureElementWithOklabFix';
+import { logExportError } from '@/features/error-logging';
+import { recordExport } from '@/shared/utils/exportHistory';
+import { ErrorGuidance } from '@/shared/ui/ErrorGuidance';
+import {
+    buildExportErrorMessage,
+    EXPORT_PREVIEW_RENDER_ERROR,
+    EXPORT_GENERIC_ERROR,
+    EXPORT_PREVIEW_RENDER_DETAIL,
+} from '@/shared/utils/exportErrors';
 
 // ─── Position definitions ──────────────────────────────────────────────────
 
@@ -346,6 +356,29 @@ export default function WatermarkSettings() {
         [settings],
     );
 
+    // Per-format export loading states (PNG and PDF tracked independently so
+    // each button shows exactly which export is in progress).
+    const [isExportingPNG, setIsExportingPNG] = useState(false);
+    const [isExportingPDF, setIsExportingPDF] = useState(false);
+
+    // Inline export error (replaces blocking alert()) — paired with a smart
+    // "Try Again" button that re-runs the exact export that failed. The
+    // failed format is stored as plain state (not a ref) so the banner is
+    // driven purely by reactive re-renders — safe against future code that
+    // might mutate a ref without triggering a re-render.
+    const [exportError, setExportError] = useState<string | null>(null);
+    const [lastFailedExportFormat, setLastFailedExportFormat] = useState<'png' | 'pdf' | null>(null);
+
+    const retryButtonRef = useRef<HTMLButtonElement>(null);
+
+    // Move focus to the banner's Retry button the moment an export failure
+    // appears, so keyboard/screen-reader users can act immediately.
+    useEffect(() => {
+        if (lastFailedExportFormat) {
+            retryButtonRef.current?.focus();
+        }
+    }, [lastFailedExportFormat]);
+
     // ── Derive descriptive export filename from current settings ──
 
     const exportFilename = useMemo(() => {
@@ -505,23 +538,49 @@ export default function WatermarkSettings() {
     }, [renderPreviewToCanvas]);
 
     const handleExportSamplePNG = useCallback(async () => {
+        setIsExportingPNG(true);
+        setExportError(null);
+        setLastFailedExportFormat(null);
         try {
             const canvas = await capturePreviewCanvas();
-            if (!canvas) { alert('Could not render preview for export.'); return; }
+            if (!canvas) {
+                console.error(buildExportErrorMessage('png', exportFilename, EXPORT_PREVIEW_RENDER_DETAIL));
+                logExportError('png', exportFilename, EXPORT_PREVIEW_RENDER_DETAIL);
+                recordExport({ filename: exportFilename, format: 'png', status: 'failure', source: 'watermark' });
+                setLastFailedExportFormat('png');
+                setExportError(EXPORT_PREVIEW_RENDER_ERROR);
+                return;
+            }
             const link = document.createElement('a');
             link.download = `${exportFilename}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
+            recordExport({ filename: exportFilename, format: 'png', status: 'success', source: 'watermark' });
         } catch (err) {
             console.error('PNG export failed:', err);
-            alert('Export failed. See console for details.');
+            logExportError('png', exportFilename, err);
+            recordExport({ filename: exportFilename, format: 'png', status: 'failure', source: 'watermark' });
+            setLastFailedExportFormat('png');
+            setExportError(EXPORT_GENERIC_ERROR);
+        } finally {
+            setIsExportingPNG(false);
         }
     }, [exportFilename, capturePreviewCanvas]);
 
     const handleExportSamplePDF = useCallback(async () => {
+        setIsExportingPDF(true);
+        setExportError(null);
+        setLastFailedExportFormat(null);
         try {
             const canvas = await capturePreviewCanvas();
-            if (!canvas) { alert('Could not render preview for export.'); return; }
+            if (!canvas) {
+                console.error(buildExportErrorMessage('pdf', exportFilename, EXPORT_PREVIEW_RENDER_DETAIL));
+                logExportError('pdf', exportFilename, EXPORT_PREVIEW_RENDER_DETAIL);
+                recordExport({ filename: exportFilename, format: 'pdf', status: 'failure', source: 'watermark' });
+                setLastFailedExportFormat('pdf');
+                setExportError(EXPORT_PREVIEW_RENDER_ERROR);
+                return;
+            }
             const imgData = canvas.toDataURL('image/png');
             const { default: jsPDF } = await import('jspdf');
             const pdf = new jsPDF('l', 'mm', 'a4');
@@ -530,11 +589,25 @@ export default function WatermarkSettings() {
             const imgHeight = (canvas.height * imgWidth) / canvas.width;
             pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
             pdf.save(`${exportFilename}.pdf`);
+            recordExport({ filename: exportFilename, format: 'pdf', status: 'success', source: 'watermark' });
         } catch (err) {
             console.error('PDF export failed:', err);
-            alert('Export failed. See console for details.');
+            logExportError('pdf', exportFilename, err);
+            recordExport({ filename: exportFilename, format: 'pdf', status: 'failure', source: 'watermark' });
+            setLastFailedExportFormat('pdf');
+            setExportError(EXPORT_GENERIC_ERROR);
+        } finally {
+            setIsExportingPDF(false);
         }
     }, [exportFilename, capturePreviewCanvas]);
+
+    /** Re-run the last failed export (PNG or PDF) directly from the banner. */
+    const handleRetryExport = useCallback(() => {
+        if (lastFailedExportFormat === 'png') handleExportSamplePNG();
+        else if (lastFailedExportFormat === 'pdf') handleExportSamplePDF();
+    }, [lastFailedExportFormat, handleExportSamplePNG, handleExportSamplePDF]);
+
+    const isExportingAny = isExportingPNG || isExportingPDF;
 
     return (
         <div className="space-y-8">
@@ -607,16 +680,43 @@ export default function WatermarkSettings() {
                 </div>
             </div>
 
+            {/* Inline export error — with smart Try Again that re-runs the last failed export */}
+            {exportError && (
+                <div role="alert" className="flex items-start gap-2 px-4 py-2.5 rounded-xl border border-red-500/20 bg-red-950/25 backdrop-blur-sm">
+                    <AlertTriangle size={12} className="text-red-400 shrink-0 mt-0.5" />
+                    <span className="flex-1 min-w-0">
+                        <span className="block text-[10px] font-mono text-red-300/90 leading-relaxed">{exportError}</span>
+                        <ErrorGuidance className="text-[9px]" />
+                    </span>
+                    {lastFailedExportFormat && (
+                        <button ref={retryButtonRef} onClick={handleRetryExport} disabled={isExportingAny}
+                            aria-label={`Retry failed ${lastFailedExportFormat.toUpperCase()} export`}
+                            className="px-2.5 py-1 rounded-lg text-[9px] font-mono uppercase tracking-wider text-[#C9A84C] border border-[#C9A84C]/30 hover:bg-[#C9A84C]/10 hover:text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-wait flex items-center gap-1 shrink-0"
+                            title="Re-run the last failed export">
+                            <RotateCcw size={10} /> Retry
+                        </button>
+                    )}
+                    <button onClick={() => { setLastFailedExportFormat(null); setExportError(null); }}
+                        aria-label="Dismiss error"
+                        className="text-[10px] font-mono text-[#E8E0D5]/30 hover:text-white transition-colors cursor-pointer shrink-0"
+                        title="Dismiss">✕</button>
+                </div>
+            )}
+
             {/* Footer — shows the resolved filename so the user knows what to expect */}
             <div className="flex items-center gap-3 pt-4 border-t border-white/5">
                 <span className="text-[9px] font-mono uppercase tracking-widest text-[#E8E0D5]/40">Test Export:</span>
-                <button onClick={handleExportSamplePNG}
-                    className="px-3 py-1.5 rounded-lg text-[9px] font-mono uppercase tracking-wider bg-[#C9A84C]/10 text-[#C9A84C] border border-[#C9A84C]/30 hover:bg-[#C9A84C]/20 transition-all cursor-pointer flex items-center gap-1.5">
-                    <FileImage size={11} /> Export PNG
+                <button onClick={handleExportSamplePNG} disabled={isExportingAny}
+                    className="px-3 py-1.5 rounded-lg text-[9px] font-mono uppercase tracking-wider bg-[#C9A84C]/10 text-[#C9A84C] border border-[#C9A84C]/30 hover:bg-[#C9A84C]/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-wait flex items-center gap-1.5"
+                    title={isExportingAny ? 'Export in progress…' : 'Export a sample PNG of the current watermark'}>
+                    {isExportingPNG ? <span className="block w-3 h-3 rounded-full border-2 border-[#C9A84C] border-t-transparent animate-spin" /> : <FileImage size={11} />}
+                    {isExportingPNG ? 'Exporting…' : 'Export PNG'}
                 </button>
-                <button onClick={handleExportSamplePDF}
-                    className="px-3 py-1.5 rounded-lg text-[9px] font-mono uppercase tracking-wider bg-gradient-to-r from-[#C9A84C]/20 to-[#4FC3F7]/10 text-white border border-[#C9A84C]/40 hover:border-[#C9A84C]/60 transition-all cursor-pointer flex items-center gap-1.5">
-                    <FileText size={11} /> Export PDF
+                <button onClick={handleExportSamplePDF} disabled={isExportingAny}
+                    className="px-3 py-1.5 rounded-lg text-[9px] font-mono uppercase tracking-wider bg-gradient-to-r from-[#C9A84C]/20 to-[#4FC3F7]/10 text-white border border-[#C9A84C]/40 hover:border-[#C9A84C]/60 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-wait flex items-center gap-1.5"
+                    title={isExportingAny ? 'Export in progress…' : 'Export a sample PDF of the current watermark'}>
+                    {isExportingPDF ? <span className="block w-3 h-3 rounded-full border-2 border-[#4FC3F7] border-t-transparent animate-spin" /> : <FileText size={11} />}
+                    {isExportingPDF ? 'Exporting…' : 'Export PDF'}
                 </button>
                 {/* Live filename preview */}
                 <div className="ml-auto flex items-center gap-1.5 text-[8px] font-mono text-[#E8E0D5]/40">

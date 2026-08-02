@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
 import {
     TrendingUp,
@@ -20,6 +20,10 @@ import {
     FileSpreadsheet,
     FileBarChart,
     LayoutDashboard,
+    AlertTriangle,
+    RotateCcw,
+    History,
+    Trash2,
 } from 'lucide-react';
 import {
     BarChart,
@@ -39,6 +43,15 @@ import {
 import { useAnalytics } from '../hooks/useAnalytics';
 import { useExportChart, exportElementsAsPDF } from '../hooks/useExportChart';
 import { useWatermarkStore, getWatermarkExportPrefix } from '@/features/watermark/store/useWatermarkStore';
+import {
+    getExportHistory,
+    clearExportHistory,
+    subscribeExportHistory,
+} from '@/shared/utils/exportHistory';
+import type { ExportHistoryEntry } from '@/shared/utils/exportHistory';
+import { ErrorGuidance } from '@/shared/ui/ErrorGuidance';
+import { buildToolbarExportUserMessage } from '@/shared/utils/exportErrors';
+import type { ToolbarExportKind } from '@/shared/utils/exportErrors';
 import type { TimeRange, AnalyticsData } from '../types';
 
 interface AnalyticsDashboardProps {
@@ -58,6 +71,13 @@ const TAB_LABELS: Record<string, string> = {
     overview: 'Revenue',
     products: 'Products',
     growth: 'Growth',
+};
+
+/** Accessible labels for the toolbar banner's Retry button, per failed kind. */
+const TOOLBAR_RETRY_LABELS: Record<ToolbarExportKind, string> = {
+    charts: 'Retry failed charts export',
+    report: 'Retry failed report export',
+    all: 'Retry failed dashboard export',
 };
 
 /** Every chart across all tabs (for full-dashboard export) */
@@ -99,27 +119,167 @@ function PieTooltip({ active, payload }: any) {
     );
 }
 
+// ─── Export history helpers ───────────────────────────────────────────────
+
+const SOURCE_LABELS: Record<string, string> = {
+    chart: 'Chart',
+    kpi: 'KPI',
+    report: 'Report',
+    watermark: 'Watermark',
+};
+
+function formatRelativeTime(iso: string): string {
+    const diffMs = Date.now() - new Date(iso).getTime();
+    const minutes = Math.floor(diffMs / 60000);
+    if (minutes < 1) return 'just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+}
+
+/**
+ * Small local panel showing the last 10 export operations (file, format,
+ * success/failure) from localStorage. Updates immediately via a custom
+ * window event fired by the shared exportHistory utility, and re-renders
+ * every minute so relative timestamps stay honest. Shows a muted empty
+ * state before the first export so the panel is discoverable.
+ */
+function ExportHistoryPanel() {
+    const [history, setHistory] = useState<ExportHistoryEntry[]>(() => getExportHistory());
+    // Tick every 60s to refresh the relative-time labels.
+    const [, setClock] = useState(0);
+
+    useEffect(() => {
+        const unsubscribe = subscribeExportHistory(() => setHistory(getExportHistory()));
+        const interval = window.setInterval(() => setClock((c) => c + 1), 60000);
+        return () => {
+            unsubscribe();
+            window.clearInterval(interval);
+        };
+    }, []);
+
+    const handleClear = useCallback(() => {
+        clearExportHistory();
+        setHistory([]);
+    }, []);
+
+    return (
+        <div className="mb-6 p-4 bg-[#05081A]/70 border border-white/5 rounded-2xl">
+            <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-[#C9A84C]/10 text-[#C9A84C]"><History size={12} /></div>
+                    <h3 className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold">Export History</h3>
+                    {history.length > 0 && (
+                        <span className="text-[9px] font-mono text-[#E8E0D5]/40">last {history.length}/10</span>
+                    )}
+                </div>
+                {history.length > 0 && (
+                    <button onClick={handleClear}
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-mono text-[#E8E0D5]/40 hover:text-red-400 border border-white/10 hover:border-red-500/30 transition-all cursor-pointer"
+                        title="Clear export history">
+                        <Trash2 size={9} /> Clear
+                    </button>
+                )}
+            </div>
+            {history.length === 0 ? (
+                <p className="text-[9px] font-mono text-[#E8E0D5]/30 italic px-2 py-1.5">
+                    No exports yet — run any PNG/PDF export and it will appear here.
+                </p>
+            ) : (
+                <ul className="space-y-1 max-h-44 overflow-y-auto pr-1 scrollbar-thin">
+                    {history.map((entry) => (
+                        <li key={entry.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-[#0A0F2C]/40 hover:bg-[#0A0F2C]/70 transition-colors">
+                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${entry.status === 'success' ? 'bg-emerald-400' : 'bg-red-400'}`} title={entry.status} />
+                            <span className={`text-[8px] font-mono font-bold w-7 shrink-0 ${entry.format === 'png' ? 'text-[#4FC3F7]' : 'text-[#C9A84C]'}`}>
+                                {entry.format === 'png' ? <FileImage size={10} className="inline -mt-0.5 mr-0.5" /> : <FileText size={10} className="inline -mt-0.5 mr-0.5" />}
+                                {entry.format.toUpperCase()}
+                            </span>
+                            <span className="text-[9px] font-mono text-[#E8E0D5]/80 truncate flex-1" title={entry.filename}>{entry.filename}</span>
+                            <span className="text-[7px] font-mono uppercase tracking-wider text-[#E8E0D5]/30 shrink-0">{SOURCE_LABELS[entry.source] ?? entry.source}</span>
+                            <span className="text-[7px] font-mono text-[#E8E0D5]/30 shrink-0">{formatRelativeTime(entry.timestamp)}</span>
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </div>
+    );
+}
+
 // ─── Export dropdown (per-chart / per-KPI) ────────────────────────────────
+
+type ExportFn = () => boolean | void | Promise<boolean | void>;
 
 function ExportDropdown({
     onExportPNG,
     onExportPDF,
-    isExporting,
+    isExportingPNG,
+    isExportingPDF,
+    exportError,
+    onErrorDismiss,
     size = 13,
 }: {
-    onExportPNG: () => void;
-    onExportPDF: () => void;
-    isExporting: boolean;
+    onExportPNG: ExportFn;
+    onExportPDF: ExportFn;
+    isExportingPNG: boolean;
+    isExportingPDF: boolean;
+    exportError?: string | null;
+    onErrorDismiss?: () => void;
     size?: number;
 }) {
     const [open, setOpen] = useState(false);
+    const isExporting = isExportingPNG || isExportingPDF;
+
+    /**
+     * Remembers which export (PNG or PDF) failed last so the inline error's
+     * "Try Again" button can transparently re-run exactly that operation
+     * instead of asking the user to click the menu item again. Stored as a
+     * plain format kind (not a function) so everything is reactive state.
+     */
+    const [lastFailedExportFormat, setLastFailedExportFormat] = useState<'png' | 'pdf' | null>(null);
+
+    const retryButtonRef = useRef<HTMLButtonElement>(null);
+
+    // When a failure banner appears (or the menu reopens with one showing),
+    // move focus to the Retry button so keyboard/screen-reader users can act
+    // immediately without tabbing through the whole menu.
+    useEffect(() => {
+        if (lastFailedExportFormat && open) {
+            retryButtonRef.current?.focus();
+        }
+    }, [lastFailedExportFormat, open]);
+
+    /**
+     * Run an export while keeping the menu open so the per-item spinner and
+     * "Exporting…" label stay visible. The menu closes only when the export
+     * SUCCEEDS; on failure it stays open so the inline error below is
+     * immediately visible to the user (with a smart Try Again button).
+     */
+    const runExport = useCallback(async (format: 'png' | 'pdf') => {
+        const exportFn = format === 'png' ? onExportPNG : onExportPDF;
+        const succeeded = await exportFn();
+        if (succeeded !== false) {
+            setLastFailedExportFormat(null);
+            setOpen(false);
+        } else {
+            setLastFailedExportFormat(format);
+        }
+    }, [onExportPNG, onExportPDF]);
+
+    /** Re-run the last failed export directly from the error banner. */
+    const handleRetry = useCallback(() => {
+        if (lastFailedExportFormat) runExport(lastFailedExportFormat);
+    }, [lastFailedExportFormat, runExport]);
+
     return (
         <div className="relative">
             <button
                 onClick={() => setOpen(!open)}
                 disabled={isExporting}
-                className="p-1.5 rounded-lg text-[#E8E0D5]/30 hover:text-[#C9A84C] hover:bg-[#C9A84C]/10 transition-all cursor-pointer disabled:opacity-40"
-                title="Export"
+                className="p-1.5 rounded-lg text-[#E8E0D5]/30 hover:text-[#C9A84C] hover:bg-[#C9A84C]/10 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-wait"
+                title={isExporting ? 'Export in progress…' : 'Export'}
+                aria-label="Export chart or KPI"
             >
                 {isExporting ? (
                     <span className="block w-3.5 h-3.5 rounded-full border-2 border-[#C9A84C] border-t-transparent animate-spin" />
@@ -130,15 +290,50 @@ function ExportDropdown({
             {open && (
                 <>
                     <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-                    <div className="absolute right-0 top-full mt-1 z-20 w-32 bg-[#0A0F2C]/98 border border-[#C9A84C]/20 rounded-xl shadow-xl shadow-[#C9A84C]/10 backdrop-blur-xl overflow-hidden">
-                        <button onClick={() => { onExportPNG(); setOpen(false); }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-[10px] font-mono text-[#E8E0D5]/70 hover:text-white hover:bg-white/5 transition-all cursor-pointer">
-                            <FileImage size={12} className="text-[#4FC3F7]" /> Export as PNG
+                    <div className="absolute right-0 top-full mt-1 z-20 w-56 bg-[#0A0F2C]/98 border border-[#C9A84C]/20 rounded-xl shadow-xl shadow-[#C9A84C]/10 backdrop-blur-xl overflow-hidden">
+                        <button onClick={() => runExport('png')}
+                            disabled={isExporting}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-[10px] font-mono text-[#E8E0D5]/70 hover:text-white hover:bg-white/5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-wait">
+                            {isExportingPNG ? (
+                                <span className="block w-3 h-3 rounded-full border-2 border-[#4FC3F7] border-t-transparent animate-spin" />
+                            ) : (
+                                <FileImage size={12} className="text-[#4FC3F7]" />
+                            )}
+                            {isExportingPNG ? 'Exporting…' : 'Export as PNG'}
                         </button>
-                        <button onClick={() => { onExportPDF(); setOpen(false); }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-[10px] font-mono text-[#E8E0D5]/70 hover:text-white hover:bg-white/5 transition-all cursor-pointer">
-                            <FileText size={12} className="text-[#C9A84C]" /> Export as PDF
+                        <button onClick={() => runExport('pdf')}
+                            disabled={isExporting}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-[10px] font-mono text-[#E8E0D5]/70 hover:text-white hover:bg-white/5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-wait">
+                            {isExportingPDF ? (
+                                <span className="block w-3 h-3 rounded-full border-2 border-[#C9A84C] border-t-transparent animate-spin" />
+                            ) : (
+                                <FileText size={12} className="text-[#C9A84C]" />
+                            )}
+                            {isExportingPDF ? 'Exporting…' : 'Export as PDF'}
                         </button>
+
+                        {/* Inline export error — the menu stays open on failure so this is visible */}
+                        {exportError && (
+                            <div role="alert" className="flex items-start gap-1.5 px-3 py-2 border-t border-red-500/15 bg-red-950/20">
+                                <AlertTriangle size={10} className="text-red-400 shrink-0 mt-0.5" />
+                                <span className="flex-1 min-w-0">
+                                    <span className="block text-[9px] font-mono text-red-300/90 leading-tight">{exportError}</span>
+                                    <ErrorGuidance className="text-[8px]" />
+                                </span>
+                                {lastFailedExportFormat && (
+                                    <button ref={retryButtonRef} onClick={handleRetry} disabled={isExporting}
+                                        aria-label={`Retry failed ${lastFailedExportFormat.toUpperCase()} export`}
+                                        className="text-[8px] font-mono uppercase tracking-wider text-[#C9A84C] border border-[#C9A84C]/30 rounded px-1.5 py-0.5 hover:bg-[#C9A84C]/10 hover:text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-wait shrink-0 flex items-center gap-1"
+                                        title="Re-run the last failed export">
+                                        <RotateCcw size={8} /> Retry
+                                    </button>
+                                )}
+                                <button onClick={() => { setLastFailedExportFormat(null); onErrorDismiss?.(); }}
+                                    aria-label="Dismiss error"
+                                    className="text-[9px] font-mono text-[#E8E0D5]/30 hover:text-white transition-colors cursor-pointer shrink-0"
+                                    title="Dismiss">✕</button>
+                            </div>
+                        )}
                     </div>
                 </>
             )}
@@ -164,7 +359,7 @@ function ChartCard({
     className?: string;
 }) {
     const chartRef = useRef<HTMLDivElement>(null);
-    const { exportAsPNG, exportAsPDF, isExporting } = useExportChart(chartRef, filename);
+    const { exportAsPNG, exportAsPDF, isExportingPNG, isExportingPDF, exportError, clearError } = useExportChart(chartRef, filename, 'chart');
 
     return (
         <div className={`p-5 bg-[#05081A]/90 border border-[#C9A84C]/10 rounded-2xl ${className}`}>
@@ -173,7 +368,7 @@ function ChartCard({
                     <Icon size={14} className="text-[#C9A84C]" />
                     <h3 className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold">{title}</h3>
                 </div>
-                <ExportDropdown onExportPNG={exportAsPNG} onExportPDF={exportAsPDF} isExporting={isExporting} />
+                <ExportDropdown onExportPNG={exportAsPNG} onExportPDF={exportAsPDF} isExportingPNG={isExportingPNG} isExportingPDF={isExportingPDF} exportError={exportError} onErrorDismiss={clearError} />
             </div>
             <div ref={chartRef} id={chartId}>
                 {children}
@@ -202,7 +397,7 @@ function KpiCard({
     filename: string;
 }) {
     const cardRef = useRef<HTMLDivElement>(null);
-    const { exportAsPNG, exportAsPDF, isExporting } = useExportChart(cardRef, filename);
+    const { exportAsPNG, exportAsPDF, isExportingPNG, isExportingPDF, exportError, clearError } = useExportChart(cardRef, filename, 'kpi');
 
     return (
         <motion.div
@@ -212,7 +407,7 @@ function KpiCard({
         >
             {/* Export button — visible on hover */}
             <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
-                <ExportDropdown onExportPNG={exportAsPNG} onExportPDF={exportAsPDF} isExporting={isExporting} size={11} />
+                <ExportDropdown onExportPNG={exportAsPNG} onExportPDF={exportAsPDF} isExportingPNG={isExportingPNG} isExportingPDF={isExportingPDF} exportError={exportError} onErrorDismiss={clearError} size={11} />
             </div>
 
             <div ref={cardRef} id={cardId}>
@@ -259,6 +454,26 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
     const [isExportingCharts, setIsExportingCharts] = useState(false);
     const [isExportingFull, setIsExportingFull] = useState(false);
     const [isExportingAll, setIsExportingAll] = useState(false);
+    const [toolbarExportError, setToolbarExportError] = useState<string | null>(null);
+
+    /**
+     * Remembers which toolbar export (Charts / Report / All Dashboard) failed
+     * last so the banner's "Try Again" button can re-run exactly that
+     * operation. Stored as a plain serializable kind (not a function or ref)
+     * so the banner renders purely from reactive state — safe against future
+     * code that might mutate a ref without triggering a re-render.
+     */
+    const [lastFailedToolbarExport, setLastFailedToolbarExport] = useState<ToolbarExportKind | null>(null);
+
+    const toolbarRetryButtonRef = useRef<HTMLButtonElement>(null);
+
+    // Move focus to the banner's Retry button the moment a toolbar export
+    // failure appears, so keyboard/screen-reader users can act immediately.
+    useEffect(() => {
+        if (lastFailedToolbarExport) {
+            toolbarRetryButtonRef.current?.focus();
+        }
+    }, [lastFailedToolbarExport]);
 
     // Subscribe to watermark settings so filenames reactively include the label
     useWatermarkStore((s) => s.settings);
@@ -273,23 +488,54 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
         TrendingDown: ArrowDownRight,
     };
 
-    const handleExportCharts = useCallback(() => {
+    /**
+     * Run one of the three toolbar exports. On failure the failed kind is
+     * stored in state so the error banner can offer a smart Try Again that
+     * transparently re-runs the same operation.
+     */
+    const runToolbarExport = useCallback(async (kind: ToolbarExportKind) => {
+        setToolbarExportError(null);
+        setLastFailedToolbarExport(null);
+
         const chartIds = TAB_CHART_IDS[activeTab];
         const tabLabel = TAB_LABELS[activeTab];
-        if (!chartIds?.length) return;
-        exportElementsAsPDF(chartIds, labelFilename(`analytics_${tabLabel.toLowerCase()}`), setIsExportingCharts);
-    }, [activeTab]);
 
-    const handleExportFullReport = useCallback(() => {
-        const chartIds = TAB_CHART_IDS[activeTab];
-        const tabLabel = TAB_LABELS[activeTab];
-        const allIds = ['kpi-section', ...(chartIds ?? [])];
-        exportElementsAsPDF(allIds, labelFilename(`full_report_${tabLabel.toLowerCase()}`), setIsExportingFull);
-    }, [activeTab]);
+        if (kind === 'charts') {
+            if (!chartIds?.length) return;
+            const succeeded = await exportElementsAsPDF(chartIds, labelFilename(`analytics_${tabLabel.toLowerCase()}`), setIsExportingCharts, 'report');
+            if (!succeeded) {
+                setLastFailedToolbarExport('charts');
+                setToolbarExportError(buildToolbarExportUserMessage('charts', tabLabel));
+            }
+            return;
+        }
 
-    const handleExportAllDashboard = useCallback(() => {
+        if (kind === 'report') {
+            const allIds = ['kpi-section', ...(chartIds ?? [])];
+            const succeeded = await exportElementsAsPDF(allIds, labelFilename(`full_report_${tabLabel.toLowerCase()}`), setIsExportingFull, 'report');
+            if (!succeeded) {
+                setLastFailedToolbarExport('report');
+                setToolbarExportError(buildToolbarExportUserMessage('report'));
+            }
+            return;
+        }
+
         const allIds = ['kpi-section', ...ALL_CHART_IDS];
-        exportElementsAsPDF(allIds, labelFilename('complete_dashboard_report'), setIsExportingAll);
+        const succeeded = await exportElementsAsPDF(allIds, labelFilename('complete_dashboard_report'), setIsExportingAll, 'report');
+        if (!succeeded) {
+            setLastFailedToolbarExport('all');
+            setToolbarExportError(buildToolbarExportUserMessage('all'));
+        }
+    }, [activeTab]);
+
+    const handleExportCharts = useCallback(() => runToolbarExport('charts'), [runToolbarExport]);
+    const handleExportFullReport = useCallback(() => runToolbarExport('report'), [runToolbarExport]);
+    const handleExportAllDashboard = useCallback(() => runToolbarExport('all'), [runToolbarExport]);
+
+    const handleTabChange = useCallback((tab: typeof activeTab) => {
+        setToolbarExportError(null);
+        setLastFailedToolbarExport(null);
+        setActiveTab(tab);
     }, []);
 
     if (!data?.kpis?.length) {
@@ -338,7 +584,7 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
                         { id: 'products', label: 'Products', icon: PieChart },
                         { id: 'growth', label: 'Growth', icon: Activity },
                     ].map((tab) => (
-                        <button key={tab.id} onClick={() => setActiveTab(tab.id as typeof activeTab)}
+                        <button key={tab.id} onClick={() => handleTabChange(tab.id as typeof activeTab)}
                             className={`px-4 py-1.5 rounded-lg text-[10px] uppercase font-semibold tracking-wider transition cursor-pointer flex items-center gap-1.5 ${
                                 activeTab === tab.id ? 'bg-[#C9A84C] text-[#0A0F2C]' : 'text-slate-400 hover:text-white hover:bg-white/5'
                             }`}>
@@ -361,27 +607,55 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
 
                 <div className="flex items-center gap-2 ml-auto sm:ml-0">
                     <button onClick={handleExportCharts} disabled={isExportingCharts}
-                        className="px-3 py-1.5 rounded-lg text-[9px] font-mono uppercase tracking-wider bg-[#C9A84C]/10 text-[#C9A84C] border border-[#C9A84C]/30 hover:bg-[#C9A84C]/20 transition-all cursor-pointer disabled:opacity-40 flex items-center gap-1.5"
+                        className="px-3 py-1.5 rounded-lg text-[9px] font-mono uppercase tracking-wider bg-[#C9A84C]/10 text-[#C9A84C] border border-[#C9A84C]/30 hover:bg-[#C9A84C]/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-wait flex items-center gap-1.5"
                         title={`Export ${TAB_LABELS[activeTab]} charts as PDF`}>
                         {isExportingCharts ? <span className="block w-3 h-3 rounded-full border-2 border-[#C9A84C] border-t-transparent animate-spin" /> : <FileSpreadsheet size={12} />}
-                        Charts ({TAB_CHART_IDS[activeTab]?.length ?? 0})
+                        {isExportingCharts ? 'Exporting…' : `Charts (${TAB_CHART_IDS[activeTab]?.length ?? 0})`}
                     </button>
 
                     <button onClick={handleExportFullReport} disabled={isExportingFull}
-                        className="px-3 py-1.5 rounded-lg text-[9px] font-mono uppercase tracking-wider bg-gradient-to-r from-[#C9A84C]/20 to-[#4FC3F7]/10 text-white border border-[#C9A84C]/40 hover:border-[#C9A84C]/60 transition-all cursor-pointer disabled:opacity-40 flex items-center gap-1.5"
+                        className="px-3 py-1.5 rounded-lg text-[9px] font-mono uppercase tracking-wider bg-gradient-to-r from-[#C9A84C]/20 to-[#4FC3F7]/10 text-white border border-[#C9A84C]/40 hover:border-[#C9A84C]/60 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-wait flex items-center gap-1.5"
                         title="Export current tab report (KPIs + charts)">
                         {isExportingFull ? <span className="block w-3 h-3 rounded-full border-2 border-[#C9A84C] border-t-transparent animate-spin" /> : <FileBarChart size={12} />}
-                        Report
+                        {isExportingFull ? 'Exporting…' : 'Report'}
                     </button>
 
                     <button onClick={handleExportAllDashboard} disabled={isExportingAll}
-                        className="px-3 py-1.5 rounded-lg text-[9px] font-mono uppercase tracking-wider bg-gradient-to-r from-[#C9A84C]/30 to-[#EC4899]/10 text-white border border-[#C9A84C]/50 hover:border-[#EC4899]/40 transition-all cursor-pointer disabled:opacity-40 flex items-center gap-1.5"
+                        className="px-3 py-1.5 rounded-lg text-[9px] font-mono uppercase tracking-wider bg-gradient-to-r from-[#C9A84C]/30 to-[#EC4899]/10 text-white border border-[#C9A84C]/50 hover:border-[#EC4899]/40 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-wait flex items-center gap-1.5"
                         title="Export complete dashboard report (all KPIs + all charts)">
                         {isExportingAll ? <span className="block w-3 h-3 rounded-full border-2 border-[#C9A84C] border-t-transparent animate-spin" /> : <LayoutDashboard size={12} />}
-                        All Dashboard
+                        {isExportingAll ? 'Exporting…' : 'All Dashboard'}
                     </button>
                 </div>
             </div>
+
+            {/* Inline export error banner — with smart Try Again that re-runs the last failed export */}
+            {toolbarExportError && (
+                <div role="alert" className="flex items-start gap-2 px-4 py-2.5 mb-4 rounded-xl border border-red-500/20 bg-red-950/25 backdrop-blur-sm">
+                    <AlertTriangle size={12} className="text-red-400 shrink-0 mt-0.5" />
+                    <span className="flex-1 min-w-0">
+                        <span className="block text-[10px] font-mono text-red-300/90 leading-relaxed">{toolbarExportError}</span>
+                        <ErrorGuidance className="text-[9px]" />
+                    </span>
+                    {lastFailedToolbarExport && (
+                        <button ref={toolbarRetryButtonRef}
+                            onClick={() => runToolbarExport(lastFailedToolbarExport)}
+                            disabled={isExportingCharts || isExportingFull || isExportingAll}
+                            aria-label={TOOLBAR_RETRY_LABELS[lastFailedToolbarExport]}
+                            className="px-2.5 py-1 rounded-lg text-[9px] font-mono uppercase tracking-wider text-[#C9A84C] border border-[#C9A84C]/30 hover:bg-[#C9A84C]/10 hover:text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-wait flex items-center gap-1 shrink-0"
+                            title="Re-run the last failed export">
+                            <RotateCcw size={10} /> Retry
+                        </button>
+                    )}
+                    <button onClick={() => { setToolbarExportError(null); setLastFailedToolbarExport(null); }}
+                        aria-label="Dismiss error"
+                        className="text-[10px] font-mono text-[#E8E0D5]/30 hover:text-white transition-colors cursor-pointer shrink-0"
+                        title="Dismiss">✕</button>
+                </div>
+            )}
+
+            {/* Local export history panel (last 10 operations) */}
+            <ExportHistoryPanel />
 
             {/* ═══ OVERVIEW TAB ═══ */}
             {activeTab === 'overview' && (
