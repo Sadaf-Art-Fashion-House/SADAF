@@ -1,13 +1,13 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import {
     getWatermarkFillStyle,
     getWatermarkSettings,
 } from '@/features/watermark/store/useWatermarkStore';
 import type { WatermarkPosition } from '@/features/watermark/store/useWatermarkStore';
+import { captureElementWithOklabFix } from '@/shared/utils/captureElementWithOklabFix';
 
 // ─── Watermark overlay ─────────────────────────────────────────────────────
 
@@ -206,15 +206,8 @@ function drawWatermark(canvas: HTMLCanvasElement): void {
 
 // ─── Shared capture helper ─────────────────────────────────────────────────
 
-async function captureElementWithWatermark(element: HTMLElement): Promise<HTMLCanvasElement> {
-    const canvas = await html2canvas(element, {
-        backgroundColor: '#0A0F2C',
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        allowTaint: false,
-    });
-
+export async function captureElementWithWatermark(element: HTMLElement): Promise<HTMLCanvasElement> {
+    const canvas = await captureElementWithOklabFix(element);
     drawWatermark(canvas);
     return canvas;
 }
