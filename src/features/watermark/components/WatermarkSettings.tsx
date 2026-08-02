@@ -11,7 +11,6 @@ import {
     RefreshCw,
     FileImage,
     FileText,
-    CheckCircle,
     Image as ImageIcon,
     Upload,
     Trash2,
@@ -28,6 +27,7 @@ import {
 } from 'lucide-react';
 import { useWatermarkStore, DEFAULT_WATERMARK_SETTINGS } from '../store/useWatermarkStore';
 import type { WatermarkSettings, WatermarkType, WatermarkPosition, LogoEntry } from '../store/useWatermarkStore';
+import { captureElementWithOklabFix } from '@/shared/utils/captureElementWithOklabFix';
 
 // ─── Position definitions ──────────────────────────────────────────────────
 
@@ -67,6 +67,10 @@ function WatermarkPreview({ settings }: { settings: WatermarkSettings }) {
 
     const previewLogos = useMemo(() => settings.logos.slice(0, 2), [settings.logos]);
 
+    // NOTE: The inline <svg> previews below use hex/rgba fills only (no oklab).
+    // If this element is ever captured with html2canvas, route it through
+    // captureElementWithOklabFix() so Tailwind v4 oklch colors on the
+    // surrounding DOM don't crash the snapshot.
     return (
         <div className="relative w-full h-32 rounded-2xl overflow-hidden border border-white/10 bg-[#0A0F2C]">
             <div className="absolute inset-0 flex items-end justify-around px-4 pb-4">
@@ -360,23 +364,177 @@ export default function WatermarkSettings() {
         return 'sadaf_watermark_preview';
     }, [settings.watermarkType, settings.logos, settings.text]);
 
-    const handleExportSamplePNG = useCallback(async () => {
-        const { useExportChart } = await import('../../analytics/hooks/useExportChart');
+    /**
+     * Render the watermark preview directly to a Canvas 2D element — this is
+     * the primary path because it bypasses html2canvas entirely (and therefore
+     * the oklab parsing issue).
+     */
+    const renderPreviewToCanvas = useCallback(async (): Promise<HTMLCanvasElement | null> => {
         const previewEl = document.getElementById('watermark-preview-container');
-        if (!previewEl) return;
-        const ref = { current: previewEl as HTMLDivElement };
-        const { exportAsPNG } = useExportChart(ref as React.RefObject<HTMLDivElement | null>, exportFilename);
-        await exportAsPNG();
-    }, [exportFilename]);
+        if (!previewEl) return null;
+
+        const rect = previewEl.getBoundingClientRect();
+        const w = Math.round(rect.width) || 576;
+        const h = Math.round(rect.height) || 128;
+        const scale = 2;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = w * scale;
+        canvas.height = h * scale;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return null;
+
+        // Background
+        ctx.fillStyle = '#0A0F2C';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Chart bars (mimic the WatermarkPreview bars)
+        const { color, enabled, opacity } = settings;
+        if (enabled) {
+            const bars = [40, 65, 35, 80, 55, 70, 45];
+            const barW = 12 * scale;
+            const gap = (canvas.width - bars.length * barW) / (bars.length + 1);
+            bars.forEach((hPct, i) => {
+                const barH = (hPct / 100) * canvas.height * 0.7;
+                const x = gap + i * (barW + gap);
+                const y = canvas.height - barH - 16 * scale;
+                const grad = ctx.createLinearGradient(x, y + barH, x, y);
+                grad.addColorStop(0, color + '77');
+                grad.addColorStop(1, color + '22');
+                ctx.fillStyle = grad;
+                ctx.globalAlpha = 0.6;
+                ctx.beginPath();
+                ctx.roundRect(x, y, barW, barH, 4 * scale);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            });
+
+            // Watermark overlay (text or logo)
+            if (settings.watermarkType === 'text') {
+                const hex = color.replace('#', '');
+                const r = Number.parseInt(hex.substring(0, 2), 16);
+                const g = Number.parseInt(hex.substring(2, 4), 16);
+                const b = Number.parseInt(hex.substring(4, 6), 16);
+                ctx.save();
+                ctx.globalAlpha = opacity;
+                ctx.font = `bold ${settings.fontSize * 0.6 * scale}px system-ui, sans-serif`;
+                ctx.fillStyle = `rgba(${r},${g},${b},${opacity})`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+
+                ctx.translate(canvas.width / 2, canvas.height / 2);
+                ctx.rotate(settings.rotation * (Math.PI / 180));
+                ctx.translate(-canvas.width / 2, -canvas.height / 2);
+
+                const step = settings.fontSize * 6.5 * scale;
+                for (let y = -canvas.height; y < canvas.height * 2; y += step) {
+                    for (let x = -canvas.width; x < canvas.width * 2; x += step * 0.6) {
+                        ctx.fillText(settings.text, x, y);
+                    }
+                }
+                ctx.restore();
+            } else if (settings.watermarkType === 'logo' && settings.logos.length > 0) {
+                ctx.save();
+                ctx.globalAlpha = opacity;
+                const logo = settings.logos[0];
+                const img = new window.Image();
+                img.crossOrigin = 'anonymous';
+                img.src = logo.dataUrl;
+
+                if (settings.watermarkPosition === 'tiled') {
+                    const logoW = canvas.width * settings.logoScale;
+                    const aspect = img.naturalWidth > 0 ? img.naturalHeight / img.naturalWidth : 1;
+                    const logoH = logoW * aspect;
+                    ctx.translate(canvas.width / 2, canvas.height / 2);
+                    ctx.rotate(settings.rotation * (Math.PI / 180));
+                    ctx.translate(-canvas.width / 2, -canvas.height / 2);
+                    for (let y = -canvas.height; y < canvas.height * 2; y += logoH * 3.5) {
+                        for (let x = -canvas.width; x < canvas.width * 2; x += logoW * 3.5) {
+                            ctx.drawImage(img, x, y, logoW, logoH);
+                        }
+                    }
+                } else {
+                    const logoW = canvas.width * settings.logoScale * 0.3;
+                    const aspect = img.naturalWidth > 0 ? img.naturalHeight / img.naturalWidth : 1;
+                    const logoH = logoW * aspect;
+                    const margin = 12 * scale;
+                    let lx = margin, ly = margin;
+                    const pos = settings.watermarkPosition;
+                    if (pos === 'center') { lx = (canvas.width - logoW) / 2; ly = (canvas.height - logoH) / 2; }
+                    else if (pos === 'top-right') { lx = canvas.width - logoW - margin; }
+                    else if (pos === 'bottom-left') { ly = canvas.height - logoH - margin; }
+                    else if (pos === 'bottom-right') { lx = canvas.width - logoW - margin; ly = canvas.height - logoH - margin; }
+                    const cx = lx + logoW / 2, cy = ly + logoH / 2;
+                    ctx.save();
+                    ctx.translate(cx, cy);
+                    ctx.rotate(settings.rotation * (Math.PI / 180));
+                    ctx.drawImage(img, -logoW / 2, -logoH / 2, logoW, logoH);
+                    ctx.restore();
+                }
+                ctx.restore();
+            }
+        }
+
+        return canvas;
+    }, [settings]);
+
+    /**
+     * Capture the preview as a canvas, preferring the direct Canvas 2D path.
+     * If that renderer throws (e.g. a future preview element it cannot
+     * replicate), fall back to html2canvas through the shared
+     * captureElementWithOklabFix() so SVG previews and their Tailwind v4
+     * oklch surroundings never crash the snapshot.
+     */
+    const capturePreviewCanvas = useCallback(async (): Promise<HTMLCanvasElement | null> => {
+        const previewEl = document.getElementById('watermark-preview-container');
+        if (!previewEl) return null;
+
+        try {
+            const directCanvas = await renderPreviewToCanvas();
+            if (directCanvas) return directCanvas;
+        } catch (err) {
+            console.error('Direct preview render failed — falling back to html2canvas:', err);
+        }
+
+        try {
+            return await captureElementWithOklabFix(previewEl);
+        } catch (err) {
+            console.error('Fallback preview capture failed:', err);
+            return null;
+        }
+    }, [renderPreviewToCanvas]);
+
+    const handleExportSamplePNG = useCallback(async () => {
+        try {
+            const canvas = await capturePreviewCanvas();
+            if (!canvas) { alert('Could not render preview for export.'); return; }
+            const link = document.createElement('a');
+            link.download = `${exportFilename}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        } catch (err) {
+            console.error('PNG export failed:', err);
+            alert('Export failed. See console for details.');
+        }
+    }, [exportFilename, capturePreviewCanvas]);
 
     const handleExportSamplePDF = useCallback(async () => {
-        const { useExportChart } = await import('../../analytics/hooks/useExportChart');
-        const previewEl = document.getElementById('watermark-preview-container');
-        if (!previewEl) return;
-        const ref = { current: previewEl as HTMLDivElement };
-        const { exportAsPDF } = useExportChart(ref as React.RefObject<HTMLDivElement | null>, exportFilename);
-        await exportAsPDF();
-    }, [exportFilename]);
+        try {
+            const canvas = await capturePreviewCanvas();
+            if (!canvas) { alert('Could not render preview for export.'); return; }
+            const imgData = canvas.toDataURL('image/png');
+            const { default: jsPDF } = await import('jspdf');
+            const pdf = new jsPDF('l', 'mm', 'a4');
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const imgWidth = pageWidth - 20;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+            pdf.save(`${exportFilename}.pdf`);
+        } catch (err) {
+            console.error('PDF export failed:', err);
+            alert('Export failed. See console for details.');
+        }
+    }, [exportFilename, capturePreviewCanvas]);
 
     return (
         <div className="space-y-8">
