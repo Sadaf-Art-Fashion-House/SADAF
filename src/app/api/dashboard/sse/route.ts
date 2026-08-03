@@ -5,7 +5,7 @@
  *
  * Streams dashboard data via SSE as a fallback when WebSocket is unavailable.
  * Query params:
- *   type — 'admin' | 'founder' | 'customer' (default: 'admin')
+ *   type — 'admin' | 'founder' | 'customer' | 'analytics' (default: 'admin')
  *
  * The client uses EventSource to connect.
  * Falls back to polling if SSE also fails.
@@ -17,6 +17,7 @@ const ENDPOINT_MAP: Record<string, string> = {
     admin: '/api/dashboard/admin',
     founder: '/api/dashboard/founder',
     customer: '/api/dashboard/customer',
+    analytics: '/api/analytics',
 };
 
 const SSE_INTERVAL_MS = 5_000; // 5s push via SSE
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     if (!endpoint) {
         return new Response(
-            `data: ${JSON.stringify({ error: `Invalid type: "${type}". Use: admin, founder, customer` })}\n\n`,
+            `data: ${JSON.stringify({ error: `Invalid type: "${type}". Use: admin, founder, customer, analytics` })}\n\n`,
             {
                 status: 400,
                 headers: {

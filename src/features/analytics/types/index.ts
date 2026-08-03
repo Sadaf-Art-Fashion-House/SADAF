@@ -63,6 +63,20 @@ export interface KpiMetric {
     icon: string;
 }
 
+/** A single real-time event shown in the Live Events Feed. */
+export interface LiveEvent {
+    /** Unique id — consumers dedupe by this when appending. */
+    id: string;
+    /** Event category, drives the icon and color. */
+    type: 'order' | 'signup' | 'ai' | 'review' | 'promotion';
+    /** Short headline (e.g. "New order received"). */
+    title: string;
+    /** One-line detail (e.g. customer, product, amount). */
+    message: string;
+    /** ISO timestamp of when the event occurred. */
+    timestamp: string;
+}
+
 /** Complete analytics dataset. */
 export interface AnalyticsData {
     /** KPI summary cards (4-6 metrics). */
@@ -81,6 +95,8 @@ export interface AnalyticsData {
     acquisitionChannels: ChartDataPoint[];
     /** Revenue from different channels. */
     revenueByChannel: ChartDataPoint[];
+    /** Latest real-time events (orders, signups, AI generations). */
+    liveEvents: LiveEvent[];
 }
 
 /** Time range filter for charts. */

@@ -12,6 +12,7 @@ import type {
     TopProduct,
     UserGrowthDataPoint,
     KpiMetric,
+    LiveEvent,
 } from '../types';
 
 // ─── KPI Metrics ───────────────────────────────────────────────────────────
@@ -131,6 +132,19 @@ export const MOCK_REVENUE_BY_CHANNEL: ChartDataPoint[] = [
     { label: 'Wholesale', value: 5800 },
 ];
 
+// ─── Live Events (seed for the feed before real-time data arrives) ─────────
+
+const now = Date.now();
+
+export const MOCK_LIVE_EVENTS: LiveEvent[] = [
+    { id: 'seed-1', type: 'order', title: 'New order received', message: 'Order #SADAF-1042 · $1,240 — Empress Diwani Abaya Cape', timestamp: new Date(now - 42_000).toISOString() },
+    { id: 'seed-2', type: 'ai', title: 'AI design generated', message: 'User rendered "Gold Calligraphy Hoodie" concept via AI Studio', timestamp: new Date(now - 3 * 60_000).toISOString() },
+    { id: 'seed-3', type: 'signup', title: 'New customer joined', message: 'Salma H. registered as a family customer (referral)', timestamp: new Date(now - 7 * 60_000).toISOString() },
+    { id: 'seed-4', type: 'review', title: 'New 5-star review', message: 'Amira K. reviewed the Sadaf Inlaid Peak Tuxedo', timestamp: new Date(now - 12 * 60_000).toISOString() },
+    { id: 'seed-5', type: 'promotion', title: 'Promotion claimed', message: 'Weekend offer "20% off Traditional Fusion" claimed ×3', timestamp: new Date(now - 18 * 60_000).toISOString() },
+    { id: 'seed-6', type: 'order', title: 'Order fulfilled', message: 'Order #SADAF-1017 marked as shipped', timestamp: new Date(now - 26 * 60_000).toISOString() },
+];
+
 // ─── Full Dataset ──────────────────────────────────────────────────────────
 
 export const MOCK_ANALYTICS_DATA: AnalyticsData = {
@@ -142,4 +156,5 @@ export const MOCK_ANALYTICS_DATA: AnalyticsData = {
     userGrowth: MOCK_USER_GROWTH,
     acquisitionChannels: MOCK_ACQUISITION_CHANNELS,
     revenueByChannel: MOCK_REVENUE_BY_CHANNEL,
+    liveEvents: MOCK_LIVE_EVENTS,
 };

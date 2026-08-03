@@ -11,6 +11,7 @@
  * 5. 🧹 Auto-clean stale ports — kills old processes on startup
  * 6. 🔔 Real-time notifications — pushes demo notifications every 15s
  *    → Replace generateDemoNotification() with real API polling in production
+ * 7. 📈 analytics:admin endpoint — real-time analytics payload (KPIs + charts)
  *
  * Usage:
  *   node ws-server.mjs       # standalone
@@ -33,6 +34,7 @@ const ENDPOINTS = [
     { type: 'dashboard:admin', path: '/api/dashboard/admin' },
     { type: 'dashboard:founder', path: '/api/dashboard/founder' },
     { type: 'dashboard:customer', path: '/api/dashboard/customer' },
+    { type: 'analytics:admin', path: '/api/analytics' },
 ];
 
 const VALID_ENDPOINT_TYPES = new Set(ENDPOINTS.map((e) => e.type));
@@ -246,7 +248,7 @@ setTimeout(() => {
 
 console.log('   📡 Subscription-based broadcasting — clients receive only their subscribed endpoints');
 console.log('   💓 Heartbeat every 5s — clients detect stale connections');
-console.log(`   🚀 Ready! Connect: new WebSocket(\"ws://localhost:${WS_PORT}\")\n`);
+console.log(`   🚀 Ready! Connect: new WebSocket(\\"ws://localhost:${WS_PORT}\\")`);
 
 // ─── Demo Notification Generator ────────────────────────────────────────────
 // Sends a simulated notification to all clients subscribed to notifications.

@@ -47,6 +47,7 @@ const SSE_TYPE_MAP: Record<string, string> = {
     'dashboard:admin': 'admin',
     'dashboard:founder': 'founder',
     'dashboard:customer': 'customer',
+    'analytics:admin': 'analytics',
 };
 
 // ─── Hook ───────────────────────────────────────────────────────────────────

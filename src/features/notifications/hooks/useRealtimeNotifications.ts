@@ -15,7 +15,7 @@
  *   - Pushed as a browser Notification (if permission granted)
  */
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { useNotifications } from './useNotifications';
 import type { Notification } from '../types';
 
@@ -45,6 +45,7 @@ export function useRealtimeNotifications(
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const wsConnectedRef = useRef(false);
+    const [wsLive, setWsLive] = useState(false);
 
     // ─── WebSocket connection ────────────────────────────────────────────────
 
@@ -57,6 +58,7 @@ export function useRealtimeNotifications(
 
             ws.onopen = () => {
                 wsConnectedRef.current = true;
+                setWsLive(true);
                 // Subscribe to user's notifications endpoint
                 const endpointType = `notifications:user:${userId}`;
                 ws.send(JSON.stringify({
@@ -92,6 +94,7 @@ export function useRealtimeNotifications(
 
             ws.onclose = () => {
                 wsConnectedRef.current = false;
+                setWsLive(false);
                 // Auto-reconnect
                 reconnectTimeoutRef.current = setTimeout(connectWS, RECONNECT_DELAY_MS);
             };
@@ -101,6 +104,7 @@ export function useRealtimeNotifications(
             };
         } catch {
             // WS unavailable — fall back to polling
+            setWsLive(false);
             reconnectTimeoutRef.current = setTimeout(connectWS, RECONNECT_DELAY_MS);
         }
     }, [userId, addNotification]);
@@ -162,6 +166,7 @@ export function useRealtimeNotifications(
                 wsRef.current = null;
             }
             wsConnectedRef.current = false;
+            setWsLive(false);
         };
     }, [userId, connectWS, startPolling]);
 
@@ -173,5 +178,6 @@ export function useRealtimeNotifications(
         markAllAsRead,
         filterType,
         setFilterType,
+        wsLive,
     };
 }
