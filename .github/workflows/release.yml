@@ -1,0 +1,101 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# SADAF Auto-Release Workflow
+# ─────────────────────────────────────────────────────────────────────────────
+# Triggers: every push to `main` that changes `package.json` (version bump).
+#
+# What it does:
+#   1. Extract the "version" field from package.json (e.g. "0.1.0").
+#   2. Check if a git tag v{version} already exists.
+#      - If it exists → skip (avoid re-releasing the same version).
+#      - If it does not exist → create an annotated tag and push it.
+#   3. Extract the matching section from CHANGELOG.md (Markdown between
+#      `## [version]` and the next `## [x.y.z]` heading).
+#      - If no section found → fall back to the commit message.
+#   4. Create a GitHub Release from the tag with the extracted notes.
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: Auto-Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - package.json
+
+jobs:
+  release:
+    name: Tag & Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write          # needed to push tags and create releases
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        # full history so we can find existing tags
+
+      # ── 1. Get the new version from package.json ────────────────────────
+      - name: Extract version
+        id: version
+        run: |
+          VERSION=$(jq -r '.version' package.json)
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
+
+      # ── 2. Check whether the tag already exists ─────────────────────────
+      - name: Check if tag exists
+        id: tag-check
+        run: |
+          TAG="v${{ steps.version.outputs.version }}"
+          if git tag -l "$TAG" | grep -q .; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Tag $TAG already exists — skipping release."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ── 3. Create annotated tag (only if new) ───────────────────────────
+      - name: Create tag
+        if: steps.tag-check.outputs.exists == 'false'
+        run: |
+          TAG="v${{ steps.version.outputs.version }}"
+          git config user.name "SADAF Bot"
+          git config user.email "bot@sadaf-art.com"
+          git tag -a "$TAG" -m "SADAF $TAG"
+          git push origin "$TAG"
+          echo "Created and pushed tag $TAG"
+
+      # ── 4. Extract release notes from CHANGELOG.md ──────────────────────
+      # Uses index() instead of ~ regex to avoid [0.2.0] being treated as a
+      # character class — the brackets are matched literally.
+      - name: Extract release notes
+        id: changelog
+        if: steps.tag-check.outputs.exists == 'false'
+        run: |
+          TAG="${{ steps.version.outputs.version }}"
+          NOTES=$(awk -v header="## [$TAG]" '
+            index($0, header) == 1 { flag=1; next }
+            flag && /^## \[/ { flag=0 }
+            flag { print }
+          ' CHANGELOG.md 2>/dev/null || true)
+
+          if [ -z "$NOTES" ]; then
+            NOTES="Release SADAF v$TAG — see CHANGELOG.md for details."
+          fi
+
+          # Write notes to a temp file (supports multi-line)
+          echo "$NOTES" > /tmp/release-notes.md
+          echo "ok=true" >> "$GITHUB_OUTPUT"
+
+      # ── 5. Create GitHub Release ────────────────────────────────────────
+      - name: Create Release
+        if: steps.tag-check.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: SADAF v${{ steps.version.outputs.version }}
+          body_path: /tmp/release-notes.md
+          draft: false
+          prerelease: false
