@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
-import { LayoutDashboard, ShoppingBag, LogOut, Compass, Brush, Menu, X, Bell, Users, Settings } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, LogOut, Compass, Brush, Menu, X, Bell, Users, Settings, BarChart3 } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
 
 export default function CustomerSidebar() {
@@ -20,6 +20,7 @@ export default function CustomerSidebar() {
         { href: ROUTES.DASHBOARD, label: 'Dashboard Home', icon: LayoutDashboard },
         { href: ROUTES.DASHBOARD_PROFILE, label: 'Profile', icon: Compass },
         { href: ROUTES.ORDERS, label: 'Orders', icon: ShoppingBag },
+        { href: ROUTES.DASHBOARD_ANALYSIS, label: 'My Analysis', icon: BarChart3 },
         { href: ROUTES.DASHBOARD_NOTIFICATIONS, label: 'Notifications', icon: Bell },
         { href: ROUTES.DASHBOARD_COMMUNITY, label: 'My Network', icon: Users },
         { href: ROUTES.ATELIER, label: 'Atelier', icon: Brush },

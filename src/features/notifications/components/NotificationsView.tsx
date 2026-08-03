@@ -4,17 +4,17 @@ import { motion, AnimatePresence } from 'motion/react';
 import Link from 'next/link';
 import {
     Bell,
-    ShoppingBag,
-    Heart,
-    MessageSquare,
-    Info,
-    Tag,
     CheckCheck,
     ChevronRight,
-    Wifi,
-    WifiOff,
 } from 'lucide-react';
-import type { Notification, NotificationType } from '../types';
+import type { Notification } from '../types';
+import {
+    TYPE_ICONS,
+    TYPE_COLORS,
+    TYPE_LABELS,
+    NOTIFICATION_TYPES,
+} from '../constants/notificationStyles';
+import { formatRelativeTime } from '../utils/formatRelativeTime';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -28,33 +28,8 @@ interface NotificationsViewProps {
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
-
-const TYPE_ICONS: Record<NotificationType, typeof Bell> = {
-    order: ShoppingBag,
-    wishlist: Heart,
-    review: MessageSquare,
-    system: Info,
-    promotion: Tag,
-};
-
-const TYPE_COLORS: Record<NotificationType, string> = {
-    order: 'text-[#4FC3F7] bg-[#4FC3F7]/10',
-    wishlist: 'text-red-400 bg-red-400/10',
-    review: 'text-[#C9A84C] bg-[#C9A84C]/10',
-    system: 'text-purple-400 bg-purple-400/10',
-    promotion: 'text-green-400 bg-green-400/10',
-};
-
-const TYPE_LABELS: Record<string, string> = {
-    all: 'All Notifications',
-    order: 'Orders',
-    wishlist: 'Wishlist',
-    review: 'Reviews',
-    system: 'System',
-    promotion: 'Promotions',
-};
-
-const FILTER_TABS = ['all', 'order', 'wishlist', 'review', 'system', 'promotion'] as const;
+// TYPE_ICONS / TYPE_COLORS / TYPE_LABELS / NOTIFICATION_TYPES live in
+// ../constants/notificationStyles — reused by the header NotificationBell.
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -105,7 +80,7 @@ export default function NotificationsView({
 
                     {/* Filter Tabs */}
                     <div className="flex flex-wrap gap-2 mt-8">
-                        {FILTER_TABS.map((tab) => {
+                        {NOTIFICATION_TYPES.map((tab) => {
                             const isActive = filterType === tab;
                             return (
                                 <button
@@ -166,7 +141,7 @@ function NotificationItem({
     notification: Notification;
     onMarkRead: (id: string) => void;
 }) {
-    const IconComponent = TYPE_ICONS[notification.type] || Info;
+    const IconComponent = TYPE_ICONS[notification.type] || Bell;
     const colorClass = TYPE_COLORS[notification.type] || TYPE_COLORS.system;
 
     const content = (
@@ -231,21 +206,4 @@ function NotificationItem({
     }
 
     return content;
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatRelativeTime(dateStr: string): string {
-    const now = Date.now();
-    const date = new Date(dateStr).getTime();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60_000);
-    const diffHours = Math.floor(diffMs / 3_600_000);
-    const diffDays = Math.floor(diffMs / 86_400_000);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }

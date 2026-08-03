@@ -32,8 +32,14 @@ export function useNotifications(initialNotifications: Notification[] = []) {
         }
     }, []);
 
-    // Update notifications when initial prop changes
+    // Update notifications when initial prop changes.
+    // Guard: the default `[]` is a fresh reference on every render, so without
+    // this check the effect would re-run constantly and wipe notifications
+    // added at runtime via addNotification (WebSocket pushes). Only merge
+    // when the caller actually passes meaningful initial data.
     useEffect(() => {
+        if (initialNotifications.length === 0) return;
+
         setNotifications((prev) => {
             // Merge: keep read status from state, use new data
             const stateMap = new Map(prev.map((n) => [n.id, n]));

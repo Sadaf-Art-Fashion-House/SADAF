@@ -41,6 +41,7 @@ import {
     Line,
 } from 'recharts';
 import { useAnalytics } from '../hooks/useAnalytics';
+import { useWSAnalyticsData } from '../hooks/useWSAnalyticsData';
 import { useExportChart, exportElementsAsPDF } from '../hooks/useExportChart';
 import { useWatermarkStore, getWatermarkExportPrefix } from '@/features/watermark/store/useWatermarkStore';
 import {
@@ -49,9 +50,10 @@ import {
     subscribeExportHistory,
 } from '@/shared/utils/exportHistory';
 import type { ExportHistoryEntry } from '@/shared/utils/exportHistory';
-import { ErrorGuidance } from '@/shared/ui/ErrorGuidance';
+import { ErrorBanner, ErrorGuidance } from '@/shared/ui/ErrorGuidance';
 import { buildToolbarExportUserMessage } from '@/shared/utils/exportErrors';
 import type { ToolbarExportKind } from '@/shared/utils/exportErrors';
+import LiveEventsFeed from './LiveEventsFeed';
 import type { TimeRange, AnalyticsData } from '../types';
 
 interface AnalyticsDashboardProps {
@@ -438,6 +440,10 @@ function labelFilename(base: string): string {
 // ─── Main Dashboard ────────────────────────────────────────────────────────
 
 export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardProps) {
+    // ── Real-time data — WS → SSE → polling (same transport ladder as dashboards) ──
+    const { data: liveData, wsState, error: dataError } = useWSAnalyticsData(true);
+    const isLive = wsState.status === 'connected';
+
     const {
         data,
         timeRange,
@@ -448,7 +454,7 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
         totalRevenue,
         averageOrderValue,
         growthRate,
-    } = useAnalytics(initialData);
+    } = useAnalytics(initialData, liveData);
 
     const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'growth'>('overview');
     const [isExportingCharts, setIsExportingCharts] = useState(false);
@@ -555,6 +561,11 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
             <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#C9A84C]/5 rounded-full blur-[120px] pointer-events-none" />
             <div className="absolute bottom-1/4 left-1/4 w-72 h-72 bg-[#4FC3F7]/5 rounded-full blur-[120px] pointer-events-none" />
 
+            {/* Real-time data degradation banner — same pattern as Admin/Founder dashboards */}
+            {dataError && (
+                <ErrorBanner tone="yellow" icon={AlertTriangle} message={`Live data is degraded: ${dataError}`} />
+            )}
+
             {/* KPI Cards — wrapped for full-report capture */}
             <section id="kpi-section" className="mb-8">
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -605,7 +616,16 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
                     ))}
                 </div>
 
+                {/* Live connection indicator */}
                 <div className="flex items-center gap-2 ml-auto sm:ml-0">
+                    <span className={`inline-flex items-center gap-1 text-[8px] font-mono uppercase tracking-widest ${
+                        isLive ? 'text-green-400' : 'text-yellow-500'
+                    }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${
+                            isLive ? 'bg-green-400 animate-pulse' : 'bg-yellow-500'
+                        }`} />
+                        {isLive ? 'LIVE via WebSocket' : 'Polling 15s'}
+                    </span>
                     <button onClick={handleExportCharts} disabled={isExportingCharts}
                         className="px-3 py-1.5 rounded-lg text-[9px] font-mono uppercase tracking-wider bg-[#C9A84C]/10 text-[#C9A84C] border border-[#C9A84C]/30 hover:bg-[#C9A84C]/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-wait flex items-center gap-1.5"
                         title={`Export ${TAB_LABELS[activeTab]} charts as PDF`}>
@@ -653,6 +673,9 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
                         title="Dismiss">✕</button>
                 </div>
             )}
+
+            {/* Live Events Feed — real-time activity stream */}
+            <LiveEventsFeed events={data.liveEvents} isLive={isLive} />
 
             {/* Local export history panel (last 10 operations) */}
             <ExportHistoryPanel />

@@ -7,12 +7,17 @@ import { MOCK_ANALYTICS_DATA } from '../constants/analyticsData';
 /**
  * useAnalytics — processes analytics data and applies time-range filtering.
  *
- * Currently uses mock data; swap with Supabase/API queries when ready.
+ * Uses mock data as a static fallback; when `liveData` arrives from the
+ * WebSocket/SSE/polling layer it overrides the fallback so charts update
+ * in real time (WS → SSE → polling, see useWSAnalyticsData).
  *
  * @param initialData - Override data (for server-provided datasets).
+ * @param liveData - Real-time payload; when present it replaces the fallback.
  */
-export function useAnalytics(initialData?: AnalyticsData) {
-    const [data] = useState<AnalyticsData>(initialData ?? MOCK_ANALYTICS_DATA);
+export function useAnalytics(initialData?: AnalyticsData, liveData?: AnalyticsData | null) {
+    const [fallbackData] = useState<AnalyticsData>(initialData ?? MOCK_ANALYTICS_DATA);
+    // Live payload wins whenever the transport delivers one
+    const data = liveData ?? fallbackData;
     const [timeRange, setTimeRange] = useState<TimeRange>('7d');
 
     // ── Time-range filtered data ────────────────────────────────────────
