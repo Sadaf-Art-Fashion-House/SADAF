@@ -25,7 +25,7 @@ import { fashionDatabase, artDatabase, collections } from '@/data';
 import { useDesignDraftStore } from '@/features/ai/store/useDesignDraftStore';
 import { designPublisher } from '@/features/ai/services/designPublisher';
 import { useWSAdminDashboardData } from '@/features/dashboard/hooks/useDashboardData';
-import { ErrorGuidance } from '@/shared/ui/ErrorGuidance';
+import { ErrorBanner } from '@/shared/ui/ErrorGuidance';
 
 // ─── Dynamic icon resolver for API-driven KPIs ────────────────────────────
 function DynamicKpiIcon({ name, size, className }: { name: string; size: number; className: string }) {
@@ -274,18 +274,7 @@ export default function AdminDashboardView({ user, onLogout }: AdminDashboardVie
             <section className="py-12 px-4 md:px-8 max-w-7xl mx-auto">
                 {/* Real-time data degradation banner */}
                 {dataError && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="mb-6 p-3.5 bg-yellow-950/30 border border-yellow-500/35 text-yellow-100 rounded-xl text-xs"
-                        role="alert"
-                    >
-                        <div className="flex items-center gap-2">
-                            <AlertTriangle size={14} className="shrink-0 text-yellow-400" />
-                            <span>Live data is degraded: {dataError}</span>
-                        </div>
-                        <ErrorGuidance className="text-[9px]" />
-                    </motion.div>
+                    <ErrorBanner tone="yellow" icon={AlertTriangle} message={`Live data is degraded: ${dataError}`} />
                 )}
 
                 <AnimatePresence mode="wait">
@@ -420,13 +409,7 @@ export default function AdminDashboardView({ user, onLogout }: AdminDashboardVie
                                 </h3>
 
                                 {formSuccess && (
-                                    <motion.div
-                                        initial={{ opacity: 0, scale: 0.95 }}
-                                        animate={{ opacity: 1 }}
-                                        className="p-2.5 bg-green-950/40 border border-green-500/30 text-green-200 text-[10px] rounded-lg text-center font-mono uppercase mb-4"
-                                    >
-                                        ✔ Product successfully registered!
-                                    </motion.div>
+                                    <ErrorBanner tone="green" icon={CheckCircle} message="✔ Product successfully registered!" className="mb-4" showGuidance={false} />
                                 )}
 
                                 <form onSubmit={handleCreateProduct} className="space-y-4 text-xs">
@@ -802,14 +785,7 @@ export default function AdminDashboardView({ user, onLogout }: AdminDashboardVie
                             </div>
 
                             {publishMsg && (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    className="p-3 bg-green-950/40 border border-green-500/30 text-green-200 text-xs rounded-xl flex items-center gap-2"
-                                >
-                                    <CheckCircle size={14} className="text-green-400" />
-                                    <span>{publishMsg}</span>
-                                </motion.div>
+                                <ErrorBanner tone="green" icon={CheckCircle} message={publishMsg} showGuidance={false} />
                             )}
 
                             {collectionMode && (

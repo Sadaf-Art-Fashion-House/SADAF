@@ -14,7 +14,7 @@ import {
 import SadafLogo from '@/components/common/SadafLogo';
 import type { UserRole } from '@/features/auth/types';
 import { ELEVATED_ROLES, ROLE_LABELS, REFERRAL_REQUIRED_ROLES, APPLICATION_REQUIRED_ROLES, APPLICATION_FIELDS } from '@/features/auth/types';
-import { ErrorGuidance } from '@/shared/ui/ErrorGuidance';
+import { ErrorBanner } from '@/shared/ui/ErrorGuidance';
 
 interface SignUpViewProps {
     onSignUp: (data: {
@@ -156,34 +156,13 @@ export default function SignUpView({
                 </div>
 
                 {(error || localError) && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="mb-5 p-3.5 bg-red-950/40 border border-red-500/30 text-red-200 rounded-xl text-xs"
-                        role="alert"
-                    >
-                        <div className="flex items-center gap-2">
-                            <AlertCircle size={14} className="shrink-0 text-red-400" />
-                            <span>{localError || error}</span>
-                        </div>
-                        <ErrorGuidance className="text-[9px]" />
-                    </motion.div>
+                    <ErrorBanner tone="red" icon={AlertCircle} message={localError || error} />
                 )}
 
                 {success && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="mb-5 p-4 bg-green-950/40 border border-green-500/30 text-green-200 rounded-xl text-xs flex items-start gap-2"
-                    >
-                        <CheckCircle size={14} className="shrink-0 text-green-400 mt-0.5" />
-                        <div>
-                            <strong className="text-white block mb-0.5">
-                                Registration Registered!
-                            </strong>
-                            <span>{success}</span>
-                        </div>
-                    </motion.div>
+                    <ErrorBanner tone="green" icon={CheckCircle} showGuidance={false}
+                        message={<><strong className="text-white block mb-0.5">Registration Registered!</strong><span>{success}</span></>}
+                    />
                 )}
 
                 <form noValidate onSubmit={handleSubmit} className="space-y-4 relative z-10 text-left">
