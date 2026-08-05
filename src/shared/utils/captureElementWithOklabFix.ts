@@ -222,6 +222,60 @@ function restoreCapturePadding(element: HTMLElement, state: CapturePaddingState)
 }
 
 /**
+ * html2canvas clones the ENTIRE document (not just the captured element) and
+ * runs ~3 getComputedStyle calls per element, so a big page adds ~15s of
+ * fixed overhead to EVERY capture — independent of the captured element's
+ * size. html2canvas skips elements carrying the `data-html2canvas-ignore`
+ * attribute, so everything outside the captured element (and its ancestor
+ * chain, which must stay for the reference lookup) is temporarily marked and
+ * restored after the capture. The captured element's own computed styles are
+ * inlined by inlineComputedStyles, so the missing siblings never affect the
+ * layout.
+ */
+const IGNORE_ATTRIBUTE = 'data-html2canvas-ignore';
+
+interface IgnoreMarkState {
+    element: Element;
+}
+
+function markPageOutsideCapture(element: HTMLElement): IgnoreMarkState[] {
+    const marked: IgnoreMarkState[] = [];
+    for (const el of Array.from(document.querySelectorAll('*'))) {
+        // Keep the captured element, its subtree, and its ancestor chain.
+        if (el === element || element.contains(el) || el.contains(element)) continue;
+        if (el.hasAttribute(IGNORE_ATTRIBUTE)) continue;
+        el.setAttribute(IGNORE_ATTRIBUTE, '');
+        marked.push({ element: el });
+    }
+    return marked;
+}
+
+function restoreIgnoreMarks(marks: IgnoreMarkState[]): void {
+    for (const mark of marks) {
+        mark.element.removeAttribute(IGNORE_ATTRIBUTE);
+    }
+}
+
+/**
+ * Keep the capture sharp on screen but bounded: html2canvas render cost grows
+ * with the square of the scale, and very wide elements (user's ~1400px
+ * viewport → 2800px canvas at 2x) are by far the slowest. Cap the longest
+ * canvas side at MAX_CANVAS_DIM px (never below 1×, so text stays legible on
+ * ultra-wide elements) — small elements keep the full base scale. Any
+ * caller-provided `scale` is treated as an upper bound.
+ */
+const MAX_CANVAS_DIM = 2048;
+
+function computeCaptureScale(element: HTMLElement, baseScale: number): number {
+    const rect = element.getBoundingClientRect();
+    const longestSide = Math.max(rect.width, rect.height);
+    if (longestSide <= 0) return baseScale;
+    // Floor of 1×: for elements wider than MAX_CANVAS_DIM the canvas still
+    // exceeds the cap, but sub-1× scaling would blur text beyond usefulness.
+    return Math.min(baseScale, Math.max(1, MAX_CANVAS_DIM / longestSide));
+}
+
+/**
  * Copy the SOURCE computed styles of every element in `sourceRoot` onto the
  * matching element in `clonedRoot` (the html2canvas clone) as inline styles.
  *
@@ -246,12 +300,6 @@ function inlineComputedStyles(sourceRoot: HTMLElement, clonedRoot: HTMLElement):
         const clonedElement = clonedElements[i] as HTMLElement;
         for (let p = 0; p < sourceStyle.length; p++) {
             const property = sourceStyle.item(p);
-            // Never copy transitions into the clone: a clone element that gets
-            // an inline color change while carrying a transition would keep its
-            // computed color frozen at the old (unsupported oklab) value for
-            // the transition duration — html2canvas parses computed styles
-            // immediately after onclone and crashes. The export is a static
-            // snapshot, so the clone must not animate anything.
             // Never copy transitions or animations into the clone: a clone
             // element that gets an inline color change while carrying a
             // transition/animation would keep its computed color frozen at the
@@ -289,11 +337,14 @@ export async function captureElementWithOklabFix(
 
     const svgColorPatches = patchSvgColors(element);
     const paddingState = applyCapturePadding(element);
+    // Dynamic scale is computed AFTER padding (the padded box is what is captured).
+    const effectiveScale = computeCaptureScale(element, scale);
+    const ignoreMarks = markPageOutsideCapture(element);
 
     try {
         const canvas = await html2canvas(element, {
             backgroundColor,
-            scale,
+            scale: effectiveScale,
             useCORS: true,
             logging: false,
             allowTaint: false,
@@ -310,6 +361,7 @@ export async function captureElementWithOklabFix(
     } finally {
         restoreSvgColors(svgColorPatches);
         restoreCapturePadding(element, paddingState);
+        restoreIgnoreMarks(ignoreMarks);
         if (!hadId) element.removeAttribute('id');
     }
 }
