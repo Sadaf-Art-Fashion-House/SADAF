@@ -212,6 +212,46 @@ function drawWatermark(canvas: HTMLCanvasElement): void {
     ctx.restore();
 }
 
+// ─── PDF page-fit helper ────────────────────────────────────────────────────
+
+/**
+ * Compute the largest centered image size that fits a jsPDF page within the
+ * printable area in BOTH dimensions.
+ *
+ * The old math sized the image from the page WIDTH only, so any element
+ * taller than the page's aspect ratio (KPI sections, product tables, tall
+ * charts) overflowed the A4 page and the bottom of the report was silently
+ * cut off. This keeps the whole capture visible (possibly smaller).
+ */
+function computePdfImageFit(
+    canvas: HTMLCanvasElement,
+    pageWidth: number,
+    pageHeight: number,
+    margin: number,
+): { imgWidth: number; imgHeight: number; x: number; y: number } {
+    const availableWidth = pageWidth - margin * 2;
+    const availableHeight = pageHeight - margin * 2;
+    // Guard against a zero-dimension canvas (hidden/zero-height element), which
+    // would otherwise make aspectRatio Infinity and imgWidth Infinity.
+    const aspectRatio =
+        canvas.width > 0 && canvas.height > 0 ? canvas.width / canvas.height : 1;
+
+    let imgWidth = availableWidth;
+    let imgHeight = imgWidth / aspectRatio;
+
+    if (imgHeight > availableHeight) {
+        imgHeight = availableHeight;
+        imgWidth = imgHeight * aspectRatio;
+    }
+
+    return {
+        imgWidth,
+        imgHeight,
+        x: (pageWidth - imgWidth) / 2,
+        y: (pageHeight - imgHeight) / 2,
+    };
+}
+
 // ─── Shared capture helper ─────────────────────────────────────────────────
 
 export async function captureElementWithWatermark(element: HTMLElement): Promise<HTMLCanvasElement> {
@@ -287,9 +327,10 @@ export function useExportChart(
             const imgData = canvas.toDataURL('image/png');
             const pdf = new jsPDF('l', 'mm', 'a4');
             const pageWidth = pdf.internal.pageSize.getWidth();
-            const imgWidth = pageWidth - 20;
-            const imgHeight = (canvas.height * imgWidth) / canvas.width;
-            pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const margin = 10;
+            const { imgWidth, imgHeight, x, y } = computePdfImageFit(canvas, pageWidth, pageHeight, margin);
+            pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
             pdf.save(`${filename}.pdf`);
             recordExport({ filename, format: 'pdf', status: 'success', source });
             return true;
@@ -338,8 +379,8 @@ export async function exportElementsAsPDF(
     try {
         const pdf = new jsPDF('l', 'mm', 'a4');
         const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
         const margin = 10;
-        const imgMaxWidth = pageWidth - margin * 2;
         let capturedAny = false;
 
         for (let i = 0; i < elementIds.length; i++) {
@@ -348,13 +389,13 @@ export async function exportElementsAsPDF(
 
             const canvas = await captureElementWithWatermark(el);
             const imgData = canvas.toDataURL('image/png');
-            const imgHeight = (canvas.height * imgMaxWidth) / canvas.width;
+            const { imgWidth, imgHeight, x, y } = computePdfImageFit(canvas, pageWidth, pageHeight, margin);
 
             if (i > 0) {
                 pdf.addPage();
             }
 
-            pdf.addImage(imgData, 'PNG', margin, margin, imgMaxWidth, imgHeight);
+            pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
             capturedAny = true;
         }
 
