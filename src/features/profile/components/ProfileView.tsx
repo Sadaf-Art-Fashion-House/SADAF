@@ -25,6 +25,7 @@ import type { UserProfile } from '@/shared/types';
 import { isCustomerRole, isAdminRole } from '@/shared/types';
 import { ROLE_BADGES, ROLE_BADGE_COLORS } from '@/features/auth/types';
 import { mockAuth } from '@/lib/supabase';
+import { ROUTES } from '@/config/routes';
 import { useWishlistStore } from '@/features/wishlist/store/useWishlistStore';
 import { useOrdersStore } from '@/features/orders/store/useOrdersStore';
 
@@ -266,9 +267,12 @@ export default function ProfileView({ user, onLogout }: ProfileViewProps) {
                                     <div className="text-center py-4">
                                         <p className="text-xs text-[#E8E0D5]/60 mb-1">Your network is growing</p>
                                         <p className="text-[10px] text-[#E8E0D5]/40 mb-3">Invite family and friends to join SADAF.</p>
-                                        <button className="px-4 py-2 bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/80 text-[#0A0F2C] text-[9px] font-mono font-bold uppercase tracking-wider rounded-lg transition-all duration-300 hover:scale-105 cursor-pointer">
+                                        <Link
+                                            href={`${ROUTES.DASHBOARD_COMMUNITY}?invite=1`}
+                                            className="inline-block px-4 py-2 bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/80 text-[#0A0F2C] text-[9px] font-mono font-bold uppercase tracking-wider rounded-lg transition-all duration-300 hover:scale-105 cursor-pointer"
+                                        >
                                             Invite Connections
-                                        </button>
+                                        </Link>
                                     </div>
                                 )}
                             </div>

@@ -21,6 +21,7 @@ import type { UserProfile, UserRole } from '@/shared/types';
 import { isCustomerRole, isAdminRole, getRoleCategory } from '@/shared/types';
 import { ROLE_BADGES, ROLE_BADGE_COLORS } from '@/features/auth/types';
 import { mockAuth } from '@/lib/supabase';
+import { ROUTES } from '@/config/routes';
 
 interface DashboardViewProps {
     user: UserProfile;
@@ -256,9 +257,12 @@ export default function DashboardView({ user, onLogout }: DashboardViewProps) {
                                 <p className="text-[11px] text-[#E8E0D5]/40">
                                     Invite your family and friends to join SADAF and earn exclusive rewards.
                                 </p>
-                                <button className="mt-4 px-5 py-2 bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/80 text-[#0A0F2C] text-[10px] font-mono font-bold uppercase tracking-wider rounded-lg transition-all duration-300 hover:scale-105 cursor-pointer">
+                                <Link
+                                    href={`${ROUTES.DASHBOARD_COMMUNITY}?invite=1`}
+                                    className="mt-4 inline-block px-5 py-2 bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/80 text-[#0A0F2C] text-[10px] font-mono font-bold uppercase tracking-wider rounded-lg transition-all duration-300 hover:scale-105 cursor-pointer"
+                                >
                                     Invite Connections
-                                </button>
+                                </Link>
                             </div>
                         )}
                     </div>
