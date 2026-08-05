@@ -14,6 +14,7 @@ import {
     MOCK_NETWORK_GRAPH,
     MOCK_REFERRAL_INFO,
 } from '../constants/communityData';
+import { COMMUNITY_UPDATED_EVENT } from './usePendingFriendRequests';
 
 const STORAGE_KEY = 'sadaf_community';
 
@@ -52,6 +53,10 @@ export function useCommunity() {
                 STORAGE_KEY,
                 JSON.stringify({ connections, pendingRequests }),
             );
+            // Notify the header friend-requests badge (same tab) that the
+            // pending requests changed (accept / decline / new invite), so it
+            // re-reads the count without a refresh.
+            window.dispatchEvent(new Event(COMMUNITY_UPDATED_EVENT));
         } catch {
             // ignore
         }

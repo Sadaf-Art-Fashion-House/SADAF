@@ -4,17 +4,28 @@
  * GET /api/dashboard/customer-analysis?userId=<id>
  *
  * Returns customer-specific personal analytics: KPIs (total spent, orders,
- * wishlist, AI designs), order history, monthly spending, and category
- * breakdown. Values include slight real-time jitter so the page feels live.
+ * wishlist, AI designs), order history, monthly spending, category
+ * breakdown, and smart product recommendations matched to the customer's
+ * top spending categories (e.g. heavy Traditional Fusion spenders get
+ * Traditional Fusion offers).
+ *
+ * Values include slight real-time jitter so the page feels live.
  *
  * Currently serves generated demo data scoped per-user. Swap the mock base
  * for Prisma/database queries in production (filter orders, wishlist, and
- * AI designs by userId).
+ * AI designs by userId; pull real product offers from the catalog).
  */
 
 import { NextResponse } from 'next/server';
 import { formatCurrency } from '@/utils/formatCurrency';
-import type { CustomerAnalysisData, CustomerOrder, CustomerSpendingPoint, CustomerCategorySpend } from '@/features/customer/types';
+import { ROUTES } from '@/config/routes';
+import type {
+    CustomerAnalysisData,
+    CustomerOrder,
+    CustomerSpendingPoint,
+    CustomerCategorySpend,
+    ProductRecommendation,
+} from '@/features/customer/types';
 
 /**
  * Never cache: personal stats change as the customer shops.
@@ -60,6 +71,131 @@ const MOCK_CATEGORY_SPEND: CustomerCategorySpend[] = [
     { category: 'Limited Edition', value: 890, color: '#F59E0B' },
 ];
 
+// ─── Smart Recommendation Engine ─────────────────────────────────────────────
+// Matches offers to the customer's top spending categories. In production,
+// replace the static offers with real catalog rows (Prisma products) filtered
+// by category.
+
+interface RecommendationOffer {
+    title: string;
+    description: string;
+    price: number;
+    originalPrice: number;
+    href: string;
+}
+
+/** Static offer pool keyed by category (the key IS the category). */
+const OFFER_POOL: Record<string, RecommendationOffer[]> = {
+    'Traditional Fusion': [
+        {
+            title: 'Heritage Fusion Abaya',
+            description: 'Hand-embroidered abaya with gold-thread details.',
+            price: 1250,
+            originalPrice: 1480,
+            href: `${ROUTES.FASHION}?category=Traditional+Fusion`,
+        },
+        {
+            title: 'Omani-Born Kaftan',
+            description: 'Signature silhouette cut from premium woven cotton.',
+            price: 890,
+            originalPrice: 1050,
+            href: `${ROUTES.FASHION}?category=Traditional+Fusion`,
+        },
+    ],
+    Women: [
+        {
+            title: 'Pearl Evening Gown',
+            description: 'Hand-beaded gown from the spring atelier collection.',
+            price: 1620,
+            originalPrice: 1900,
+            href: `${ROUTES.FASHION}?category=Women`,
+        },
+    ],
+    Men: [
+        {
+            title: 'Tailored Heritage Thobe',
+            description: 'Slim-fit thobe with cuff embroidery — limited fabric.',
+            price: 780,
+            originalPrice: 920,
+            href: `${ROUTES.FASHION}?category=Men`,
+        },
+    ],
+    'Art Pieces': [
+        {
+            title: 'Fusion Canvas — Original',
+            description: 'One-of-one mixed-media piece by a SADAF artist.',
+            price: 2400,
+            originalPrice: 2750,
+            href: ROUTES.ARTWORKS,
+        },
+    ],
+    'Limited Edition': [
+        {
+            title: 'Limited Edition Wrap',
+            description: 'Numbered piece — only 25 produced worldwide.',
+            price: 1350,
+            originalPrice: 1600,
+            href: ROUTES.STORE,
+        },
+    ],
+};
+
+const OFFER_REASONS: Record<string, string> = {
+    'Traditional Fusion': "Your most-loved category — we saved a special price for you.",
+    Women: "You've been exploring the women's collection lately.",
+    Men: "Matches your recent men's tailoring orders.",
+    'Art Pieces': "Based on your art purchases, this may speak to you.",
+    'Limited Edition': 'You collect limited pieces — this one is nearly gone.',
+};
+
+/**
+ * Rank the customer's spending categories and return a matching offer per
+ * top category (up to 3 total). Falls back to a curated pick if no category
+ * has a matching offer.
+ */
+function buildRecommendations(categorySpend: CustomerCategorySpend[]): ProductRecommendation[] {
+    const ranked = [...categorySpend].sort((a, b) => b.value - a.value);
+    const topCategories = ranked.slice(0, 3);
+
+    const recommendations: ProductRecommendation[] = [];
+
+    for (const cat of topCategories) {
+        const offers = OFFER_POOL[cat.category];
+        if (!offers || offers.length === 0) continue;
+        const offer = offers[0];
+        recommendations.push({
+            id: `rec-${cat.category}-${offer.title}`,
+            category: cat.category,
+            title: offer.title,
+            description: offer.description,
+            price: offer.price,
+            originalPrice: offer.originalPrice,
+            discountPercent: Math.round((1 - offer.price / offer.originalPrice) * 100),
+            reason: OFFER_REASONS[cat.category] ?? `Popular in ${cat.category}.`,
+            href: offer.href,
+        });
+        if (recommendations.length >= 3) break;
+    }
+
+    // Fallback: if nothing matched (empty pool), return a generic featured pick.
+    if (recommendations.length === 0) {
+        const fallback = OFFER_POOL['Limited Edition'][0];
+        recommendations.push({
+            id: `rec-fallback-${fallback.title}`,
+            category: 'Limited Edition',
+            title: fallback.title,
+            description: fallback.description,
+            price: fallback.price,
+            originalPrice: fallback.originalPrice,
+            discountPercent: Math.round((1 - fallback.price / fallback.originalPrice) * 100),
+            reason: 'A curated pick for you this week.',
+            href: fallback.href,
+        });
+    }
+
+    return recommendations;
+}
+
 /** Jitter a number by ±pct% (min 0). */
 function jitter(value: number, pct = 0.05): number {
     const delta = value * (Math.random() * 2 - 1) * pct;
@@ -103,6 +239,7 @@ export async function GET(request: Request) {
             })),
             monthlySpending,
             categorySpend,
+            recommendations: buildRecommendations(categorySpend),
             averageOrderValue,
             tier: 'Heritage Gold Member',
             wishlistValue,

@@ -13,10 +13,21 @@ import {
     MapPin,
     Heart,
 } from 'lucide-react';
-import type { Order, OrderStatus } from '@/features/orders/types';
+import type { Order, OrderStatus, OrderStatusEvent } from '@/features/orders/types';
+import LiveOrderStatus from './LiveOrderStatus';
 
 interface OrdersViewProps {
     orders: Order[];
+    /** Latest status per order, overlaid from real-time events. */
+    liveStatuses: Record<string, OrderStatus>;
+    /** Recent order-status transitions (newest first). */
+    liveEvents: OrderStatusEvent[];
+    /** Whether the WebSocket transport is connected (LIVE badge). */
+    isLive: boolean;
+    /** True while the first batch of live events is loading. */
+    liveLoading: boolean;
+    /** Degradation message from the live transport, if any. */
+    liveError: string | null;
 }
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
@@ -36,7 +47,20 @@ const STATUS_ICONS: Record<OrderStatus, typeof Package> = {
 const STEP_LABELS = ['Ordered', 'Sewing', 'Shipped', 'Received'] as const;
 const STEP_STATUSES: OrderStatus[] = ['Pending', 'Tailoring', 'Shipped', 'Delivered'];
 
-export default function OrdersView({ orders }: OrdersViewProps) {
+export default function OrdersView({
+    orders,
+    liveStatuses,
+    liveEvents,
+    isLive,
+    liveLoading,
+    liveError,
+}: OrdersViewProps) {
+    // Live statuses win over the initial snapshot for the order cards below.
+    const effectiveOrders = orders.map((order) => ({
+        ...order,
+        status: liveStatuses[order.id] ?? order.status,
+    }));
+
     return (
         <div className="relative w-full min-h-screen pb-20">
             {/* Background glow */}
@@ -54,9 +78,9 @@ export default function OrdersView({ orders }: OrdersViewProps) {
                             <ShoppingBag size={28} className="text-[#4FC3F7]" />
                             Your Orders
                         </h1>
-                        {orders.length > 0 && (
+                        {effectiveOrders.length > 0 && (
                             <p className="text-xs text-[#E8E0D5]/50 font-mono mt-1">
-                                {orders.length} {orders.length === 1 ? 'order' : 'orders'}
+                                {effectiveOrders.length} {effectiveOrders.length === 1 ? 'order' : 'orders'}
                             </p>
                         )}
                     </div>
@@ -71,7 +95,7 @@ export default function OrdersView({ orders }: OrdersViewProps) {
                 </div>
             </section>
 
-            {orders.length === 0 ? (
+            {effectiveOrders.length === 0 ? (
                 /* Empty state */
                 <section className="relative py-24 px-4 md:px-8 max-w-5xl mx-auto text-center">
                     <motion.div
@@ -97,9 +121,28 @@ export default function OrdersView({ orders }: OrdersViewProps) {
             ) : (
                 /* Orders list */
                 <section className="py-10 px-4 md:px-8 max-w-5xl mx-auto">
+                    {/* Live order status panel — receives raw orders + live statuses,
+                        computes its own effective overlay (single source of truth). */}
+                    <LiveOrderStatus
+                        orders={orders}
+                        statuses={liveStatuses}
+                        events={liveEvents}
+                        isLive={isLive}
+                        loading={liveLoading}
+                    />
+
+                    {/* Live transport degradation notice */}
+                    {liveError && !isLive && (
+                        <div className="mb-6 flex items-center gap-2 px-3 py-2 rounded-xl text-[9px] font-mono text-amber-400/80 bg-amber-500/5 border border-amber-500/15">
+                            <span>
+                                Live order tracking is degraded: {liveError} — using polling fallback.
+                            </span>
+                        </div>
+                    )}
+
                     <div className="space-y-6">
                         <AnimatePresence>
-                            {orders.map((ord, index) => {
+                            {effectiveOrders.map((ord, index) => {
                                 const StatusIcon = STATUS_ICONS[ord.status];
                                 const statusIdx = STEP_STATUSES.indexOf(ord.status);
 
@@ -193,7 +236,7 @@ export default function OrdersView({ orders }: OrdersViewProps) {
             )}
 
             {/* Bottom navigation */}
-            {orders.length > 0 && (
+            {effectiveOrders.length > 0 && (
                 <section className="py-8 px-4 md:px-8 max-w-5xl mx-auto">
                     <div className="flex flex-wrap items-center justify-center gap-4 text-[10px] font-mono uppercase tracking-widest">
                         <Link

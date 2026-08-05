@@ -12,6 +12,20 @@
  * 6. 🔔 Real-time notifications — pushes demo notifications every 15s
  *    → Replace generateDemoNotification() with real API polling in production
  * 7. 📈 analytics:admin endpoint — real-time analytics payload (KPIs + charts)
+ * 8. 👤 personal:user:{id} endpoint — per-user personal activity (orders,
+ *    saved designs, wishlist updates, offers) pushed in real time
+ *    → Replace generateDemoPersonalActivity() with real API polling in production
+ * 9. 📦 order-status on personal:user:{id} — per-user live order transitions
+ *    (Pending → Tailoring → Shipped → Delivered) pushed in real time
+ *    → Replace generateDemoOrderStatus() with real API polling in production
+ * 10. 💎 rewards on personal:user:{id} — per-user loyalty rewards (points,
+ *     tier, leaderboard rank) pushed in real time. Fetches the real
+ *     /api/dashboard/rewards route so the tier math lives in one place.
+ * 11. 🏆 leaderboard:global — pushes live leaderboard updates (loyalty
+ *     points / sales / designs rankings) to every client subscribed to the
+ *     global channel whenever someone shops. Fetches the real
+ *     /api/dashboard/leaderboard route per kind so ranking math stays in
+ *     one place; tables update without a refresh.
  *
  * Usage:
  *   node ws-server.mjs       # standalone
@@ -39,11 +53,15 @@ const ENDPOINTS = [
 
 const VALID_ENDPOINT_TYPES = new Set(ENDPOINTS.map((e) => e.type));
 
-// Allow dynamic notification endpoint validation
+// Allow dynamic notification & personal endpoints validation
 function isValidEndpointType(type) {
     if (VALID_ENDPOINT_TYPES.has(type)) return true;
     // Dynamic notifications:user:{userId}
     if (type.startsWith('notifications:user:') || type === 'notifications:global') return true;
+    // Dynamic personal activity: personal:user:{userId}
+    if (type.startsWith('personal:user:')) return true;
+    // Global leaderboard channel
+    if (type === 'leaderboard:global') return true;
     return false;
 }
 
@@ -74,6 +92,103 @@ function generateDemoNotification() {
     };
 }
 
+// ─── Simulated Personal Activity (for demo / development) ────────────────────
+// Pushes per-user personal activity (order placed, design saved) to clients
+// subscribed to personal:user:{userId}.
+// In production, replace with real events from the database (orders, designs).
+const DEMO_PERSONAL_ACTIVITY_ENABLED = !process.env.DISABLE_DEMO_PERSONAL_ACTIVITY;
+let personalActivityCounter = 0;
+
+function generateDemoPersonalActivity(userId) {
+    personalActivityCounter++;
+    const templates = [
+        { type: 'order', title: 'Order Placed', message: 'Order #SADAF-' + (5000 + personalActivityCounter) + ' has been placed and is being prepared in the atelier.' },
+        { type: 'design', title: 'Design Saved', message: 'Your design "Heritage Fusion 07" was saved to your atelier.' },
+        { type: 'wishlist', title: 'Wishlist Update', message: 'An item in your wishlist is now 15% off — limited time.' },
+        { type: 'promotion', title: 'Personal Offer', message: 'You earned a 10% member discount on your next order.' },
+    ];
+    const tpl = templates[personalActivityCounter % templates.length];
+    return {
+        id: 'pa-demo-' + Date.now() + '-' + personalActivityCounter,
+        type: tpl.type,
+        title: tpl.title,
+        message: tpl.message,
+        timestamp: new Date().toISOString(),
+        userId,
+    };
+}
+
+// ─── Simulated Order Status (for demo / development) ─────────────────────────
+// Pushes per-user live order transitions (Pending → Tailoring → Shipped →
+// Delivered) to clients subscribed to personal:user:{userId}, using the
+// `orderStatus` payload so it stays distinct from the `activity` payload.
+// In production, replace with real polling from /api/dashboard/order-status.
+const DEMO_ORDER_STATUS_ENABLED = !process.env.DISABLE_DEMO_ORDER_STATUS;
+let orderStatusCounter = 0;
+
+const ORDER_STATUS_FLOW = [
+    { previousStatus: 'Pending', status: 'Tailoring', message: 'Your piece has entered the atelier — our artisans are sewing it by hand.' },
+    { previousStatus: 'Tailoring', status: 'Shipped', message: 'Your order has shipped from the atelier and is on its way.' },
+    { previousStatus: 'Shipped', status: 'Delivered', message: 'Delivered! We hope your piece brings you joy.' },
+];
+
+function generateDemoOrderStatus(userId) {
+    const step = orderStatusCounter % ORDER_STATUS_FLOW.length;
+    orderStatusCounter++;
+    const transition = ORDER_STATUS_FLOW[step];
+    return {
+        id: 'os-demo-' + Date.now() + '-' + orderStatusCounter,
+        orderId: 'SDF-2026-9041',
+        previousStatus: transition.previousStatus,
+        status: transition.status,
+        message: transition.message,
+        timestamp: new Date().toISOString(),
+        userId,
+    };
+}
+
+// ─── Real-time Rewards (for demo / development) ──────────────────────────────
+// Pushes the logged-in user's loyalty rewards (points, tier, leaderboard
+// rank) to clients subscribed to personal:user:{userId}, using the `rewards`
+// payload (distinct from `activity` / `orderStatus`).
+// It fetches the real /api/dashboard/rewards route so the tier math stays
+// in exactly one place — in production this already reads the live API.
+const DEMO_REWARDS_ENABLED = !process.env.DISABLE_DEMO_REWARDS;
+
+// ─── Global Leaderboard (for demo / development) ─────────────────────────────
+// Pushes live leaderboard updates to every client subscribed to the
+// leaderboard:global channel. Fetches the real /api/dashboard/leaderboard
+// route once per ranking kind so the ranking math lives in exactly one
+// place — in production this already reads the live catalog.
+const DEMO_LEADERBOARD_ENABLED = !process.env.DISABLE_DEMO_LEADERBOARD;
+const LEADERBOARD_KINDS = ['points', 'sales', 'designs'];
+
+/** True when at least one connected client subscribes to leaderboard:global. */
+function hasLeaderboardSubscribers() {
+    let found = false;
+    wss.clients.forEach((client) => {
+        if (client.readyState !== WebSocketClient.OPEN) return;
+        if (getSubscriptions(client).has('leaderboard:global')) found = true;
+    });
+    return found;
+}
+
+/** Broadcast a leaderboard payload to every client subscribed to the global channel. */
+function sendLeaderboardGlobal(kind, leaderboard) {
+    const message = JSON.stringify({
+        type: 'leaderboard:global',
+        kind,
+        leaderboard,
+        timestamp: new Date().toISOString(),
+    });
+    wss.clients.forEach((client) => {
+        if (client.readyState !== WebSocketClient.OPEN) return;
+        if (getSubscriptions(client).has('leaderboard:global')) {
+            client.send(message);
+        }
+    });
+}
+
 // ─── Client Subscription Tracking ────────────────────────────────────────────
 
 const clientSubscriptions = new WeakMap();
@@ -85,6 +200,45 @@ function getSubscriptions(ws) {
         clientSubscriptions.set(ws, subs);
     }
     return subs;
+}
+
+/**
+ * Collect the distinct user ids that currently have at least one active
+ * `personal:user:{userId}` subscription across all connected clients.
+ * Shared by the personal-activity, order-status and rewards broadcasters
+ * so the channel format stays consistent in one place.
+ */
+function collectSubscribedUserIds() {
+    const userIds = new Set();
+    wss.clients.forEach((client) => {
+        if (client.readyState !== WebSocketClient.OPEN) return;
+        const subs = getSubscriptions(client);
+        for (const sub of subs) {
+            if (sub.startsWith('personal:user:')) {
+                userIds.add(sub.slice('personal:user:'.length));
+            }
+        }
+    });
+    return userIds;
+}
+
+/**
+ * Send a message to every client subscribed to the given personal channel.
+ */
+function sendToPersonalChannel(userId, payload) {
+    const message = JSON.stringify({
+        type: `personal:user:${userId}`,
+        ...payload,
+        timestamp: new Date().toISOString(),
+    });
+
+    wss.clients.forEach((client) => {
+        if (client.readyState !== WebSocketClient.OPEN) return;
+        const subs = getSubscriptions(client);
+        if (subs.has(`personal:user:${userId}`)) {
+            client.send(message);
+        }
+    });
 }
 
 // ─── API Health Tracking ─────────────────────────────────────────────────────
@@ -110,7 +264,7 @@ wss.on('connection', (ws, req) => {
         status: 'connected',
         clientCount,
         apiHealthy,
-        endpoints: [...ENDPOINTS.map((e) => e.type), 'notifications:user:{id}', 'notifications:global'],
+        endpoints: [...ENDPOINTS.map((e) => e.type), 'notifications:user:{id}', 'notifications:global', 'personal:user:{id}', 'leaderboard:global'],
         supportsNotifications: true,
         timestamp: new Date().toISOString(),
     }));
@@ -280,6 +434,102 @@ if (DEMO_NOTIFICATIONS_ENABLED) {
 
     console.log('   🔔 Demo notifications enabled — sending one every 15s');
     console.log('      Set DISABLE_DEMO_NOTIFICATIONS=1 to disable');
+}
+
+// ─── Demo Personal Activity Generator ───────────────────────────────────────
+// Sends a simulated per-user personal event (order placed / design saved) to
+// clients subscribed to personal:user:{userId}.
+// In production, replace with real polling from /api/dashboard/personal-activity.
+
+if (DEMO_PERSONAL_ACTIVITY_ENABLED) {
+    setInterval(() => {
+        for (const userId of collectSubscribedUserIds()) {
+            const activity = generateDemoPersonalActivity(userId);
+            sendToPersonalChannel(userId, { activity });
+        }
+    }, 15_000); // Every 15 seconds
+
+    console.log('   👤 Demo personal activity enabled — per-user push every 15s');
+    console.log('      Set DISABLE_DEMO_PERSONAL_ACTIVITY=1 to disable');
+}
+
+// ─── Demo Order Status Generator ────────────────────────────────────────────
+// Sends a simulated per-user order transition (Pending → Tailoring → Shipped
+// → Delivered) to clients subscribed to personal:user:{userId}, using the
+// `orderStatus` payload (distinct from `activity`).
+// In production, replace with real polling from /api/dashboard/order-status.
+
+if (DEMO_ORDER_STATUS_ENABLED) {
+    setInterval(() => {
+        for (const userId of collectSubscribedUserIds()) {
+            const orderStatus = generateDemoOrderStatus(userId);
+            sendToPersonalChannel(userId, { orderStatus });
+        }
+    }, 12_000); // Every 12 seconds
+
+    console.log('   📦 Demo order status enabled — per-user transition every 12s');
+    console.log('      Set DISABLE_DEMO_ORDER_STATUS=1 to disable');
+}
+
+// ─── Real-time Rewards Generator ────────────────────────────────────────────
+// Sends the logged-in user's loyalty rewards (points, tier, leaderboard rank)
+// to clients subscribed to personal:user:{userId}, using the `rewards`
+// payload (distinct from `activity` / `orderStatus`). It fetches the real
+// /api/dashboard/rewards route so tier math stays in one place.
+
+if (DEMO_REWARDS_ENABLED) {
+    setInterval(async () => {
+        for (const userId of collectSubscribedUserIds()) {
+            try {
+                const url = `${NEXT_DEV_URL}/api/dashboard/rewards?userId=${encodeURIComponent(userId)}`;
+                const res = await fetch(url, { signal: AbortSignal.timeout(API_TIMEOUT_MS) });
+                if (!res.ok) continue;
+
+                const rewards = await res.json();
+                sendToPersonalChannel(userId, { rewards });
+            } catch (err) {
+                if (err.code === 'ECONNREFUSED' || err.code === 'UND_ERR_CONNECT_TIMEOUT') {
+                    continue; // Next.js not ready — skip this user, keep others
+                }
+                console.error(`   ⚠️ rewards:${userId}: ${err.message}`);
+            }
+        }
+    }, 12_000); // Every 12 seconds
+
+    console.log('   💎 Real-time rewards enabled — per-user push every 12s');
+    console.log('      Set DISABLE_DEMO_REWARDS=1 to disable');
+}
+
+// ─── Global Leaderboard Generator ───────────────────────────────────────────
+// Pushes live leaderboard updates to every client subscribed to
+// leaderboard:global, once per ranking kind. Fetches the real
+// /api/dashboard/leaderboard route so ranking math stays in one place.
+// In production this already reads the live catalog — clients (useLeaderboard)
+// re-rank instantly when someone shops.
+
+if (DEMO_LEADERBOARD_ENABLED) {
+    setInterval(async () => {
+        if (!hasLeaderboardSubscribers()) return;
+
+        for (const kind of LEADERBOARD_KINDS) {
+            try {
+                const url = `${NEXT_DEV_URL}/api/dashboard/leaderboard?kind=${encodeURIComponent(kind)}&size=100`;
+                const res = await fetch(url, { signal: AbortSignal.timeout(API_TIMEOUT_MS) });
+                if (!res.ok) continue;
+
+                const leaderboard = await res.json();
+                sendLeaderboardGlobal(kind, leaderboard);
+            } catch (err) {
+                if (err.code === 'ECONNREFUSED' || err.code === 'UND_ERR_CONNECT_TIMEOUT') {
+                    continue; // Next.js not ready — skip this tick, keep others
+                }
+                console.error(`   ⚠️ leaderboard:${kind}: ${err.message}`);
+            }
+        }
+    }, 12_000); // Every 12 seconds
+
+    console.log('   🏆 Real-time leaderboard enabled — global push every 12s');
+    console.log('      Set DISABLE_DEMO_LEADERBOARD=1 to disable');
 }
 
 // Graceful shutdown

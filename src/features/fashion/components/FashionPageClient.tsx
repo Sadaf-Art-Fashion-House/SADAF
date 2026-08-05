@@ -8,9 +8,11 @@ import type { FashionProduct, LookbookItem } from "@/shared/types";
 interface FashionPageClientProps {
     products: FashionProduct[];
     lookbookItems: LookbookItem[];
+    /** Optional category from the ?category= URL param (e.g. Smart Offers "View Offer" links). */
+    initialCategory?: string;
 }
 
-export default function FashionPageClient({ products, lookbookItems }: FashionPageClientProps) {
+export default function FashionPageClient({ products, lookbookItems, initialCategory }: FashionPageClientProps) {
     const addFashionToCart = useCartStore((state) => state.addFashionToCart);
     const isWishlisted = useWishlistStore((state) => state.isWishlisted);
     const toggleWishlist = useWishlistStore((state) => state.toggleWishlist);
@@ -27,6 +29,7 @@ export default function FashionPageClient({ products, lookbookItems }: FashionPa
         <FashionView
             products={products}
             lookbookItems={lookbookItems}
+            initialCategory={initialCategory}
             isWishlisted={isWishlisted}
             onAddToCart={handleAddToCart}
             onAddToWishlist={handleAddToWishlist}
