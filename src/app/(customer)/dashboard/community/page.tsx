@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import CommunityPageClient from '@/features/community/components/CommunityPageClient';
 
 export const metadata: Metadata = {
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function CommunityPage() {
-    return <CommunityPageClient />;
+    return (
+        <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center" />}>
+            <CommunityPageClient />
+        </Suspense>
+    );
 }
