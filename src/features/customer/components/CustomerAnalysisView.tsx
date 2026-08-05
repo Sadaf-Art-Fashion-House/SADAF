@@ -13,6 +13,7 @@ import {
     Activity,
     Compass,
     Calendar,
+    WifiOff,
 } from 'lucide-react';
 import {
     BarChart,
@@ -28,14 +29,31 @@ import {
     Legend,
 } from 'recharts';
 import { formatCurrency } from '@/utils/formatCurrency';
-import type { CustomerAnalysisData } from '../types';
+import type { CustomerAnalysisData, PersonalActivityEvent, RewardsData } from '../types';
 import { ErrorBanner } from '@/shared/ui/ErrorGuidance';
+import PersonalActivityFeed from './PersonalActivityFeed';
+import SmartRecommendations from './SmartRecommendations';
+import RewardsPanel from './RewardsPanel';
 
 interface CustomerAnalysisViewProps {
     data: CustomerAnalysisData | null;
     loading: boolean;
     error: string | null;
     memberName: string;
+    /** Real-time personal activity events (orders, saved designs). */
+    personalEvents: PersonalActivityEvent[];
+    /** Whether the personal activity WebSocket is connected (LIVE badge). */
+    isPersonalLive: boolean;
+    /** Degradation message from the personal activity transport, if any. */
+    personalActivityError: string | null;
+    /** True while the first batch of personal events is loading. */
+    personalActivityLoading: boolean;
+    /** Loyalty rewards + leaderboard data. */
+    rewardsData: RewardsData | null;
+    rewardsLoading: boolean;
+    rewardsError: string | null;
+    /** Whether the rewards WebSocket is connected (LIVE badge). */
+    isRewardsLive: boolean;
 }
 
 const KPI_ICONS: Record<string, typeof Wallet> = {
@@ -61,6 +79,14 @@ export default function CustomerAnalysisView({
     loading,
     error,
     memberName,
+    personalEvents,
+    isPersonalLive,
+    personalActivityError,
+    personalActivityLoading,
+    rewardsData,
+    rewardsLoading,
+    rewardsError,
+    isRewardsLive,
 }: CustomerAnalysisViewProps) {
     if (loading) {
         return (
@@ -134,6 +160,23 @@ export default function CustomerAnalysisView({
                     />
                 )}
 
+                {/* Real-time personal activity feed */}
+                <PersonalActivityFeed
+                    events={personalEvents}
+                    isLive={isPersonalLive}
+                    loading={personalActivityLoading}
+                />
+
+                {/* Personal activity transport degradation notice */}
+                {personalActivityError && !isPersonalLive && (
+                    <div className="mb-6 flex items-center gap-2 px-3 py-2 rounded-xl text-[9px] font-mono text-amber-400/80 bg-amber-500/5 border border-amber-500/15">
+                        <WifiOff size={10} className="shrink-0" />
+                        <span>
+                            Personal activity is degraded: {personalActivityError} — using polling fallback.
+                        </span>
+                    </div>
+                )}
+
                 {/* KPI Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
                     {data.kpis.map((kpi) => {
@@ -160,6 +203,15 @@ export default function CustomerAnalysisView({
                         );
                     })}
                 </div>
+
+                {/* Rewards & Leaderboard */}
+                <RewardsPanel
+                    data={rewardsData}
+                    loading={rewardsLoading}
+                    error={rewardsError}
+                    memberName={memberName}
+                    isLive={isRewardsLive}
+                />
 
                 {/* Charts */}
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
@@ -248,6 +300,9 @@ export default function CustomerAnalysisView({
                         </div>
                     </div>
                 </div>
+
+                {/* Smart recommendations matched to spending categories */}
+                <SmartRecommendations recommendations={data.recommendations} />
 
                 {/* Orders table */}
                 <div className="p-5 bg-[#05081A]/90 border border-[#C9A84C]/10 rounded-2xl">

@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Heart, ShoppingCart, User, ChevronDown, Search, MessageSquare } from "lucide-react";
 import SadafLogo from "@/components/common/SadafLogo";
 import NotificationBell from "@/features/notifications/components/NotificationBell";
+import FriendRequestsBadge from "@/features/community/components/FriendRequestsBadge";
 import { useCartStore } from "@/features/cart/store/useCartStore";
 import { useWishlistStore } from "@/features/wishlist/store/useWishlistStore";
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -168,6 +169,8 @@ export default function Header() {
                     >
                         <Search size={16} />
                     </Link>
+
+                    <FriendRequestsBadge />
 
                     <NotificationBell />
 

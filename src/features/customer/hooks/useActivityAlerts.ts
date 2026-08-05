@@ -1,0 +1,208 @@
+'use client';
+
+/**
+ * SADAF | Customer — My Activity Alert Hook
+ *
+ * Optional browser Notification + soft chime when a NEW personal activity
+ * event (order, saved design, wishlist, offer) streams into the feed.
+ *
+ * - Both alerts are opt-in and persisted in localStorage
+ *   (key: `sadaf_activity_alerts`).
+ * - Browser notifications request permission only when the user enables
+ *   them (a user gesture), following Notification best practice.
+ * - The chime is synthesized with the Web Audio API (no asset file), so it
+ *   works offline and never needs a network round-trip.
+ * - Alerts fire only for events the feed has NOT seen yet (deduped by id);
+ *   the initial batch is treated as historical and stays silent.
+ */
+
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { PersonalActivityEvent } from '../types';
+
+// ─── Config ──────────────────────────────────────────────────────────────────
+
+const STORAGE_KEY = 'sadaf_activity_alerts';
+const CHIME_NOTES_HZ = [880, 1174.66]; // A5 → D6 — soft two-note "ding-ding"
+const CHIME_VOLUME = 0.05;
+
+interface AlertPreferences {
+    /** Show a browser Notification per new event. */
+    browser: boolean;
+    /** Play a soft chime per new event. */
+    sound: boolean;
+}
+
+const DEFAULT_PREFERENCES: AlertPreferences = { browser: false, sound: false };
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function readStoredPreferences(): AlertPreferences {
+    try {
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        if (!raw) return DEFAULT_PREFERENCES;
+        const parsed = JSON.parse(raw) as Partial<AlertPreferences>;
+        return {
+            browser: typeof parsed.browser === 'boolean' ? parsed.browser : DEFAULT_PREFERENCES.browser,
+            sound: typeof parsed.sound === 'boolean' ? parsed.sound : DEFAULT_PREFERENCES.sound,
+        };
+    } catch {
+        return DEFAULT_PREFERENCES;
+    }
+}
+
+function isNotificationSupported(): boolean {
+    return typeof window !== 'undefined' && 'Notification' in window;
+}
+
+// ─── Hook ────────────────────────────────────────────────────────────────────
+
+export function useActivityAlerts(events: PersonalActivityEvent[]) {
+    const [preferences, setPreferences] = useState<AlertPreferences>(DEFAULT_PREFERENCES);
+    const [isSupported, setIsSupported] = useState(false);
+    const [permissionDenied, setPermissionDenied] = useState(false);
+
+    // Kept in a ref so the event effect always reads the latest prefs without
+    // re-subscribing to the feed on every toggle change.
+    const preferencesRef = useRef<AlertPreferences>(DEFAULT_PREFERENCES);
+    const seenIdsRef = useRef<Set<string>>(new Set());
+    const seededRef = useRef(false);
+    const audioCtxRef = useRef<AudioContext | null>(null);
+
+    // Load persisted prefs + feature detection after mount (client-only,
+    // avoids SSR hydration mismatch).
+    useEffect(() => {
+        setIsSupported(isNotificationSupported());
+        setPreferences(readStoredPreferences());
+    }, []);
+
+    // Keep the ref in sync and persist every change.
+    useEffect(() => {
+        preferencesRef.current = preferences;
+        try {
+            window.localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
+        } catch {
+            // Storage may be unavailable (private mode) — alerts still work in-session.
+        }
+    }, [preferences]);
+
+    // Close the audio context on unmount so no node leaks for the page lifetime.
+    useEffect(() => {
+        return () => {
+            void audioCtxRef.current?.close();
+            audioCtxRef.current = null;
+        };
+    }, []);
+
+    // ─── Soft chime (Web Audio — no asset needed) ───────────────────────────
+
+    const playChime = useCallback(() => {
+        try {
+            if (typeof window === 'undefined') return;
+            const AudioContextClass =
+                window.AudioContext ??
+                (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+            if (!AudioContextClass) return;
+
+            if (!audioCtxRef.current) {
+                audioCtxRef.current = new AudioContextClass();
+            }
+            const context = audioCtxRef.current;
+            if (context.state === 'suspended') void context.resume();
+
+            const now = context.currentTime;
+            CHIME_NOTES_HZ.forEach((frequency, index) => {
+                const start = now + index * 0.09;
+                const oscillator = context.createOscillator();
+                const gain = context.createGain();
+                oscillator.type = 'sine';
+                oscillator.frequency.value = frequency;
+                gain.gain.setValueAtTime(0.0001, start);
+                gain.gain.exponentialRampToValueAtTime(CHIME_VOLUME, start + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.5);
+                oscillator.connect(gain);
+                gain.connect(context.destination);
+                oscillator.start(start);
+                oscillator.stop(start + 0.55);
+            });
+        } catch {
+            // Sound is best-effort — never let it break the activity feed.
+        }
+    }, []);
+
+    // ─── Browser notification ───────────────────────────────────────────────
+
+    const notifyBrowser = useCallback((event: PersonalActivityEvent) => {
+        try {
+            if (!isNotificationSupported() || Notification.permission !== 'granted') return;
+            const notification = new Notification('SADAF — My Activity', {
+                body: `${event.title} — ${event.message}`,
+                tag: event.id, // Replaces any older notification with the same id.
+                icon: '/favicon.ico',
+            });
+            notification.onclick = () => {
+                window.focus();
+                notification.close();
+            };
+        } catch {
+            // Notifications are best-effort.
+        }
+    }, []);
+
+    // ─── New-event detection ─────────────────────────────────────────────────
+
+    useEffect(() => {
+        // The first batch is historical — seed the seen set and stay silent.
+        if (!seededRef.current) {
+            events.forEach((event) => seenIdsRef.current.add(event.id));
+            seededRef.current = true;
+            return;
+        }
+
+        const fresh = events.filter((event) => event && !seenIdsRef.current.has(event.id));
+        if (fresh.length === 0) return;
+        fresh.forEach((event) => seenIdsRef.current.add(event.id));
+
+        const { browser, sound } = preferencesRef.current;
+        fresh.forEach((event) => {
+            if (sound) playChime();
+            if (browser) notifyBrowser(event);
+        });
+    }, [events, playChime, notifyBrowser]);
+
+    // ─── Toggle actions ─────────────────────────────────────────────────────
+
+    const toggleBrowserAlerts = useCallback(async () => {
+        if (!isSupported) return;
+        const currentlyOn = preferencesRef.current.browser;
+
+        if (currentlyOn) {
+            setPreferences((prev) => ({ ...prev, browser: false }));
+            return;
+        }
+
+        // Enabling: request permission first (must be a user gesture).
+        let permission = Notification.permission;
+        if (permission === 'default') {
+            permission = await Notification.requestPermission();
+        }
+        setPermissionDenied(permission === 'denied');
+        setPreferences((prev) => ({ ...prev, browser: permission === 'granted' }));
+    }, [isSupported]);
+
+    const toggleSoundAlerts = useCallback(() => {
+        const turningOn = !preferencesRef.current.sound;
+        setPreferences((prev) => ({ ...prev, sound: turningOn }));
+        // Play a confirmation chime when enabling — this also primes the
+        // AudioContext inside the click gesture so the first real alert
+        // has no autoplay delay.
+        if (turningOn) playChime();
+    }, [playChime]);
+
+    return {
+        preferences,
+        isSupported,
+        permissionDenied,
+        toggleBrowserAlerts,
+        toggleSoundAlerts,
+    };
+}

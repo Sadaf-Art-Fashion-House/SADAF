@@ -15,6 +15,7 @@ import {
     ArrowDown,
 } from 'lucide-react';
 import type { LiveEvent } from '../types';
+import { formatEventTime } from '@/utils/formatEventTime';
 
 interface LiveEventsFeedProps {
     /** Latest events from the analytics payload (most recent first). */
@@ -33,18 +34,6 @@ const EVENT_STYLES: Record<LiveEvent['type'], { icon: typeof ShoppingBag; color:
 
 /** Cap on how many events stay in the feed list. */
 const MAX_FEED_EVENTS = 30;
-
-function formatEventTime(iso: string): string {
-    const diffMs = Date.now() - new Date(iso).getTime();
-    const seconds = Math.floor(diffMs / 1000);
-    if (seconds < 10) return 'now';
-    if (seconds < 60) return `${seconds}s ago`;
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-    return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-}
 
 /**
  * Live Events Feed — streams real-time activity (orders, signups, AI

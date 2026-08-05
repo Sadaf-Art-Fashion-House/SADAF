@@ -12,6 +12,12 @@ interface FashionViewProps {
     lookbookItems: LookbookItem[];
     isWishlisted: (productId: string) => boolean;
     /**
+     * Optional category from the ?category= URL param — preselects the active
+     * filter tab on first render (e.g. Smart Offers "View Offer" links to a
+     * specific category). Falls back to "All" when absent or invalid.
+     */
+    initialCategory?: string;
+    /**
      * Called when the user confirms an add-to-cart action from the product
      * detail modal. Size and color are persisted on the cart line
      * (see useCartStore.addFashionToCart).
@@ -21,14 +27,29 @@ interface FashionViewProps {
     onAddToWishlist: (product: FashionProduct) => void;
 }
 
+/**
+ * Returns the initial active category, validating the URL-provided value
+ * against the known FASHION_CATEGORIES so an unknown ?category= can never
+ * produce an empty catalogue. "All" when absent or invalid.
+ */
+function resolveInitialCategory(initialCategory: string | undefined): FashionCategory | "All" {
+    if (initialCategory && FASHION_CATEGORIES.some((category) => category === initialCategory)) {
+        return initialCategory as FashionCategory | "All";
+    }
+    return "All";
+}
+
 export default function FashionView({
     products,
     lookbookItems,
+    initialCategory,
     isWishlisted,
     onAddToCart,
     onAddToWishlist,
 }: FashionViewProps) {
-    const [activeCategory, setActiveCategory] = useState<FashionCategory | "All">("All");
+    const [activeCategory, setActiveCategory] = useState<FashionCategory | "All">(
+        () => resolveInitialCategory(initialCategory),
+    );
     const [activeLookId, setActiveLookId] = useState<string>("lb-1");
 
     // Product detail modal state — self-contained here (mirrors StoreView's

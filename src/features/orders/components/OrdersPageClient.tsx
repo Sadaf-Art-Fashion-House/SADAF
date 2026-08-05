@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useOrderStatus } from '../hooks/useOrderStatus';
 import OrdersView from './OrdersView';
 import type { Order } from '@/features/orders/types';
 
@@ -45,6 +47,17 @@ const SIMULATED_ORDERS: Order[] = [
 
 export default function OrdersPageClient() {
     const [orders] = useState<Order[]>(SIMULATED_ORDERS);
+    const { user } = useAuth();
+    const { statuses, events, loading, wsLive, error } = useOrderStatus(user?.id ?? null);
 
-    return <OrdersView orders={orders} />;
+    return (
+        <OrdersView
+            orders={orders}
+            liveStatuses={statuses}
+            liveEvents={events}
+            isLive={wsLive}
+            liveLoading={loading}
+            liveError={error}
+        />
+    );
 }
