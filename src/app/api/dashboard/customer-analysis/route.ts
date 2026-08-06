@@ -19,9 +19,10 @@
 import { NextResponse } from 'next/server';
 import { formatCurrency } from '@/utils/formatCurrency';
 import { ROUTES } from '@/config/routes';
+import { MOCK_ORDERS, sumDeliveredSpend } from '@/features/orders/data/mockOrders';
+import { tierForSpend } from '@/features/customer/utils/leaderboard';
 import type {
     CustomerAnalysisData,
-    CustomerOrder,
     CustomerSpendingPoint,
     CustomerCategorySpend,
     ProductRecommendation,
@@ -34,17 +35,16 @@ export const dynamic = 'force-dynamic';
 
 // ─── In-memory counters (simulates live personal activity) ─────────────────
 
-const MOCK_ORDERS: CustomerOrder[] = [
-    { id: 'SDF-2026-9041', date: '2026-05-28', total: 1250, status: 'Tailoring', items: 1 },
-    { id: 'SDF-2026-4412', date: '2026-04-12', total: 3400, status: 'Delivered', items: 2 },
-    { id: 'SDF-2026-2287', date: '2026-02-19', total: 890, status: 'Delivered', items: 1 },
-    { id: 'SDF-2026-1053', date: '2025-12-02', total: 2150, status: 'Delivered', items: 1 },
-    { id: 'SDF-2025-8820', date: '2025-10-14', total: 460, status: 'Delivered', items: 1 },
-    { id: 'SDF-2025-6631', date: '2025-08-30', total: 1780, status: 'Delivered', items: 3 },
-];
+// Order history comes from the canonical shared list (features/orders/data/
+// mockOrders) — the same list the loyalty points/tier are computed from, so
+// the analysis table and the rewards numbers always agree. No per-order
+// jitter: the totals you see ARE the numbers that earned your points.
 
 // The Orders KPI mirrors the visible table rows exactly — no phantom orders.
 const ORDER_COUNT = MOCK_ORDERS.length;
+
+/** Membership tier derived from delivered order spend (1 point per $1). */
+const DERIVED_TIER = tierForSpend(sumDeliveredSpend(MOCK_ORDERS));
 
 let simulatedAiDesignCount = 12;
 
@@ -234,14 +234,17 @@ export async function GET(request: Request) {
         const data: CustomerAnalysisData = {
             kpis,
             orders: MOCK_ORDERS.map((order) => ({
-                ...order,
-                total: jitter(order.total, 0.02),
+                id: order.id,
+                date: order.date,
+                total: order.total,
+                status: order.status,
+                items: order.items.reduce((count, item) => count + item.quantity, 0),
             })),
             monthlySpending,
             categorySpend,
             recommendations: buildRecommendations(categorySpend),
             averageOrderValue,
-            tier: 'Heritage Gold Member',
+            tier: `${DERIVED_TIER} Member`,
             wishlistValue,
             timestamp: new Date().toISOString(),
         };

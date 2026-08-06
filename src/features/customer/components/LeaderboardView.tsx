@@ -1,13 +1,15 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trophy, Search, Users, Medal, Crown, Filter, X, Wifi, WifiOff } from 'lucide-react';
-import type { LeaderboardEntry, LeaderboardKind, LoyaltyTier } from '../types';
+import { Trophy, Search, Users, Medal, Crown, Filter, X, Wifi, WifiOff, MapPin, ChevronDown, TrendingDown, Swords, Volume2, VolumeX } from 'lucide-react';
+import type { LeaderboardEntry, LeaderboardKind, LoyaltyTier, OvertakeEvent } from '../types';
 import { TIER_COLORS, RANK_MEDALS } from '../constants/tierStyles';
 import { formatPoints } from '../utils/formatPoints';
 import { formatCurrency } from '@/utils/formatCurrency';
-import { LEADERBOARD_KIND_LABELS } from '../utils/leaderboard';
+import { LEADERBOARD_KIND_LABELS, TIER_ORDER, tierMemberCounts } from '../utils/leaderboard';
+import { useOvertakeAlerts } from '../hooks/useOvertakeAlerts';
+import { playSoftChime } from '@/shared/utils/playSoftChime';
 
 interface LeaderboardViewProps {
     /** Full ranked member list (includes the current user). */
@@ -30,6 +32,8 @@ interface LeaderboardViewProps {
     onKindChange?: (kind: LeaderboardKind) => void;
     /** Whether the WebSocket transport is connected (LIVE badge). */
     isLive?: boolean;
+    /** Latest "someone overtook you" event (null when nothing new). */
+    overtake?: OvertakeEvent | null;
 }
 
 const TIER_FILTERS: (LoyaltyTier | 'All')[] = ['All', 'Bronze', 'Silver', 'Gold', 'Heritage', 'Platinum'];
@@ -68,9 +72,42 @@ export default function LeaderboardView({
     activeKind,
     onKindChange,
     isLive = false,
+    overtake = null,
 }: LeaderboardViewProps) {
     const [searchQuery, setSearchQuery] = useState('');
     const [tierFilter, setTierFilter] = useState<LoyaltyTier | 'All'>('All');
+    const [cityFilter, setCityFilter] = useState<string>('All');
+
+    // Overtake alerts — toast + row flash (on by default) + optional chime,
+    // persisted in localStorage by useOvertakeAlerts (same pattern as the
+    // My Activity alerts).
+    const { preferences: overtakePrefs, toggleEnabled: toggleOvertakeAlerts, toggleSound: toggleOvertakeSound } = useOvertakeAlerts();
+    const [activeToast, setActiveToast] = useState<OvertakeEvent | null>(null);
+    const [flashUserRow, setFlashUserRow] = useState(false);
+    const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // React to a fresh overtake: toast + flash on your row + optional chime.
+    // When alerts are disabled, dismiss any toast/flash still showing (the
+    // previous effect run may have been mid-display) instead of leaving it
+    // stuck — its auto-dismiss timers were cleared by the cleanup.
+    useEffect(() => {
+        if (!overtakePrefs.enabled) {
+            setActiveToast(null);
+            setFlashUserRow(false);
+            return;
+        }
+        if (!overtake) return;
+        setActiveToast(overtake);
+        setFlashUserRow(true);
+        if (overtakePrefs.sound) playSoftChime();
+        toastTimerRef.current = setTimeout(() => setActiveToast(null), 5_000);
+        flashTimerRef.current = setTimeout(() => setFlashUserRow(false), 1_600);
+        return () => {
+            clearTimeout(toastTimerRef.current ?? undefined);
+            clearTimeout(flashTimerRef.current ?? undefined);
+        };
+    }, [overtake, overtakePrefs.enabled, overtakePrefs.sound]);
 
     const metricLabel = LEADERBOARD_KIND_LABELS[kind];
     const copy = KIND_COPY[kind];
@@ -80,10 +117,12 @@ export default function LeaderboardView({
     const formatMetric = (value: number) =>
         kind === 'sales' ? formatCurrency(value) : formatPoints(value);
 
-    const filteredEntries = useMemo(() => {
+    /** Members matching the search + city filters only (tier excluded) — the
+     * base pool the faceted tier counters come from, so the per-tier counts
+     * stay meaningful while a tier is selected. */
+    const tierBasePool = useMemo(() => {
         const query = searchQuery.trim().toLowerCase();
         return entries.filter((entry) => {
-            const matchesTier = !showTier || tierFilter === 'All' || entry.tier === tierFilter;
             // Match against both the raw name and the rendered name so the
             // current user (displayed as "memberName (You)") is searchable
             // by their real name.
@@ -91,14 +130,46 @@ export default function LeaderboardView({
             const matchesSearch = !query ||
                 entry.name.toLowerCase().includes(query) ||
                 renderedName.toLowerCase().includes(query);
-            return matchesTier && matchesSearch;
+            const matchesCity = cityFilter === 'All' || entry.city === cityFilter;
+            return matchesSearch && matchesCity;
         });
-    }, [entries, searchQuery, tierFilter, memberName, showTier]);
+    }, [entries, searchQuery, cityFilter, memberName]);
+
+    const filteredEntries = useMemo(() => {
+        const query = searchQuery.trim().toLowerCase();
+        return entries.filter((entry) => {
+            const matchesTier = !showTier || tierFilter === 'All' || entry.tier === tierFilter;
+            const renderedName = entry.isCurrentUser ? `${memberName} (You)` : entry.name;
+            const matchesSearch = !query ||
+                entry.name.toLowerCase().includes(query) ||
+                renderedName.toLowerCase().includes(query);
+            const matchesCity = cityFilter === 'All' || entry.city === cityFilter;
+            return matchesTier && matchesSearch && matchesCity;
+        });
+    }, [entries, searchQuery, tierFilter, cityFilter, memberName, showTier]);
 
     // totalMembers includes the current user's row, so the member pool
     // (excluding "You") is totalMembers - 1.
     const poolSize = Math.max(0, totalMembers - 1);
     const filterCount = showTier ? entries.length - filteredEntries.length : 0;
+
+    /** City options derived from the pool — each with its member count. */
+    const cityOptions = useMemo(() => {
+        const counts = new Map<string, number>();
+        for (const entry of entries) {
+            counts.set(entry.city, (counts.get(entry.city) ?? 0) + 1);
+        }
+        return [...counts.entries()]
+            .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+            .map(([city, count]) => ({ city, count }));
+    }, [entries]);
+
+    /** Members per tier over the search+city base pool (faceted counts). */
+    const tierCounts = useMemo(
+        () => (showTier ? tierMemberCounts(tierBasePool) : null),
+        [tierBasePool, showTier],
+    );
+    const totalBase = tierBasePool.length;
 
     // 3 tracks on mobile everywhere; 4 tracks on md+ only when the Tier
     // column is visible (points kind), otherwise 3.
@@ -108,6 +179,39 @@ export default function LeaderboardView({
 
     return (
         <div className="relative w-full min-h-screen pb-16">
+            {/* Overtake toast — "someone overtook you" */}
+            <AnimatePresence>
+                {activeToast && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -12, x: 24 }}
+                        animate={{ opacity: 1, y: 0, x: 0 }}
+                        exit={{ opacity: 0, y: -12, x: 24 }}
+                        transition={{ duration: 0.25, ease: 'easeOut' }}
+                        role="status"
+                        className="fixed top-24 right-4 md:right-8 z-50 max-w-sm flex items-start gap-3 px-4 py-3 rounded-xl bg-[#1A1030]/95 border border-red-400/30 shadow-2xl shadow-black/60 backdrop-blur-xl"
+                    >
+                        <span className="p-2 rounded-lg bg-red-400/10 text-red-300 shrink-0">
+                            <TrendingDown size={14} />
+                        </span>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-[11px] font-semibold text-white">
+                                {activeToast.overtakenBy} overtook you
+                            </p>
+                            <p className="text-[10px] text-[#E8E0D5]/60 mt-0.5 font-mono">
+                                Your rank dropped from #{activeToast.previousRank} to #{activeToast.newRank}
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => setActiveToast(null)}
+                            className="p-0.5 rounded text-[#E8E0D5]/40 hover:text-white transition-colors cursor-pointer shrink-0"
+                            aria-label="Dismiss"
+                        >
+                            <X size={12} />
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Background glows */}
             <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#C9A84C]/5 rounded-full blur-[120px] pointer-events-none" />
             <div className="absolute bottom-1/4 left-1/4 w-72 h-72 bg-[#4FC3F7]/5 rounded-full blur-[120px] pointer-events-none" />
@@ -151,6 +255,42 @@ export default function LeaderboardView({
                                 <Users size={11} className="inline mr-1" />
                                 {totalMembers.toLocaleString()} members
                             </span>
+
+                            {/* Overtake alert toggles — same pattern as the My Activity alerts */}
+                            <div className="flex items-center gap-1.5">
+                                <button
+                                    onClick={toggleOvertakeAlerts}
+                                    aria-pressed={overtakePrefs.enabled}
+                                    aria-label={overtakePrefs.enabled ? 'Disable overtake alerts' : 'Enable overtake alerts'}
+                                    title={overtakePrefs.enabled
+                                        ? 'Overtake alerts ON — toast + flash when someone passes you'
+                                        : 'Overtake alerts OFF — click to get toast + flash when someone passes you'}
+                                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[9px] font-mono uppercase tracking-wider border transition-all cursor-pointer ${
+                                        overtakePrefs.enabled
+                                            ? 'text-[#4FC3F7] border-[#4FC3F7]/30 bg-[#4FC3F7]/10 hover:border-[#4FC3F7]/60'
+                                            : 'text-[#E8E0D5]/40 border-white/10 hover:text-white hover:border-white/25'
+                                    }`}
+                                >
+                                    <Swords size={10} />
+                                    {overtakePrefs.enabled ? 'Alerts' : 'Alerts off'}
+                                </button>
+                                <button
+                                    onClick={toggleOvertakeSound}
+                                    aria-pressed={overtakePrefs.sound}
+                                    aria-label={overtakePrefs.sound ? 'Mute overtake sound' : 'Enable overtake sound'}
+                                    title={overtakePrefs.sound
+                                        ? 'Sound ON — plays a soft chime when someone passes you'
+                                        : 'Sound OFF — click to play a soft chime when someone passes you'}
+                                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[9px] font-mono uppercase tracking-wider border transition-all cursor-pointer ${
+                                        overtakePrefs.sound
+                                            ? 'text-emerald-400 border-emerald-400/30 bg-emerald-400/10 hover:border-emerald-400/60'
+                                            : 'text-[#E8E0D5]/40 border-white/10 hover:text-emerald-400/80 hover:border-emerald-400/30'
+                                    }`}
+                                >
+                                    {overtakePrefs.sound ? <Volume2 size={10} /> : <VolumeX size={10} />}
+                                    {overtakePrefs.sound ? 'Sound' : 'Muted'}
+                                </button>
+                            </div>
                         </div>
                     </motion.div>
 
@@ -200,6 +340,35 @@ export default function LeaderboardView({
                         )}
                     </div>
 
+                    {/* City filter dropdown */}
+                    <div className="relative w-full lg:w-60 shrink-0">
+                        <MapPin size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C9A84C]/50 pointer-events-none" />
+                        <select
+                            value={cityFilter}
+                            onChange={(e) => setCityFilter(e.target.value)}
+                            aria-label="Filter by city"
+                            className="w-full appearance-none bg-[#0A0F2C]/60 border border-white/[0.08] text-xs text-white rounded-xl pl-9 pr-8 py-2.5 outline-none focus:border-[#C9A84C]/50 transition cursor-pointer"
+                        >
+                            <option value="All" className="bg-[#0A0F2C]">All cities &middot; {entries.length}</option>
+                            {cityOptions.map(({ city, count }) => (
+                                <option key={city} value={city} className="bg-[#0A0F2C]">
+                                    {city} &middot; {count}
+                                </option>
+                            ))}
+                        </select>
+                        {cityFilter !== 'All' ? (
+                            <button
+                                onClick={() => setCityFilter('All')}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded text-[#E8E0D5]/40 hover:text-white transition-all cursor-pointer"
+                                aria-label="Clear city filter"
+                            >
+                                <X size={12} />
+                            </button>
+                        ) : (
+                            <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#E8E0D5]/30 pointer-events-none" />
+                        )}
+                    </div>
+
                     {/* Tier filter chips — only for the loyalty-points ranking */}
                     {showTier && (
                         <div className="flex items-center gap-1.5 flex-wrap">
@@ -207,7 +376,7 @@ export default function LeaderboardView({
                             {TIER_FILTERS.map((tier) => (
                                 <FilterChip
                                     key={tier}
-                                    label={tier}
+                                    label={tier === 'All' ? `All · ${totalBase}` : `${tier} · ${tierCounts?.[tier] ?? 0}`}
                                     active={tierFilter === tier}
                                     onClick={() => setTierFilter(tier)}
                                 />
@@ -240,11 +409,52 @@ export default function LeaderboardView({
                         <Users size={32} className="mx-auto text-[#E8E0D5]/20 mb-3" />
                         <p className="text-sm text-[#E8E0D5]/60">No members match your filters</p>
                         <p className="text-[10px] text-[#E8E0D5]/40 mt-1">
-                            Try a different name or {showTier ? 'tier' : 'metric'}
+                            Try a different name, city, or {showTier ? 'tier' : 'metric'}
                         </p>
                     </div>
                 ) : (
                     <motion.div layout className="bg-[#05081A]/90 border border-[#C9A84C]/10 rounded-2xl overflow-hidden">
+                        {/* Tier distribution — member counter per tier, in the
+                            same table (points ranking only). Clicking a segment
+                            toggles the tier filter, synced with the chips. */}
+                        {showTier && tierCounts && (
+                            <div className="grid grid-cols-5 gap-px bg-white/[0.04]">
+                                {TIER_ORDER.map((tier) => {
+                                    const count = tierCounts[tier];
+                                    const share = totalBase > 0 ? Math.round((count / totalBase) * 100) : 0;
+                                    const isActive = tierFilter === tier;
+                                    return (
+                                        <button
+                                            key={tier}
+                                            onClick={() => setTierFilter(isActive ? 'All' : tier)}
+                                            aria-pressed={isActive}
+                                            title={`${count} member${count === 1 ? '' : 's'} in ${tier}`}
+                                            className={`flex flex-col items-center gap-1 px-2 py-2.5 bg-[#05081A] transition-colors cursor-pointer ${
+                                                isActive ? 'bg-[#C9A84C]/10' : 'hover:bg-[#0A0F2C]'
+                                            }`}
+                                        >
+                                            <span className="flex items-center gap-1.5">
+                                                <span className={`w-1.5 h-1.5 rounded-full ${TIER_COLORS[tier].split(' ')[0]}`} />
+                                                <span className={`text-[8px] font-mono uppercase tracking-widest ${isActive ? 'text-white' : 'text-[#E8E0D5]/45'}`}>
+                                                    {tier}
+                                                </span>
+                                            </span>
+                                            <span className={`text-[11px] font-mono font-bold ${isActive ? 'text-[#C9A84C]' : 'text-[#E8E0D5]/80'}`}>
+                                                {count}
+                                            </span>
+                                            <span className="w-full h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                                                <span
+                                                    className="block h-full rounded-full bg-gradient-to-r from-[#C9A84C]/40 to-[#C9A84C] transition-all duration-500"
+                                                    style={{ width: `${share}%` }}
+                                                />
+                                            </span>
+                                            <span className="text-[7px] font-mono text-[#E8E0D5]/25">{share}%</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
+
                         {/* Table header */}
                         <div className={`grid ${rowGrid} items-center px-4 md:px-6 py-3 border-b border-white/[0.06] text-[9px] font-mono uppercase tracking-widest text-[#E8E0D5]/40`}>
                             <span>Rank</span>
@@ -267,9 +477,11 @@ export default function LeaderboardView({
                                         exit={{ opacity: 0, scale: 0.98 }}
                                         transition={{ duration: 0.25, delay: Math.min(index * 0.03, 0.6) }}
                                         className={`grid ${rowGrid} items-center px-4 md:px-6 py-3 border-b border-white/[0.03] transition-colors ${
-                                            isCurrentUser
-                                                ? 'bg-[#C9A84C]/10 border-[#C9A84C]/30'
-                                                : 'bg-transparent hover:bg-white/[0.03]'
+                                            isCurrentUser && flashUserRow
+                                                ? 'bg-red-500/15 border-red-400/50 animate-pulse'
+                                                : isCurrentUser
+                                                    ? 'bg-[#C9A84C]/10 border-[#C9A84C]/30'
+                                                    : 'bg-transparent hover:bg-white/[0.03]'
                                         }`}
                                     >
                                         {/* Rank */}
@@ -282,7 +494,7 @@ export default function LeaderboardView({
                                         </span>
 
                                         {/* Member */}
-                                        <span className={`flex items-center gap-2.5 text-xs font-medium truncate ${
+                                        <span className={`flex items-center gap-2.5 text-xs font-medium min-w-0 ${
                                             isCurrentUser ? 'text-[#C9A84C] font-bold' : 'text-[#E8E0D5]/85'
                                         }`}>
                                             <span className={`w-7 h-7 shrink-0 rounded-full flex items-center justify-center text-[9px] font-bold text-white ${
@@ -294,8 +506,14 @@ export default function LeaderboardView({
                                             }`}>
                                                 {(isCurrentUser ? memberName.charAt(0) : entry.name.charAt(0)).toUpperCase()}
                                             </span>
-                                            <span className="truncate">
-                                                {isCurrentUser ? `${memberName} (You)` : entry.name}
+                                            <span className="flex flex-col min-w-0">
+                                                <span className="truncate">
+                                                    {isCurrentUser ? `${memberName} (You)` : entry.name}
+                                                </span>
+                                                <span className="flex items-center gap-1 text-[8px] font-mono text-[#E8E0D5]/35 mt-0.5">
+                                                    <MapPin size={8} className="shrink-0 text-[#C9A84C]/60" />
+                                                    {entry.city}
+                                                </span>
                                             </span>
                                         </span>
 
@@ -321,7 +539,7 @@ export default function LeaderboardView({
                         <div className="flex items-center justify-between px-4 md:px-6 py-3 text-[9px] font-mono text-[#E8E0D5]/35">
                             <span className="flex items-center gap-1.5">
                                 <Crown size={10} className="text-[#C9A84C]/60" />
-                                Showing {filteredEntries.length.toLocaleString()} of {entries.length.toLocaleString()} members
+                                Showing {filteredEntries.length.toLocaleString()} of {entries.length.toLocaleString()} members{cityFilter !== 'All' ? ` · ${cityFilter}` : ''}
                             </span>
                             <span>{copy.footnote}</span>
                         </div>

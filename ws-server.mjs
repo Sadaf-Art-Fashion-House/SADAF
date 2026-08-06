@@ -65,24 +65,26 @@ function isValidEndpointType(type) {
     return false;
 }
 
-// ─── Simulated Notifications (for demo / development) ────────────────────────
+// ─── Simulated Global Notifications (for demo / development) ─────────────────
+// Broadcasts global events (new order received, atelier announcements) on
+// the notifications:global channel to every client subscribed to it — the
+// header NotificationBell and the notifications page both listen here.
 // In production this would poll a real API endpoint (/api/notifications).
 const DEMO_NOTIFICATIONS_ENABLED = !process.env.DISABLE_DEMO_NOTIFICATIONS;
 let demoNotifCounter = 0;
 
-function generateDemoNotification() {
+function generateDemoGlobalNotification() {
     demoNotifCounter++;
-    const types = ['order', 'wishlist', 'review', 'system', 'promotion'];
     const templates = [
-        { type: 'order', title: 'New Order Received', message: 'Order #SADAF-' + (1000 + demoNotifCounter) + ' has been placed successfully.' },
-        { type: 'wishlist', title: 'Wishlist Price Drop', message: 'An item in your wishlist is now 15% off!' },
-        { type: 'review', title: 'New Review Posted', message: 'A customer left a 5-star review on one of your products.' },
-        { type: 'system', title: 'System Update', message: 'SADAF platform v2.4.1 deployed with new features.' },
+        { type: 'order', title: 'New Order Received', message: 'Order #SADAF-' + (1000 + demoNotifCounter) + ' has been placed and is being prepared in the atelier.' },
+        { type: 'system', title: 'Atelier Announcement', message: 'The new Autumn Heritage collection is now live across the atelier and gallery.' },
         { type: 'promotion', title: 'Limited Offer', message: 'Get 20% off on all Traditional Fusion pieces this weekend.' },
+        { type: 'review', title: 'New Review Posted', message: 'A customer left a 5-star review on one of our pieces.' },
+        { type: 'system', title: 'System Update', message: 'SADAF platform v2.4.1 deployed with new features.' },
     ];
     const tpl = templates[demoNotifCounter % templates.length];
     return {
-        id: 'demo-' + Date.now() + '-' + demoNotifCounter,
+        id: 'demo-global-' + Date.now() + '-' + demoNotifCounter,
         type: tpl.type,
         title: tpl.title,
         message: tpl.message,
@@ -90,6 +92,31 @@ function generateDemoNotification() {
         read: false,
         href: '/dashboard/notifications',
     };
+}
+
+/** True when at least one connected client subscribes to notifications:global. */
+function hasGlobalNotificationSubscribers() {
+    let found = false;
+    wss.clients.forEach((client) => {
+        if (client.readyState !== WebSocketClient.OPEN) return;
+        if (getSubscriptions(client).has('notifications:global')) found = true;
+    });
+    return found;
+}
+
+/** Broadcast a global notification to every client subscribed to the channel. */
+function sendGlobalNotification(notification) {
+    const message = JSON.stringify({
+        type: 'notifications:global',
+        notification,
+        timestamp: new Date().toISOString(),
+    });
+    wss.clients.forEach((client) => {
+        if (client.readyState !== WebSocketClient.OPEN) return;
+        if (getSubscriptions(client).has('notifications:global')) {
+            client.send(message);
+        }
+    });
 }
 
 // ─── Simulated Personal Activity (for demo / development) ────────────────────
@@ -404,35 +431,18 @@ console.log('   📡 Subscription-based broadcasting — clients receive only th
 console.log('   💓 Heartbeat every 5s — clients detect stale connections');
 console.log(`   🚀 Ready! Connect: new WebSocket(\\"ws://localhost:${WS_PORT}\\")`);
 
-// ─── Demo Notification Generator ────────────────────────────────────────────
-// Sends a simulated notification to all clients subscribed to notifications.
+// ─── Demo Global Notification Generator ──────────────────────────────────────
+// Sends a simulated global event (new order / announcement) to every client
+// subscribed to notifications:global.
 // In production, replace with real polling from /api/notifications.
 
 if (DEMO_NOTIFICATIONS_ENABLED) {
     setInterval(() => {
-        const notif = generateDemoNotification();
-        const message = JSON.stringify({
-            type: 'notification',
-            notification: notif,
-            timestamp: new Date().toISOString(),
-        });
-
-        wss.clients.forEach((client) => {
-            if (client.readyState === WebSocketClient.OPEN) {
-                const subs = getSubscriptions(client);
-                if (subs.size === 0) return; // Only send to subscribed clients
-                // Send if they subscribe to notifications
-                for (const sub of subs) {
-                    if (sub.startsWith('notifications:') || sub === 'all') {
-                        client.send(message);
-                        break;
-                    }
-                }
-            }
-        });
+        if (!hasGlobalNotificationSubscribers()) return;
+        sendGlobalNotification(generateDemoGlobalNotification());
     }, 15_000); // Every 15 seconds
 
-    console.log('   🔔 Demo notifications enabled — sending one every 15s');
+    console.log('   🔔 Demo global notifications enabled — sending one every 15s');
     console.log('      Set DISABLE_DEMO_NOTIFICATIONS=1 to disable');
 }
 

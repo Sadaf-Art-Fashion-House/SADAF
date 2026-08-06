@@ -4,8 +4,11 @@ import { motion, AnimatePresence } from 'motion/react';
 import Link from 'next/link';
 import {
     Bell,
+    BellRing,
+    BellOff,
     CheckCheck,
     ChevronRight,
+    Globe,
 } from 'lucide-react';
 import type { Notification } from '../types';
 import {
@@ -25,6 +28,10 @@ interface NotificationsViewProps {
     onMarkAllAsRead: () => void;
     filterType: string;
     onFilterChange: (type: string) => void;
+    /** Whether global event pushes (new orders / announcements) are muted. */
+    globalMuted?: boolean;
+    /** Toggles the persisted global alerts mute (same toggle as the header bell). */
+    onToggleGlobalMuted?: () => void;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -40,6 +47,8 @@ export default function NotificationsView({
     onMarkAllAsRead,
     filterType,
     onFilterChange,
+    globalMuted = false,
+    onToggleGlobalMuted,
 }: NotificationsViewProps) {
     return (
         <div className="relative w-full min-h-screen pb-20">
@@ -67,15 +76,38 @@ export default function NotificationsView({
                             </p>
                         </div>
 
-                        {unreadCount > 0 && (
-                            <button
-                                onClick={onMarkAllAsRead}
-                                className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-white/10 bg-white/5 text-xs text-slate-300 hover:text-white hover:border-[#4FC3F7]/40 transition-all cursor-pointer font-mono uppercase tracking-wider"
-                            >
-                                <CheckCheck size={12} />
-                                Mark All Read
-                            </button>
-                        )}
+                        <div className="flex items-center gap-2 flex-wrap">
+                            {/* Global alerts toggle — same persisted mute as the header bell */}
+                            {onToggleGlobalMuted && (
+                                <button
+                                    onClick={onToggleGlobalMuted}
+                                    aria-pressed={!globalMuted}
+                                    aria-label={globalMuted ? 'Enable global alerts' : 'Mute global alerts'}
+                                    title={globalMuted
+                                        ? 'Global alerts are muted — click to enable new-order & announcement pushes'
+                                        : 'Global alerts are on — click to mute new-order & announcement pushes'}
+                                    className={`flex items-center gap-1.5 px-4 py-2 rounded-lg border text-xs font-mono uppercase tracking-wider transition-all cursor-pointer ${
+                                        globalMuted
+                                            ? 'border-white/10 bg-white/5 text-slate-400 hover:text-white hover:border-white/20'
+                                            : 'border-[#4FC3F7]/30 bg-[#4FC3F7]/10 text-[#4FC3F7] hover:border-[#4FC3F7]/60'
+                                    }`}
+                                >
+                                    <Globe size={12} />
+                                    {globalMuted ? <BellOff size={12} /> : <BellRing size={12} />}
+                                    {globalMuted ? 'Global alerts: muted' : 'Global alerts: on'}
+                                </button>
+                            )}
+
+                            {unreadCount > 0 && (
+                                <button
+                                    onClick={onMarkAllAsRead}
+                                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-white/10 bg-white/5 text-xs text-slate-300 hover:text-white hover:border-[#4FC3F7]/40 transition-all cursor-pointer font-mono uppercase tracking-wider"
+                                >
+                                    <CheckCheck size={12} />
+                                    Mark All Read
+                                </button>
+                            )}
+                        </div>
                     </div>
 
                     {/* Filter Tabs */}

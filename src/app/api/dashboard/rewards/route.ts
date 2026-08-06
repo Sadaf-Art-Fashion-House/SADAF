@@ -16,6 +16,7 @@
 
 import { NextResponse } from 'next/server';
 import type { TierBenefit, RewardsData } from '@/features/customer/types';
+import { MOCK_ORDERS, sumDeliveredSpend } from '@/features/orders/data/mockOrders';
 import {
     TIER_THRESHOLDS,
     tierForSpend,
@@ -45,13 +46,14 @@ export async function GET(request: Request) {
         // userId accepted for API parity; demo data is global for now.
         const userId = new URL(request.url).searchParams.get('userId');
 
-        // Lifetime spend base matching the personal analysis page (~$13.4k),
-        // with slight jitter so the rewards feel live.
-        const lifetimeSpend = Math.round(13_437 + (Math.random() * 600 - 300));
+        // Lifetime spend = the sum of Delivered orders (1 point per $1). The
+        // tier derives automatically from that spend via tierForSpend — no
+        // random jitter, so points/rank stay stable between pushes.
+        const lifetimeSpend = sumDeliveredSpend(MOCK_ORDERS);
         const tier = tierForSpend(lifetimeSpend);
         const nextTier = nextTierFor(tier);
 
-        const points = lifetimeSpend; // 1 point per $1 spent
+        const points = lifetimeSpend; // 1 point per $1 spent on delivered orders
         const benefit = BENEFITS.find((b) => b.tier === tier) ?? BENEFITS[0];
 
         let tierProgressPercent = 100;
