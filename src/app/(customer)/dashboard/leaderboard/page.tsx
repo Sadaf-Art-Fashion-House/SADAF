@@ -6,6 +6,11 @@ export const metadata: Metadata = {
     description: 'Top members ranked by loyalty points — search and filter by membership tier.',
 };
 
-export default function LeaderboardPage() {
-    return <LeaderboardPageClient />;
+interface LeaderboardPageProps {
+    searchParams: Promise<{ city?: string }>;
+}
+
+export default async function LeaderboardPage({ searchParams }: LeaderboardPageProps) {
+    const { city } = await searchParams;
+    return <LeaderboardPageClient initialCity={city ?? 'All'} />;
 }

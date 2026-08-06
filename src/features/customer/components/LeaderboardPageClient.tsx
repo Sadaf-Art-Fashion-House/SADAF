@@ -12,6 +12,8 @@ interface LeaderboardPageClientProps {
     kinds?: LeaderboardKind[];
     /** Kind selected on first render (default: points). */
     initialKind?: LeaderboardKind;
+    /** City to start the filter on (from ?city= — RewardsPanel deep-link). */
+    initialCity?: string;
 }
 
 /**
@@ -27,6 +29,7 @@ interface LeaderboardPageClientProps {
 export default function LeaderboardPageClient({
     kinds,
     initialKind = 'points',
+    initialCity = 'All',
 }: LeaderboardPageClientProps) {
     const { user } = useAuth();
     const memberName = user?.fullName?.split(' ')[0] || 'Member';
@@ -67,6 +70,7 @@ export default function LeaderboardPageClient({
             onKindChange={setActiveKind}
             isLive={wsLive}
             overtake={overtake}
+            initialCity={initialCity}
         />
     );
 }
