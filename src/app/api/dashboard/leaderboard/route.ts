@@ -10,9 +10,11 @@
  * admin/founder leaderboard variants (search + tier filter are applied
  * client-side over the returned pool).
  *
- * Each member's metric is jittered slightly per request so the table moves
- * between WebSocket pushes (leaderboard:global) — ranks visibly shift as
- * if members are actively shopping.
+ * Pool members' metrics are jittered slightly per request so the table
+ * moves between WebSocket pushes (leaderboard:global) — ranks visibly
+ * shift as if members are actively shopping. The current user's points
+ * metric is NOT jittered: it is derived from the delivered order history
+ * (1 point per $1) so their rank stays truthful.
  *
  * Currently deterministic mock generation; swap generateMemberPool for
  * real members ranked by the chosen metric once the database is wired.
@@ -20,6 +22,7 @@
 
 import { NextResponse } from 'next/server';
 import type { LeaderboardData, LeaderboardKind } from '@/features/customer/types';
+import { MOCK_ORDERS, sumDeliveredSpend } from '@/features/orders/data/mockOrders';
 import { generateMemberPool, buildLeaderboard, LEADERBOARD_KIND_LABELS } from '@/features/customer/utils/leaderboard';
 
 /**
@@ -33,7 +36,10 @@ const VALID_KINDS: LeaderboardKind[] = ['points', 'sales', 'designs'];
 /** ±% per member per request — enough for live movement, not chaotic. */
 const JITTER_PCT = 0.04;
 
-/** Resolve a metric for the current user based on the ranking kind (mock). */
+/** Resolve a metric for the current user based on the ranking kind (mock).
+ * The points metric is real data: lifetime spend from the delivered order
+ * history (1 point per $1) — no jitter, matching the rewards panel. Sales /
+ * designs stay simulated until those pipelines exist. */
 function currentUserMetricFor(kind: LeaderboardKind): number {
     switch (kind) {
         case 'sales':
@@ -42,9 +48,7 @@ function currentUserMetricFor(kind: LeaderboardKind): number {
             return Math.round(34 + (Math.random() * 10 - 5));
         case 'points':
         default:
-            // Lifetime spend base matching the personal analysis page (~$13.4k),
-            // with slight jitter so the leaderboard feels live.
-            return Math.round(13_437 + (Math.random() * 600 - 300));
+            return sumDeliveredSpend(MOCK_ORDERS);
     }
 }
 
@@ -73,6 +77,7 @@ export async function GET(request: Request) {
         const pool = generateMemberPool(size, kind).map((member) => ({
             name: member.name,
             points: jitterMetric(member.points),
+            city: member.city,
         }));
         const { entries, myRank } = buildLeaderboard(pool, currentUserMetricFor(kind));
 

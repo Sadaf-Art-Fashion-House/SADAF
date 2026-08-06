@@ -92,8 +92,24 @@ export interface LeaderboardEntry {
     points: number;
     /** Loyalty tier — only meaningful when kind === 'points'. */
     tier: LoyaltyTier;
+    /** Home city — drives the city filter on the leaderboard page. */
+    city: string;
     /** True for the logged-in user's own row. */
     isCurrentUser?: boolean;
+}
+
+/** A live "you were overtaken" event fired when someone passes you on the leaderboard. */
+export interface OvertakeEvent {
+    /** Unique id — consumers key their toast/flash off this. */
+    id: string;
+    /** Rank before the push that moved you down. */
+    previousRank: number;
+    /** Rank after the push. */
+    newRank: number;
+    /** Display name of the member who passed you (the entry directly above). */
+    overtakenBy: string;
+    /** ISO timestamp of when the overtake was detected. */
+    timestamp: string;
 }
 
 /** Full leaderboard dataset returned by /api/dashboard/leaderboard. */

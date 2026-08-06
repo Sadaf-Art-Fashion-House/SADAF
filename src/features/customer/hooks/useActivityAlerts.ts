@@ -18,12 +18,11 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PersonalActivityEvent } from '../types';
+import { playSoftChime } from '@/shared/utils/playSoftChime';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
 const STORAGE_KEY = 'sadaf_activity_alerts';
-const CHIME_NOTES_HZ = [880, 1174.66]; // A5 → D6 — soft two-note "ding-ding"
-const CHIME_VOLUME = 0.05;
 
 interface AlertPreferences {
     /** Show a browser Notification per new event. */
@@ -66,7 +65,6 @@ export function useActivityAlerts(events: PersonalActivityEvent[]) {
     const preferencesRef = useRef<AlertPreferences>(DEFAULT_PREFERENCES);
     const seenIdsRef = useRef<Set<string>>(new Set());
     const seededRef = useRef(false);
-    const audioCtxRef = useRef<AudioContext | null>(null);
 
     // Load persisted prefs + feature detection after mount (client-only,
     // avoids SSR hydration mismatch).
@@ -85,49 +83,7 @@ export function useActivityAlerts(events: PersonalActivityEvent[]) {
         }
     }, [preferences]);
 
-    // Close the audio context on unmount so no node leaks for the page lifetime.
-    useEffect(() => {
-        return () => {
-            void audioCtxRef.current?.close();
-            audioCtxRef.current = null;
-        };
-    }, []);
-
-    // ─── Soft chime (Web Audio — no asset needed) ───────────────────────────
-
-    const playChime = useCallback(() => {
-        try {
-            if (typeof window === 'undefined') return;
-            const AudioContextClass =
-                window.AudioContext ??
-                (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-            if (!AudioContextClass) return;
-
-            if (!audioCtxRef.current) {
-                audioCtxRef.current = new AudioContextClass();
-            }
-            const context = audioCtxRef.current;
-            if (context.state === 'suspended') void context.resume();
-
-            const now = context.currentTime;
-            CHIME_NOTES_HZ.forEach((frequency, index) => {
-                const start = now + index * 0.09;
-                const oscillator = context.createOscillator();
-                const gain = context.createGain();
-                oscillator.type = 'sine';
-                oscillator.frequency.value = frequency;
-                gain.gain.setValueAtTime(0.0001, start);
-                gain.gain.exponentialRampToValueAtTime(CHIME_VOLUME, start + 0.02);
-                gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.5);
-                oscillator.connect(gain);
-                gain.connect(context.destination);
-                oscillator.start(start);
-                oscillator.stop(start + 0.55);
-            });
-        } catch {
-            // Sound is best-effort — never let it break the activity feed.
-        }
-    }, []);
+    // ─── Soft chime (shared Web Audio util — no asset needed) ───────────────
 
     // ─── Browser notification ───────────────────────────────────────────────
 
@@ -164,10 +120,10 @@ export function useActivityAlerts(events: PersonalActivityEvent[]) {
 
         const { browser, sound } = preferencesRef.current;
         fresh.forEach((event) => {
-            if (sound) playChime();
+            if (sound) playSoftChime();
             if (browser) notifyBrowser(event);
         });
-    }, [events, playChime, notifyBrowser]);
+    }, [events, notifyBrowser]);
 
     // ─── Toggle actions ─────────────────────────────────────────────────────
 
@@ -195,8 +151,8 @@ export function useActivityAlerts(events: PersonalActivityEvent[]) {
         // Play a confirmation chime when enabling — this also primes the
         // AudioContext inside the click gesture so the first real alert
         // has no autoplay delay.
-        if (turningOn) playChime();
-    }, [playChime]);
+        if (turningOn) playSoftChime();
+    }, []);
 
     return {
         preferences,

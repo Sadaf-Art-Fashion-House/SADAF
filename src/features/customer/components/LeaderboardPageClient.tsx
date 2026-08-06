@@ -32,7 +32,7 @@ export default function LeaderboardPageClient({
     const memberName = user?.fullName?.split(' ')[0] || 'Member';
 
     const [activeKind, setActiveKind] = useState<LeaderboardKind>(initialKind);
-    const { data, loading, error, wsLive } = useLeaderboard(user?.id ?? null, 100, activeKind);
+    const { data, loading, error, wsLive, overtake } = useLeaderboard(user?.id ?? null, 100, activeKind);
 
     // User is not logged in — show sign-in prompt
     if (!user) {
@@ -66,6 +66,7 @@ export default function LeaderboardPageClient({
             activeKind={activeKind}
             onKindChange={setActiveKind}
             isLive={wsLive}
+            overtake={overtake}
         />
     );
 }

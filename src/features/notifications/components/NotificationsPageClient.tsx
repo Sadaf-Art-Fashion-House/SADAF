@@ -19,6 +19,8 @@ export default function NotificationsPageClient({ notifications }: Notifications
         markAllAsRead,
         filterType,
         setFilterType,
+        globalMuted,
+        toggleGlobalMuted,
     } = useRealtimeNotifications(user?.id ?? null, notifications);
 
     return (
@@ -29,6 +31,8 @@ export default function NotificationsPageClient({ notifications }: Notifications
             onMarkAllAsRead={markAllAsRead}
             filterType={filterType}
             onFilterChange={setFilterType}
+            globalMuted={globalMuted}
+            onToggleGlobalMuted={toggleGlobalMuted}
         />
     );
 }

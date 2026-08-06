@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
-import { Bell, CheckCheck, ChevronRight, Wifi, WifiOff } from 'lucide-react';
+import { Bell, BellRing, BellOff, CheckCheck, ChevronRight, Globe, Wifi, WifiOff } from 'lucide-react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useRealtimeNotifications } from '../hooks/useRealtimeNotifications';
 import { TYPE_ICONS, TYPE_COLORS } from '../constants/notificationStyles';
@@ -30,6 +30,8 @@ export default function NotificationBell() {
         markAsRead,
         markAllAsRead,
         wsLive,
+        globalMuted,
+        toggleGlobalMuted,
     } = useRealtimeNotifications(userId);
 
     const [isOpen, setIsOpen] = useState(false);
@@ -108,6 +110,32 @@ export default function NotificationBell() {
                                     Mark All Read
                                 </button>
                             )}
+                        </div>
+
+                        {/* Global alerts toggle — mutes global pushes (new
+                            orders, announcements) while leaving user-scoped
+                            alerts untouched. Persisted in localStorage. */}
+                        <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/5">
+                            <span className="flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-wider text-[#E8E0D5]/50">
+                                <Globe size={10} className="text-[#C9A84C]/60" />
+                                Global alerts
+                            </span>
+                            <button
+                                onClick={toggleGlobalMuted}
+                                aria-pressed={!globalMuted}
+                                aria-label={globalMuted ? 'Enable global alerts' : 'Mute global alerts'}
+                                title={globalMuted
+                                    ? 'Global alerts are muted — click to enable new-order & announcement pushes'
+                                    : 'Global alerts are on — click to mute new-order & announcement pushes'}
+                                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[8px] font-mono uppercase tracking-wider border transition-all cursor-pointer ${
+                                    globalMuted
+                                        ? 'text-[#E8E0D5]/40 border-white/10 hover:text-white hover:border-white/25'
+                                        : 'text-[#4FC3F7] border-[#4FC3F7]/30 bg-[#4FC3F7]/10 hover:border-[#4FC3F7]/60'
+                                }`}
+                            >
+                                {globalMuted ? <BellOff size={9} /> : <BellRing size={9} />}
+                                {globalMuted ? 'Muted' : 'On'}
+                            </button>
                         </div>
 
                         {/* Notification list */}
