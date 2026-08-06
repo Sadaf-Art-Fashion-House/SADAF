@@ -2,12 +2,13 @@
 
 import { useMemo, useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trophy, Search, Users, Medal, Crown, Filter, X, Wifi, WifiOff, MapPin, ChevronDown, TrendingDown, Swords, Volume2, VolumeX } from 'lucide-react';
+import { Trophy, Search, Users, Medal, Crown, Filter, X, Wifi, WifiOff, MapPin, ChevronDown, TrendingDown, Swords, Volume2, VolumeX, ArrowLeft } from 'lucide-react';
 import type { LeaderboardEntry, LeaderboardKind, LoyaltyTier, OvertakeEvent } from '../types';
 import { TIER_COLORS, RANK_MEDALS } from '../constants/tierStyles';
 import { formatPoints } from '../utils/formatPoints';
 import { formatCurrency } from '@/utils/formatCurrency';
 import { LEADERBOARD_KIND_LABELS, TIER_ORDER, tierMemberCounts } from '../utils/leaderboard';
+import { useCityFilter } from '../hooks/useCityFilter';
 import { useOvertakeAlerts } from '../hooks/useOvertakeAlerts';
 import { playSoftChime } from '@/shared/utils/playSoftChime';
 
@@ -34,6 +35,8 @@ interface LeaderboardViewProps {
     isLive?: boolean;
     /** Latest "someone overtook you" event (null when nothing new). */
     overtake?: OvertakeEvent | null;
+    /** City to start the filter on (from ?city= — e.g. the RewardsPanel deep-link). */
+    initialCity?: string;
 }
 
 const TIER_FILTERS: (LoyaltyTier | 'All')[] = ['All', 'Bronze', 'Silver', 'Gold', 'Heritage', 'Platinum'];
@@ -73,10 +76,13 @@ export default function LeaderboardView({
     onKindChange,
     isLive = false,
     overtake = null,
+    initialCity = 'All',
 }: LeaderboardViewProps) {
     const [searchQuery, setSearchQuery] = useState('');
     const [tierFilter, setTierFilter] = useState<LoyaltyTier | 'All'>('All');
-    const [cityFilter, setCityFilter] = useState<string>('All');
+    // City filter shared with the RewardsPanel — dropdown, counts and
+    // empty-state detection stay identical across both leaderboard surfaces.
+    const { cityFilter, setCityFilter, cityOptions, selectedCityHasNoMembers } = useCityFilter(entries, initialCity);
 
     // Overtake alerts — toast + row flash (on by default) + optional chime,
     // persisted in localStorage by useOvertakeAlerts (same pattern as the
@@ -152,17 +158,6 @@ export default function LeaderboardView({
     // (excluding "You") is totalMembers - 1.
     const poolSize = Math.max(0, totalMembers - 1);
     const filterCount = showTier ? entries.length - filteredEntries.length : 0;
-
-    /** City options derived from the pool — each with its member count. */
-    const cityOptions = useMemo(() => {
-        const counts = new Map<string, number>();
-        for (const entry of entries) {
-            counts.set(entry.city, (counts.get(entry.city) ?? 0) + 1);
-        }
-        return [...counts.entries()]
-            .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-            .map(([city, count]) => ({ city, count }));
-    }, [entries]);
 
     /** Members per tier over the search+city base pool (faceted counts). */
     const tierCounts = useMemo(
@@ -381,7 +376,10 @@ export default function LeaderboardView({
                                     onClick={() => setTierFilter(tier)}
                                 />
                             ))}
-                            {filterCount > 0 && (
+                            {/* "X hidden" only when rows are actually being
+                                filtered out — for a 0-count city nothing is
+                                hidden, the city simply has no members yet. */}
+                            {filterCount > 0 && !selectedCityHasNoMembers && (
                                 <span className="text-[9px] font-mono text-[#E8E0D5]/30 ml-1">
                                     {filterCount} hidden
                                 </span>
@@ -405,13 +403,35 @@ export default function LeaderboardView({
                         <p className="ml-3 text-[10px] font-mono text-[#E8E0D5]/50">Loading leaderboard…</p>
                     </div>
                 ) : filteredEntries.length === 0 ? (
-                    <div className="py-16 text-center">
-                        <Users size={32} className="mx-auto text-[#E8E0D5]/20 mb-3" />
-                        <p className="text-sm text-[#E8E0D5]/60">No members match your filters</p>
-                        <p className="text-[10px] text-[#E8E0D5]/40 mt-1">
-                            Try a different name, city, or {showTier ? 'tier' : 'metric'}
-                        </p>
-                    </div>
+                    selectedCityHasNoMembers ? (
+                        /* A 0-count city selected — invite the visitor to be
+                           the first member instead of a generic "no match". */
+                        <div className="py-16 text-center">
+                            <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-[#C9A84C]/10 border border-[#C9A84C]/20 flex items-center justify-center">
+                                <MapPin size={22} className="text-[#C9A84C]/70" />
+                            </div>
+                            <p className="text-sm text-[#E8E0D5]/70">No members in {cityFilter} yet</p>
+                            <p className="text-[10px] text-[#E8E0D5]/40 mt-1">
+                                Be the first SADAF member from {cityFilter} — or explore another city
+                            </p>
+                            <button
+                                onClick={() => setCityFilter('All')}
+                                aria-label="Reset city filter to all cities"
+                                className="mt-5 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#C9A84C]/15 border border-[#C9A84C]/30 text-[#C9A84C] text-[10px] font-mono uppercase tracking-wider hover:bg-[#C9A84C]/25 transition-all cursor-pointer"
+                            >
+                                <ArrowLeft size={12} />
+                                Show all cities
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="py-16 text-center">
+                            <Users size={32} className="mx-auto text-[#E8E0D5]/20 mb-3" />
+                            <p className="text-sm text-[#E8E0D5]/60">No members match your filters</p>
+                            <p className="text-[10px] text-[#E8E0D5]/40 mt-1">
+                                Try a different name, city, or {showTier ? 'tier' : 'metric'}
+                            </p>
+                        </div>
+                    )
                 ) : (
                     <motion.div layout className="bg-[#05081A]/90 border border-[#C9A84C]/10 rounded-2xl overflow-hidden">
                         {/* Tier distribution — member counter per tier, in the

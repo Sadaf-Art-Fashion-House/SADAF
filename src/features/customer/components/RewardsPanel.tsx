@@ -14,10 +14,15 @@ import {
     ArrowRight,
     Wifi,
     WifiOff,
+    MapPin,
+    X,
+    ChevronDown,
+    ArrowLeft,
 } from 'lucide-react';
 import type { RewardsData } from '../types';
 import { TIER_COLORS, RANK_MEDALS } from '../constants/tierStyles';
 import { formatPoints } from '../utils/formatPoints';
+import { useCityFilter } from '../hooks/useCityFilter';
 import { ROUTES } from '@/config/routes';
 
 interface RewardsPanelProps {
@@ -42,6 +47,13 @@ interface RewardsPanelProps {
  * leaderboard at /dashboard/leaderboard (same tier math + member pool).
  */
 export default function RewardsPanel({ data, loading, error, memberName, isLive = false }: RewardsPanelProps) {
+    // City filter shared with the full LeaderboardView — same dropdown,
+    // counts, and empty-state detection. Called unconditionally (before the
+    // early returns) per the Rules of Hooks; the empty-array fallback during
+    // loading is harmless because the memos recompute once data arrives.
+    const { cityFilter, setCityFilter, cityOptions, filteredEntries, selectedCityHasNoMembers } =
+        useCityFilter(data?.leaderboard ?? []);
+
     if (loading && !data) {
         return (
             <div className="p-6 bg-[#05081A]/90 border border-[#C9A84C]/10 rounded-2xl flex items-center justify-center">
@@ -174,7 +186,7 @@ export default function RewardsPanel({ data, loading, error, memberName, isLive 
 
                 {/* Right: compact leaderboard */}
                 <div className="lg:col-span-3 p-5 bg-[#05081A]/90 border border-[#C9A84C]/10 rounded-2xl">
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                             <Users size={14} className="text-[#C9A84C]" />
                             <h4 className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold">
@@ -186,8 +198,58 @@ export default function RewardsPanel({ data, loading, error, memberName, isLive 
                         </span>
                     </div>
 
+                    {/* City filter — same CITIES dropdown as the full leaderboard */}
+                    <div className="relative mb-3">
+                        <MapPin size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C9A84C]/50 pointer-events-none" />
+                        <select
+                            value={cityFilter}
+                            onChange={(e) => setCityFilter(e.target.value)}
+                            aria-label="Filter by city"
+                            className="w-full appearance-none bg-[#0A0F2C]/60 border border-white/[0.08] text-xs text-white rounded-xl pl-9 pr-8 py-2 outline-none focus:border-[#C9A84C]/50 transition cursor-pointer"
+                        >
+                            <option value="All" className="bg-[#0A0F2C]">All cities &middot; {data.leaderboard.length}</option>
+                            {cityOptions.map(({ city, count }) => (
+                                <option key={city} value={city} className="bg-[#0A0F2C]">
+                                    {city} &middot; {count}
+                                </option>
+                            ))}
+                        </select>
+                        {cityFilter !== 'All' ? (
+                            <button
+                                onClick={() => setCityFilter('All')}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded text-[#E8E0D5]/40 hover:text-white transition-all cursor-pointer"
+                                aria-label="Clear city filter"
+                            >
+                                <X size={12} />
+                            </button>
+                        ) : (
+                            <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#E8E0D5]/30 pointer-events-none" />
+                        )}
+                    </div>
+
                     <div className="flex flex-col gap-1.5 max-h-80 overflow-y-auto pr-1">
-                        {data.leaderboard.map((entry, index) => {
+                        {selectedCityHasNoMembers ? (
+                            /* A 0-count city selected — invite the visitor
+                               to be the first member (same as LeaderboardView). */
+                            <div className="py-12 text-center">
+                                <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-[#C9A84C]/10 border border-[#C9A84C]/20 flex items-center justify-center">
+                                    <MapPin size={20} className="text-[#C9A84C]/70" />
+                                </div>
+                                <p className="text-xs text-[#E8E0D5]/70">No members in {cityFilter} yet</p>
+                                <p className="text-[9px] text-[#E8E0D5]/40 mt-1">
+                                    Be the first SADAF member from {cityFilter} — or explore another city
+                                </p>
+                                <button
+                                    onClick={() => setCityFilter('All')}
+                                    aria-label="Reset city filter to all cities"
+                                    className="mt-4 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#C9A84C]/15 border border-[#C9A84C]/30 text-[#C9A84C] text-[9px] font-mono uppercase tracking-wider hover:bg-[#C9A84C]/25 transition-all cursor-pointer"
+                                >
+                                    <ArrowLeft size={11} />
+                                    Show all cities
+                                </button>
+                            </div>
+                        ) : (
+                            filteredEntries.map((entry, index) => {
                             const medal = index < 3 ? RANK_MEDALS[index] : null;
                             const isCurrentUser = entry.isCurrentUser;
                             return (
@@ -220,7 +282,8 @@ export default function RewardsPanel({ data, loading, error, memberName, isLive 
                                     </span>
                                 </motion.div>
                             );
-                        })}
+                        })
+                        )}
                     </div>
 
                     {/* Bottom hints + full leaderboard link */}
@@ -237,7 +300,11 @@ export default function RewardsPanel({ data, loading, error, memberName, isLive 
                     </div>
 
                     <Link
-                        href={ROUTES.DASHBOARD_LEADERBOARD}
+                        href={
+                            cityFilter !== 'All'
+                                ? `${ROUTES.DASHBOARD_LEADERBOARD}?city=${encodeURIComponent(cityFilter)}`
+                                : ROUTES.DASHBOARD_LEADERBOARD
+                        }
                         className="mt-4 flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl bg-[#C9A84C]/10 border border-[#C9A84C]/25 text-[#C9A84C] text-[9px] font-mono uppercase tracking-widest hover:bg-[#C9A84C]/20 hover:border-[#C9A84C]/40 transition-all duration-300 group"
                     >
                         View Full Leaderboard

@@ -12,7 +12,12 @@ export const metadata: Metadata = {
  * switcher (Points / Sales / Designs) so admins can rank customers, sales
  * partners, and designers from one page.
  */
-export default function AdminLeaderboardPage() {
+interface AdminLeaderboardPageProps {
+    searchParams: Promise<{ city?: string }>;
+}
+
+export default async function AdminLeaderboardPage({ searchParams }: AdminLeaderboardPageProps) {
+    const { city } = await searchParams;
     const kinds: LeaderboardKind[] = ['points', 'sales', 'designs'];
-    return <LeaderboardPageClient kinds={kinds} initialKind="points" />;
+    return <LeaderboardPageClient kinds={kinds} initialKind="points" initialCity={city ?? 'All'} />;
 }
