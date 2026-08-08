@@ -193,6 +193,7 @@ export const MOCK_REFERRAL_INFO: ReferralInfo = {
             id: 'c-105',
             name: 'Mona El-Sayed',
             role: 'customer_family',
+            avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=100&q=80',
             joinedAt: '2026-03-08',
             hasFirstPurchase: false,
         },

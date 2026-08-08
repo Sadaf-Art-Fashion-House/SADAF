@@ -398,8 +398,12 @@ export default function CommunityView({
                                                     key={user.id}
                                                     className="flex items-center gap-2.5 p-2 rounded-lg bg-[#0A0F2C]/30 border border-white/[0.03]"
                                                 >
-                                                    <div className="w-7 h-7 shrink-0 rounded-full bg-gradient-to-br from-[#4FC3F7] to-[#C9A84C] flex items-center justify-center text-[9px] font-bold text-white">
-                                                        {user.name.charAt(0)}
+                                                    <div className="w-7 h-7 shrink-0 rounded-full overflow-hidden bg-gradient-to-br from-[#4FC3F7] to-[#C9A84C] flex items-center justify-center text-[9px] font-bold text-white">
+                                                        {user.avatarUrl ? (
+                                                            <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            user.name.charAt(0)
+                                                        )}
                                                     </div>
                                                     <div className="flex-1 min-w-0">
                                                         <p className="text-xs text-[#E8E0D5]/80 font-medium truncate">
@@ -599,8 +603,12 @@ export default function CommunityView({
                                             key={req.id}
                                             className="flex items-center gap-3 p-2.5 bg-[#0A0F2C]/30 border border-white/[0.03] rounded-xl"
                                         >
-                                            <div className="w-8 h-8 shrink-0 rounded-full bg-gradient-to-br from-[#4FC3F7] to-[#C9A84C]/60 flex items-center justify-center text-[9px] font-bold text-white">
-                                                {req.name.charAt(0)}
+                                            <div className="w-8 h-8 shrink-0 rounded-full overflow-hidden bg-gradient-to-br from-[#4FC3F7] to-[#C9A84C]/60 flex items-center justify-center text-[9px] font-bold text-white">
+                                                {req.avatarUrl ? (
+                                                    <img src={req.avatarUrl} alt={req.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    req.name.charAt(0)
+                                                )}
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-xs text-[#E8E0D5]/70">{req.name}</p>

@@ -17,6 +17,24 @@ interface AuthPageClientProps {
     mode: 'login' | 'signup';
 }
 
+/**
+ * Read the middleware's ?redirect= param (the guarded page the guest was
+ * trying to open) and validate it is a safe same-origin path — blocks
+ * external and protocol-relative URLs. Read lazily inside handlers, so no
+ * render-time window access.
+ */
+function getRedirectTarget(): string | null {
+    const raw = new URLSearchParams(window.location.search).get('redirect');
+    if (!raw) return null;
+    if (!raw.startsWith('/') || raw.startsWith('//') || raw.includes('\\')) return null;
+    return raw;
+}
+
+/** Where to go after a successful auth — the guarded page, or the dashboard. */
+function getPostAuthDestination(): string {
+    return getRedirectTarget() || '/dashboard';
+}
+
 export default function AuthPageClient({ mode }: AuthPageClientProps) {
     const router = useRouter();
     const { login, signup, signInWithGoogle, isLoading } = useAuth();
@@ -32,8 +50,9 @@ export default function AuthPageClient({ mode }: AuthPageClientProps) {
             if (result.success) {
                 setSuccess('Login successful! Welcoming you to SADAF...');
                 // Brief delay so the user sees the success message, then redirect
+                // back to the page they originally tried to open (if any).
                 setTimeout(() => {
-                    router.push('/dashboard');
+                    router.push(getPostAuthDestination());
                 }, 800);
             } else {
                 setError(result.error || 'Authentication failed.');
@@ -115,7 +134,7 @@ export default function AuthPageClient({ mode }: AuthPageClientProps) {
                         : `Exclusive ${data.role} successfully registered. Welcome to SADAF.`,
                 );
                 setTimeout(() => {
-                    router.push('/dashboard');
+                    router.push(getPostAuthDestination());
                 }, 1800);
             } else {
                 setError(result.error || 'Registration failed.');
@@ -134,7 +153,7 @@ export default function AuthPageClient({ mode }: AuthPageClientProps) {
             // so the code below only runs for sandbox.
             setSuccess('Google authentication successful! Welcoming you to SADAF...');
             setTimeout(() => {
-                router.push('/dashboard');
+                router.push(getPostAuthDestination());
             }, 800);
         } else {
             setError(result.error || 'Google Sign-In failed.');

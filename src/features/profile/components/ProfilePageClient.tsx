@@ -7,7 +7,7 @@ import ProfileView from './ProfileView';
 
 export default function ProfilePageClient() {
     const router = useRouter();
-    const { user, logout } = useAuth();
+    const { user, logout, updateProfile } = useAuth();
 
     const handleLogout = () => {
         logout();
@@ -33,5 +33,5 @@ export default function ProfilePageClient() {
         );
     }
 
-    return <ProfileView user={user} onLogout={handleLogout} />;
+    return <ProfileView user={user} onLogout={handleLogout} onUpdateProfile={updateProfile} />;
 }
