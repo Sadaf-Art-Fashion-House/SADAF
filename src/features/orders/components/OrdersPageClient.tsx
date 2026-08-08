@@ -1,10 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useOrderStatus } from '../hooks/useOrderStatus';
 import OrdersView from './OrdersView';
 import type { Order } from '@/features/orders/types';
+import { ROUTES } from '@/config/routes';
+import { getUserReviews, saveUserReview, hasReviewForOrder } from '@/features/reviews/utils/userReviewsStorage';
+import type { Review } from '@/features/reviews/types';
 
 const SIMULATED_ORDERS: Order[] = [
     {
@@ -45,10 +48,60 @@ const SIMULATED_ORDERS: Order[] = [
     },
 ];
 
+/** Short review titles derived from the star rating. */
+function titleForRating(rating: number): string {
+    if (rating >= 5) return 'Exceptional — exceeded every expectation';
+    if (rating === 4) return 'Loved my SADAF piece';
+    if (rating === 3) return 'Good, with room to improve';
+    if (rating === 2) return 'Not quite what I expected';
+    return 'Disappointed with the experience';
+}
+
 export default function OrdersPageClient() {
     const [orders] = useState<Order[]>(SIMULATED_ORDERS);
     const { user } = useAuth();
     const { statuses, events, loading, wsLive, error } = useOrderStatus(user?.id ?? null);
+
+    // Order ids that already have a review — read on mount (hydration-safe,
+    // per signed-in user) and updated optimistically after each submit.
+    const [reviewedOrderIds, setReviewedOrderIds] = useState<string[]>([]);
+    useEffect(() => {
+        setReviewedOrderIds(getUserReviews(user?.id ?? '').map((review) => review.orderId).filter(Boolean) as string[]);
+    }, [user?.id]);
+
+    const handleReviewSubmit = useCallback(
+        async (order: Order, rating: number, comment: string): Promise<{ ok: boolean; error?: string }> => {
+            try {
+                if (hasReviewForOrder(order.id, user?.id ?? '')) {
+                    return { ok: false, error: 'This order already has a review.' };
+                }
+
+                const review: Review = {
+                    id: `user-review-${Date.now()}`,
+                    productId: order.id,
+                    productName: order.items[0]?.name ?? 'SADAF piece',
+                    productImage: order.items[0]?.image ?? '',
+                    productHref: ROUTES.STORE,
+                    userName: user?.fullName ?? 'SADAF Client',
+                    userAvatar: user?.avatarUrl,
+                    rating,
+                    title: titleForRating(rating),
+                    comment,
+                    createdAt: new Date().toISOString(),
+                    verified: true,
+                    orderId: order.id,
+                };
+
+                saveUserReview(review, user?.id ?? '');
+                setReviewedOrderIds((current) => [...current, order.id]);
+                return { ok: true };
+            } catch (err: unknown) {
+                const message = err instanceof Error ? err.message : 'Could not save your review';
+                return { ok: false, error: message };
+            }
+        },
+        [user],
+    );
 
     return (
         <OrdersView
@@ -58,6 +111,8 @@ export default function OrdersPageClient() {
             isLive={wsLive}
             liveLoading={loading}
             liveError={error}
+            reviewedOrderIds={reviewedOrderIds}
+            onReviewSubmit={handleReviewSubmit}
         />
     );
 }

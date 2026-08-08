@@ -52,6 +52,27 @@ export function isAdminRole(role: UserRole): boolean {
 }
 
 /**
+ * Helper to check whether the role is the independent designer role.
+ */
+export function isDesignerRole(role: UserRole): boolean {
+    return role === 'designer';
+}
+
+/**
+ * Helper to check whether the role is the standalone sales-partner role.
+ */
+export function isSalesPartnerRole(role: UserRole): boolean {
+    return role === 'sales_partner';
+}
+
+/**
+ * Helper to check whether the role is the standalone company role.
+ */
+export function isCompanyRole(role: UserRole): boolean {
+    return role === 'company';
+}
+
+/**
  * The "base" level of a role for UI grouping.
  */
 export type RoleCategory = 'customer' | 'designer' | 'company' | 'sales_partner' | 'admin' | 'founder';
@@ -99,6 +120,15 @@ export interface UserProfile {
      * the connections / networking feature (TODO: full UI in a later iteration).
      */
     connections?: string[];
+    /**
+     * Home city (used by role dashboards like the company connections hub to
+     * identify where a brand/designer operates).
+     */
+    city?: string;
+    /**
+     * Business focus for company accounts (e.g. "Bridal & Occasion Wear").
+     */
+    focus?: string;
 }
 
 // ─── Art ─────────────────────────────────────────────────────────────────────

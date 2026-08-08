@@ -15,6 +15,11 @@ export interface Review {
     comment: string;
     createdAt: string;
     verified: boolean;
+    /**
+     * Set for reviews written from an order — used to keep one review per
+     * delivered order and to mark the order as reviewed in the UI.
+     */
+    orderId?: string;
 }
 
 export type ReviewSortOption = 'newest' | 'highest' | 'lowest';

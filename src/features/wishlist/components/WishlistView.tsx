@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import { Heart, ShoppingBag, Trash2, ArrowLeft, Sparkles } from 'lucide-react';
 import type { FashionProduct } from '@/shared/types';
+import { ROUTES } from '@/config/routes';
 
 interface WishlistViewProps {
     items: FashionProduct[];
@@ -147,9 +148,12 @@ export default function WishlistView({
                                     {/* Info */}
                                     <div className="p-4 flex-1 flex flex-col justify-between">
                                         <div>
-                                            <h3 className="font-serif text-[#E8E0D5] text-sm group-hover:text-[#F0D080] transition-colors duration-300 mb-1 leading-tight truncate">
+                                            <Link
+                                                href={`${ROUTES.STORE}/${product.id}`}
+                                                className="font-serif text-[#E8E0D5] text-sm group-hover:text-[#F0D080] transition-colors duration-300 mb-1 leading-tight truncate hover:underline underline-offset-4"
+                                            >
                                                 {product.name}
-                                            </h3>
+                                            </Link>
                                             <p className="text-[10px] text-[#E8E0D5]/60 line-clamp-2 leading-relaxed mb-1">
                                                 {product.fabric}
                                             </p>

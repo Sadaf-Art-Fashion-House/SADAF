@@ -1,8 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { ShoppingCart, Heart, Filter, ChevronRight, X, CreditCard } from "lucide-react";
+import { ROUTES } from "@/config/routes";
 import type { CartItem, FashionProduct } from "@/shared/types";
 import { useMarketplace } from "../hooks/useMarketplace";
 
@@ -215,9 +217,12 @@ export default function StoreView({
                                             <span className="text-[9px] uppercase font-mono text-gray-500 mb-0.5 block">
                                                 {prod.category}
                                             </span>
-                                            <h3 className="font-serif text-[#E8E0D5] text-base group-hover:text-[#F0D080] transition-colors duration-300 mb-1 leading-tight">
+                                            <Link
+                                                href={`${ROUTES.STORE}/${prod.id}`}
+                                                className="font-serif text-[#E8E0D5] text-base group-hover:text-[#F0D080] transition-colors duration-300 mb-1 leading-tight hover:underline underline-offset-4"
+                                            >
                                                 {prod.name}
-                                            </h3>
+                                            </Link>
                                             <p className="text-xs text-[#E8E0D5]/65 line-clamp-2 leading-relaxed mb-4">
                                                 {prod.description}
                                             </p>
