@@ -2,8 +2,8 @@
 
 import { motion, AnimatePresence } from 'motion/react';
 import {
-    Sparkles, Upload, Ruler, RefreshCw, Layers, Check,
-    ShoppingBag, Eye, Info, Save, Bookmark,
+    Sparkles, Upload, Ruler, RefreshCw, Check,
+    ShoppingBag, Save, Bookmark,
 } from 'lucide-react';
 import type { AIClothingDesign, MaqasaqRecommendation } from '@/shared/types';
 import { fabricsList, printingMethods } from '@/features/ai/data';

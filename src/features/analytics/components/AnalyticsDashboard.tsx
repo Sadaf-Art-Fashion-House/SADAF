@@ -727,7 +727,7 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
                                 <ResponsiveContainer width="100%" height="100%">
                                     <RePieChart>
                                         <Pie data={data.acquisitionChannels} cx="50%" cy="50%" innerRadius={50} outerRadius={75} paddingAngle={3} dataKey="value" nameKey="label" animationDuration={800}>
-                                            {data.acquisitionChannels.map((entry, i) => (<Cell key={i} fill={['#C9A84C', '#4FC3F7', '#10B981', '#F59E0B', '#EC4899'][i % 5]} />))}
+                                            {data.acquisitionChannels.map((_, i) => (<Cell key={i} fill={['#C9A84C', '#4FC3F7', '#10B981', '#F59E0B', '#EC4899'][i % 5]} />))}
                                         </Pie>
                                         <Tooltip content={<PieTooltip />} />
                                         <Legend wrapperStyle={{ fontSize: '9px', fontFamily: 'monospace', color: '#E8E0D5' }} />

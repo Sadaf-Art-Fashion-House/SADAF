@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
     Eye,
@@ -23,7 +23,6 @@ import { useTextToSpeech, type TtsLang } from '../hooks/useTextToSpeech';
 interface ExhibitionViewProps {
     artworks: ArtPiece[];
     onAddToCart: (art: ArtPiece) => void;
-    onSelectArtPiece: (art: ArtPiece) => void;
 }
 
 const ROOMS: ExhibitionRoom[] = [
@@ -157,7 +156,7 @@ const LANGUAGE_STATUS: Record<TtsLang, { name: string; tooltip: string; noVoiceN
 
 // ─────────────────────── Component ───────────────────────
 
-export default function ExhibitionView({ artworks, onAddToCart, onSelectArtPiece }: ExhibitionViewProps) {
+export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionViewProps) {
     const [activeRoomIndex, setActiveRoomIndex] = useState<number>(0);
     const activeRoom = ROOMS[activeRoomIndex];
     const [activeWall, setActiveWall] = useState<WallView>('center');

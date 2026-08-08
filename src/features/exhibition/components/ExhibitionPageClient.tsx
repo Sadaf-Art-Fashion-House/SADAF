@@ -20,10 +20,6 @@ export default function ExhibitionPageClient({ artworks }: ExhibitionPageClientP
         }
     };
 
-    const handleSelectArtPiece = (art: ArtPiece) => {
-        console.log("Selected art piece for detail view:", art.id);
-    };
-
     return (
         <div className="w-full min-h-screen bg-[#0A0F2C] py-16 px-4 md:px-8">
             <div className="max-w-7xl mx-auto">
@@ -42,7 +38,6 @@ export default function ExhibitionPageClient({ artworks }: ExhibitionPageClientP
                 <ExhibitionView
                     artworks={artworks}
                     onAddToCart={handleAddToCart}
-                    onSelectArtPiece={handleSelectArtPiece}
                 />
             </div>
         </div>

@@ -222,7 +222,7 @@ export default function AtelierView() {
                             { title: 'Mother-of-Pearl Inlay', desc: 'Custom-carved saltwater Sadaf shell set into copper and silver.', icon: Gem },
                             { title: 'Hand-Loomed Jacquards', desc: 'Traditional looms weaving complex geometric Islamic patterns.', icon: Shirt },
                             { title: 'Natural Dye Atelier', desc: 'Plant-based indigos, crushed cochineal, and iron oxide pigments.', icon: Feather },
-                        ].map((craft, idx) => (
+                        ].map((craft) => (
                             <motion.div
                                 key={craft.title}
                                 whileHover={{ scale: 1.02 }}

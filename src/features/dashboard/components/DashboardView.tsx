@@ -17,7 +17,7 @@ import {
     Camera,
     Bot,
 } from 'lucide-react';
-import type { UserProfile, UserRole } from '@/shared/types';
+import type { UserProfile } from '@/shared/types';
 import { isCustomerRole, isAdminRole, getRoleCategory } from '@/shared/types';
 import { ROLE_BADGES, ROLE_BADGE_COLORS } from '@/features/auth/types';
 import { ROUTES } from '@/config/routes';
@@ -39,7 +39,7 @@ const quickLinks = [
 ];
 
 /** Map a section title to the correct dashboard sub-route based on the user's role. */
-function getSectionLink(role: UserRole, title: string): string {
+function getSectionLink(title: string): string {
     if (title === 'Admin Panel') return '/dashboard/admin';
     if (title === 'Founder Controls') return '/dashboard/founder';
     // Customer/Designer modules -> the user profile dashboard
@@ -278,7 +278,7 @@ export default function DashboardView({ user, onLogout, onUpdateProfile }: Dashb
                     {availableSections.map((section) => (
                         <Link
                             key={section.title}
-                            href={getSectionLink(user.role, section.title)}
+                            href={getSectionLink(section.title)}
                             className="block p-6 rounded-xl bg-[#0A0F2C]/60 border border-[#C9A84C]/10 hover:border-[#C9A84C]/30 transition-all duration-300 group"
                         >
                             <div className="flex items-center gap-3 mb-2">

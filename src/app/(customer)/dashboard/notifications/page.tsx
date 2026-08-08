@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import NotificationsPageClient from '@/features/notifications/components/NotificationsPageClient';
-import type { Notification, NotificationType } from '@/features/notifications/types';
+import type { Notification } from '@/features/notifications/types';
 
 export const metadata: Metadata = {
     title: 'Notifications | SADAF Atelier',
@@ -8,7 +8,6 @@ export const metadata: Metadata = {
 };
 
 function getMockNotifications(): Notification[] {
-    const types: NotificationType[] = ['order', 'wishlist', 'review', 'system', 'promotion'];
     return [
         {
             id: 'notif-1', type: 'order', title: 'Order #SADAF-1001 Confirmed',
