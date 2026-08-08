@@ -2,7 +2,7 @@
  * SADAF | Notifications Feature — Type Definitions
  */
 
-export type NotificationType = 'order' | 'wishlist' | 'review' | 'system' | 'promotion';
+export type NotificationType = 'order' | 'wishlist' | 'review' | 'system' | 'promotion' | 'friend_request';
 
 export interface Notification {
     id: string;

@@ -13,6 +13,7 @@ import {
     Info,
     Tag,
     Bell,
+    UserPlus,
 } from 'lucide-react';
 import type { NotificationType } from '../types';
 
@@ -23,6 +24,7 @@ export const TYPE_ICONS: Record<NotificationType, typeof Bell> = {
     review: MessageSquare,
     system: Info,
     promotion: Tag,
+    friend_request: UserPlus,
 };
 
 /** Color classes (icon + icon background) for each notification type. */
@@ -32,6 +34,7 @@ export const TYPE_COLORS: Record<NotificationType, string> = {
     review: 'text-[#C9A84C] bg-[#C9A84C]/10',
     system: 'text-purple-400 bg-purple-400/10',
     promotion: 'text-green-400 bg-green-400/10',
+    friend_request: 'text-[#4FC3F7] bg-[#4FC3F7]/10',
 };
 
 /** Human labels used for filter tabs. */
@@ -45,4 +48,7 @@ export const TYPE_LABELS: Record<string, string> = {
 };
 
 /** All filterable types, in display order (tab list). */
+// NOTE: 'friend_request' is intentionally absent — those pushes are handled
+// exclusively by the header FriendRequestsBadge and never enter the list, so
+// a filter tab for them would always be empty.
 export const NOTIFICATION_TYPES = ['all', 'order', 'wishlist', 'review', 'system', 'promotion'] as const;

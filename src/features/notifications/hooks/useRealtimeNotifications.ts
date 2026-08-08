@@ -140,6 +140,12 @@ export function useRealtimeNotifications(
                     const incoming: Notification = msg.data || msg.notification;
                     if (!incoming || !incoming.id) return;
 
+                    // Friend-request pushes are handled exclusively by the header
+                    // FriendRequestsBadge (WS-primary on the same channel) —
+                    // showing them again in the bell would duplicate the same
+                    // event in two places.
+                    if (incoming.type === 'friend_request') return;
+
                     // Add to notification list
                     addNotification(incoming);
 

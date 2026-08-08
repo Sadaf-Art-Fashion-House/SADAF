@@ -119,6 +119,76 @@ function sendGlobalNotification(notification) {
     });
 }
 
+// ─── Simulated Friend Requests (for demo / development) ───────────────────────
+// Pushes a simulated incoming connection request to each user subscribed to
+// notifications:user:{userId} so the header FriendRequestsBadge counts it in
+// real time (deduped by id on the client, so reconnects / fallback polling
+// never inflate the badge).
+// In production, replace with real events from the connections API.
+const DEMO_FRIEND_REQUESTS_ENABLED = !process.env.DISABLE_DEMO_FRIEND_REQUESTS;
+let friendRequestCounter = 0;
+
+const FRIEND_REQUEST_SENDERS = [
+    'Maya Hassan',
+    'Youssef Farouk',
+    'Hana Adel',
+    'Tarek Nabil',
+    'Salma Fouad',
+    'Omar Khaled',
+    'Rania Mostafa',
+    'Ali Sherif',
+    'Nour El-Din',
+    'Farida Tamer',
+];
+
+function generateDemoFriendRequest() {
+    const sender = FRIEND_REQUEST_SENDERS[friendRequestCounter % FRIEND_REQUEST_SENDERS.length];
+    const relationship = friendRequestCounter % 2 === 0 ? 'friend' : 'family';
+    friendRequestCounter++;
+    return {
+        id: 'fr-demo-' + Date.now() + '-' + friendRequestCounter,
+        type: 'friend_request',
+        relationship,
+        senderEmail: sender.toLowerCase().replace(/\s+/g, '.') + '@example.com',
+        title: 'New Friend Request',
+        message: `${sender} sent you a ${relationship} request`,
+        senderName: sender,
+        createdAt: new Date().toISOString(),
+        read: false,
+        href: '/dashboard/community',
+    };
+}
+
+/** Distinct user ids with at least one active notifications:user:{id} subscription. */
+function collectNotifiedUserIds() {
+    const userIds = new Set();
+    wss.clients.forEach((client) => {
+        if (client.readyState !== WebSocketClient.OPEN) return;
+        const subs = getSubscriptions(client);
+        for (const sub of subs) {
+            if (sub.startsWith('notifications:user:')) {
+                userIds.add(sub.slice('notifications:user:'.length));
+            }
+        }
+    });
+    return userIds;
+}
+
+/** Send a notification to every client subscribed to notifications:user:{userId}. */
+function sendToUserNotificationChannel(userId, notification) {
+    const message = JSON.stringify({
+        type: `notifications:user:${userId}`,
+        notification,
+        timestamp: new Date().toISOString(),
+    });
+    wss.clients.forEach((client) => {
+        if (client.readyState !== WebSocketClient.OPEN) return;
+        if (getSubscriptions(client).has(`notifications:user:${userId}`)) {
+            client.send(message);
+        }
+    });
+}
+
 // ─── Simulated Personal Activity (for demo / development) ────────────────────
 // Pushes per-user personal activity (order placed, design saved) to clients
 // subscribed to personal:user:{userId}.
@@ -444,6 +514,23 @@ if (DEMO_NOTIFICATIONS_ENABLED) {
 
     console.log('   🔔 Demo global notifications enabled — sending one every 15s');
     console.log('      Set DISABLE_DEMO_NOTIFICATIONS=1 to disable');
+}
+
+// ─── Demo Friend Request Generator ───────────────────────────────────────────
+// Sends a simulated incoming friend request to each user subscribed to
+// notifications:user:{userId} — the header FriendRequestsBadge counts these
+// in real time. Dedupe lives on the client (by notification id).
+// In production, replace with real polling from the connections API.
+
+if (DEMO_FRIEND_REQUESTS_ENABLED) {
+    setInterval(() => {
+        for (const userId of collectNotifiedUserIds()) {
+            sendToUserNotificationChannel(userId, generateDemoFriendRequest());
+        }
+    }, 25_000); // Every 25 seconds
+
+    console.log('   👥 Demo friend requests enabled — per-user push every 25s');
+    console.log('      Set DISABLE_DEMO_FRIEND_REQUESTS=1 to disable');
 }
 
 // ─── Demo Personal Activity Generator ───────────────────────────────────────

@@ -14,7 +14,7 @@ import {
     MOCK_NETWORK_GRAPH,
     MOCK_REFERRAL_INFO,
 } from '../constants/communityData';
-import { COMMUNITY_UPDATED_EVENT } from './usePendingFriendRequests';
+import { COMMUNITY_UPDATED_EVENT, buildConnectionFromRequest } from './usePendingFriendRequests';
 
 const STORAGE_KEY = 'sadaf_community';
 
@@ -61,6 +61,50 @@ export function useCommunity() {
             // ignore
         }
     }, [connections, pendingRequests]);
+
+    // Sync state from storage whenever anything writes it — live friend-request
+    // arrivals (persisted by the header badge's usePendingFriendRequests) and
+    // the toast's quick Accept / Decline (which add connections / drop pending
+    // requests straight from storage). Storage is the single source of truth
+    // both writers share, so a full sync keeps the page in line with the badge
+    // without a reload. The event also fires from this hook's own persist
+    // effect — the identity guards below bail out (same arrays) so there is
+    // no dispatch → sync → persist → dispatch loop.
+    useEffect(() => {
+        const syncFromStorage = () => {
+            try {
+                const raw = sessionStorage.getItem(STORAGE_KEY);
+                if (!raw) return;
+                const parsed = JSON.parse(raw) as {
+                    connections?: Connection[];
+                    pendingRequests?: ConnectionRequest[];
+                };
+                const storedConnections = parsed.connections;
+                const storedPending = parsed.pendingRequests;
+                if (Array.isArray(storedPending)) {
+                    setPendingRequests((prev) => {
+                        const unchanged =
+                            prev.length === storedPending.length &&
+                            prev.every((request, index) => request.id === storedPending[index].id);
+                        return unchanged ? prev : storedPending;
+                    });
+                }
+                if (Array.isArray(storedConnections)) {
+                    setConnections((prev) => {
+                        const unchanged =
+                            prev.length === storedConnections.length &&
+                            prev.every((connection, index) => connection.userId === storedConnections[index].userId);
+                        return unchanged ? prev : storedConnections;
+                    });
+                }
+            } catch {
+                // Malformed storage — ignore
+            }
+        };
+
+        window.addEventListener(COMMUNITY_UPDATED_EVENT, syncFromStorage);
+        return () => window.removeEventListener(COMMUNITY_UPDATED_EVENT, syncFromStorage);
+    }, []);
 
     // ── Filtered connections ──────────────────────────────────────────────
 
@@ -123,16 +167,7 @@ export function useCommunity() {
         // so found will be set by the time setConnections runs.
         setConnections((prev) => {
             if (!found) return prev;
-            const newConn: Connection = {
-                userId: found.userId,
-                name: found.name,
-                role: found.type === 'family' ? 'customer_family' : 'customer_friend',
-                avatarUrl: found.avatarUrl,
-                type: found.type,
-                status: 'connected',
-                connectedSince: new Date().toISOString(),
-            };
-            return [newConn, ...prev];
+            return [buildConnectionFromRequest(found), ...prev];
         });
     }, []);
 
