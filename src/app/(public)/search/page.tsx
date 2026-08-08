@@ -19,31 +19,31 @@ function getMockSearchResults(): SearchResult[] {
             id: 'f-1', type: 'product', title: 'Empress Diwani Abaya Cape',
             subtitle: 'Traditional Fusion — Italian Velvet & Raw Egyptian Silk',
             image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=82',
-            price: 1850, href: '/store', category: 'Traditional Fusion',
+            price: 1850, href: '/store/f-1', category: 'Traditional Fusion',
         },
         {
             id: 'f-2', type: 'product', title: 'Sadaf Inlaid Peak Tuxedo',
             subtitle: 'Men — Super-140s Wool & Silk-Satin facing',
             image: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=800&q=82',
-            price: 2400, href: '/store', category: 'Men',
+            price: 2400, href: '/store/f-2', category: 'Men',
         },
         {
             id: 'f-3', type: 'product', title: 'Fatimid Star Silk Slip Dress',
             subtitle: 'Women — 100% Mulberry Silk',
             image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=800&q=82',
-            price: 980, href: '/store', category: 'Women',
+            price: 980, href: '/store/f-3', category: 'Women',
         },
         {
             id: 'f-4', type: 'product', title: 'Gilded Caliph Streetwear Hoodie',
             subtitle: 'Limited Edition — 500gsm heavy loopback cotton',
             image: 'https://images.unsplash.com/photo-1509967419530-da38b4704bc6?auto=format&fit=crop&w=800&q=82',
-            price: 450, href: '/store', category: 'Limited Edition',
+            price: 450, href: '/store/f-4', category: 'Limited Edition',
         },
         {
             id: 'f-5', type: 'product', title: 'Royal Heir Linen Set',
             subtitle: 'Kids — 100% Organic Egyptian Linen',
             image: 'https://images.unsplash.com/photo-1519457431-44ccd64a579b?auto=format&fit=crop&w=800&q=82',
-            price: 320, href: '/store', category: 'Kids',
+            price: 320, href: '/store/f-5', category: 'Kids',
         },
         // ── Artworks ──────────────────────────────────────────────────────
         {

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import Link from 'next/link';
 import {
@@ -12,9 +13,11 @@ import {
     Clock,
     MapPin,
     Heart,
+    Star,
 } from 'lucide-react';
 import type { Order, OrderStatus, OrderStatusEvent } from '@/features/orders/types';
 import LiveOrderStatus from './LiveOrderStatus';
+import ReviewForm from '@/features/reviews/components/ReviewForm';
 
 interface OrdersViewProps {
     orders: Order[];
@@ -28,6 +31,10 @@ interface OrdersViewProps {
     liveLoading: boolean;
     /** Degradation message from the live transport, if any. */
     liveError: string | null;
+    /** Order ids that already have a review written from the orders page. */
+    reviewedOrderIds: string[];
+    /** Persist a review for a delivered order; resolves ok on success. */
+    onReviewSubmit: (order: Order, rating: number, comment: string) => Promise<{ ok: boolean; error?: string }>;
 }
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
@@ -54,12 +61,23 @@ export default function OrdersView({
     isLive,
     liveLoading,
     liveError,
+    reviewedOrderIds,
+    onReviewSubmit,
 }: OrdersViewProps) {
+    // Which order's review form is currently expanded (presentation state).
+    const [openReviewOrderId, setOpenReviewOrderId] = useState<string | null>(null);
+
     // Live statuses win over the initial snapshot for the order cards below.
     const effectiveOrders = orders.map((order) => ({
         ...order,
         status: liveStatuses[order.id] ?? order.status,
     }));
+
+    const handleReviewSubmit = async (order: Order, rating: number, comment: string) => {
+        const result = await onReviewSubmit(order, rating, comment);
+        if (result.ok) setOpenReviewOrderId(null);
+        return result;
+    };
 
     return (
         <div className="relative w-full min-h-screen pb-20">
@@ -227,6 +245,32 @@ export default function OrdersView({
                                                 Total: <span className="text-[#C9A84C] font-extrabold text-sm">${ord.total.toLocaleString()}</span>
                                             </div>
                                         </div>
+
+                                        {/* Review — delivered orders only */}
+                                        {ord.status === 'Delivered' && (
+                                            <div className="mt-4 border-t border-white/5 pt-4">
+                                                {reviewedOrderIds.includes(ord.id) ? (
+                                                    <div className="flex items-center gap-2 text-[10px] font-mono text-emerald-400">
+                                                        <CheckCircle size={12} />
+                                                        Review submitted — thank you!
+                                                    </div>
+                                                ) : openReviewOrderId === ord.id ? (
+                                                    <ReviewForm
+                                                        productName={ord.items[0]?.name ?? 'your piece'}
+                                                        onSubmit={(rating, comment) => handleReviewSubmit(ord, rating, comment)}
+                                                        onCancel={() => setOpenReviewOrderId(null)}
+                                                    />
+                                                ) : (
+                                                    <button
+                                                        onClick={() => setOpenReviewOrderId(ord.id)}
+                                                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#C9A84C]/10 border border-[#C9A84C]/30 text-[#C9A84C] text-[10px] font-mono uppercase tracking-wider hover:bg-[#C9A84C]/20 transition-all duration-300 cursor-pointer"
+                                                    >
+                                                        <Star size={12} />
+                                                        Write a Review
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )}
                                     </motion.div>
                                 );
                             })}

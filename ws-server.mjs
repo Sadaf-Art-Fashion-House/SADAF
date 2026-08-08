@@ -64,6 +64,12 @@ function isValidEndpointType(type) {
     if (type === 'leaderboard:global') return true;
     // Admin/founder community overview channel
     if (type === 'community:admin') return true;
+    // Designer portfolio channel
+    if (type === 'designer:global') return true;
+    // Sales partner referral overview channel
+    if (type === 'sales-partner:global') return true;
+    // Designer ↔ Company partnership hub
+    if (type === 'connections:global') return true;
     return false;
 }
 
@@ -320,6 +326,100 @@ function sendCommunityAdmin(data) {
     });
 }
 
+// ─── Designer Dashboard (for demo / development) ────────────────────────────
+// Pushes the designer's portfolio (submissions + KPI stats) to every client
+// subscribed to designer:global. Fetches the real /api/dashboard/designer
+// route so the aggregation math lives in exactly one place.
+const DEMO_DESIGNER_ENABLED = !process.env.DISABLE_DEMO_DESIGNER;
+
+/** True when at least one connected client subscribes to designer:global. */
+function hasDesignerSubscribers() {
+    let found = false;
+    wss.clients.forEach((client) => {
+        if (client.readyState !== WebSocketClient.OPEN) return;
+        if (getSubscriptions(client).has('designer:global')) found = true;
+    });
+    return found;
+}
+
+/** Broadcast the designer dashboard payload to every subscribed client. */
+function sendDesignerGlobal(data) {
+    const message = JSON.stringify({
+        type: 'designer:global',
+        data,
+        timestamp: new Date().toISOString(),
+    });
+    wss.clients.forEach((client) => {
+        if (client.readyState !== WebSocketClient.OPEN) return;
+        if (getSubscriptions(client).has('designer:global')) {
+            client.send(message);
+        }
+    });
+}
+
+// ─── Sales Partner Overview (for demo / development) ─────────────────────────
+// Pushes the sales partner's referral overview (KPIs + referrals) to every
+// client subscribed to sales-partner:global. Fetches the real
+// /api/dashboard/sales-partner route so the commission math lives in one
+// place.
+const DEMO_SALES_PARTNER_ENABLED = !process.env.DISABLE_DEMO_SALES_PARTNER;
+
+/** True when at least one connected client subscribes to sales-partner:global. */
+function hasSalesPartnerSubscribers() {
+    let found = false;
+    wss.clients.forEach((client) => {
+        if (client.readyState !== WebSocketClient.OPEN) return;
+        if (getSubscriptions(client).has('sales-partner:global')) found = true;
+    });
+    return found;
+}
+
+/** Broadcast the sales partner overview to every subscribed client. */
+function sendSalesPartnerGlobal(data) {
+    const message = JSON.stringify({
+        type: 'sales-partner:global',
+        data,
+        timestamp: new Date().toISOString(),
+    });
+    wss.clients.forEach((client) => {
+        if (client.readyState !== WebSocketClient.OPEN) return;
+        if (getSubscriptions(client).has('sales-partner:global')) {
+            client.send(message);
+        }
+    });
+}
+
+// ─── Designer ↔ Company Connections Hub (for demo / development) ────────────
+// Pushes the partnership hub payload (requests + designer/company directories)
+// to every client subscribed to connections:global. Fetches the real
+// /api/dashboard/connections route so both roles always see the same state.
+const DEMO_CONNECTIONS_ENABLED = !process.env.DISABLE_DEMO_CONNECTIONS;
+
+/** True when at least one connected client subscribes to connections:global. */
+function hasConnectionsSubscribers() {
+    let found = false;
+    wss.clients.forEach((client) => {
+        if (client.readyState !== WebSocketClient.OPEN) return;
+        if (getSubscriptions(client).has('connections:global')) found = true;
+    });
+    return found;
+}
+
+/** Broadcast the connections payload to every subscribed client. */
+function sendConnectionsGlobal(data) {
+    const message = JSON.stringify({
+        type: 'connections:global',
+        data,
+        timestamp: new Date().toISOString(),
+    });
+    wss.clients.forEach((client) => {
+        if (client.readyState !== WebSocketClient.OPEN) return;
+        if (getSubscriptions(client).has('connections:global')) {
+            client.send(message);
+        }
+    });
+}
+
 // ─── Client Subscription Tracking ────────────────────────────────────────────
 
 const clientSubscriptions = new WeakMap();
@@ -395,7 +495,7 @@ wss.on('connection', (ws, req) => {
         status: 'connected',
         clientCount,
         apiHealthy,
-        endpoints: [...ENDPOINTS.map((e) => e.type), 'notifications:user:{id}', 'notifications:global', 'personal:user:{id}', 'leaderboard:global', 'community:admin'],
+        endpoints: [...ENDPOINTS.map((e) => e.type), 'notifications:user:{id}', 'notifications:global', 'personal:user:{id}', 'leaderboard:global', 'community:admin', 'designer:global', 'sales-partner:global', 'connections:global'],
         supportsNotifications: true,
         timestamp: new Date().toISOString(),
     }));
@@ -592,6 +692,86 @@ if (DEMO_COMMUNITY_ADMIN_ENABLED) {
 
     console.log('   👥 Real-time community overview enabled — global push every 10s');
     console.log('      Set DISABLE_DEMO_COMMUNITY_ADMIN=1 to disable');
+}
+
+// ─── Designer Dashboard Generator ───────────────────────────────────────────
+// Pushes the live designer portfolio (submissions + stats) to every client
+// subscribed to designer:global. Fetches the real /api/dashboard/designer
+// route so the aggregation math lives in exactly one place.
+
+if (DEMO_DESIGNER_ENABLED) {
+    setInterval(async () => {
+        if (!hasDesignerSubscribers()) return;
+
+        try {
+            const url = `${NEXT_DEV_URL}/api/dashboard/designer`;
+            const res = await fetch(url, { signal: AbortSignal.timeout(API_TIMEOUT_MS) });
+            if (!res.ok) return;
+
+            const data = await res.json();
+            sendDesignerGlobal(data);
+        } catch (err) {
+            if (err.code === 'ECONNREFUSED' || err.code === 'UND_ERR_CONNECT_TIMEOUT') {
+                return; // Next.js not ready — skip this tick
+            }
+            console.error(`   ⚠️ designer:global: ${err.message}`);
+        }
+    }, 10_000); // Every 10 seconds
+
+    console.log('   🎨 Real-time designer dashboard enabled — global push every 10s');
+    console.log('      Set DISABLE_DEMO_DESIGNER=1 to disable');
+}
+
+// ─── Sales Partner Overview Generator ───────────────────────────────────────
+// Pushes the live sales partner referral overview to every client
+// subscribed to sales-partner:global. Fetches the real
+// /api/dashboard/sales-partner route so the commission math lives in one
+// place.
+
+if (DEMO_SALES_PARTNER_ENABLED) {
+    setInterval(async () => {
+        if (!hasSalesPartnerSubscribers()) return;
+
+        try {
+            const url = `${NEXT_DEV_URL}/api/dashboard/sales-partner`;
+            const res = await fetch(url, { signal: AbortSignal.timeout(API_TIMEOUT_MS) });
+            if (!res.ok) return;
+
+            const data = await res.json();
+            sendSalesPartnerGlobal(data);
+        } catch (err) {
+            if (err.code === 'ECONNREFUSED' || err.code === 'UND_ERR_CONNECT_TIMEOUT') {
+                return; // Next.js not ready — skip this tick
+            }
+            console.error(`   ⚠️ sales-partner:global: ${err.message}`);
+        }
+    }, 10_000); // Every 10 seconds
+
+    console.log('   🤝 Real-time sales partner dashboard enabled — global push every 10s');
+    console.log('      Set DISABLE_DEMO_SALES_PARTNER=1 to disable');
+}
+
+if (DEMO_CONNECTIONS_ENABLED) {
+    setInterval(async () => {
+        if (!hasConnectionsSubscribers()) return;
+
+        try {
+            const url = `${NEXT_DEV_URL}/api/dashboard/connections`;
+            const res = await fetch(url, { signal: AbortSignal.timeout(API_TIMEOUT_MS) });
+            if (!res.ok) return;
+
+            const data = await res.json();
+            sendConnectionsGlobal(data);
+        } catch (err) {
+            if (err.code === 'ECONNREFUSED' || err.code === 'UND_ERR_CONNECT_TIMEOUT') {
+                return; // Next.js not ready — skip this tick
+            }
+            console.error(`   ⚠️ connections:global: ${err.message}`);
+        }
+    }, 10_000); // Every 10 seconds
+
+    console.log('   🤝 Real-time designer-company connections hub enabled — global push every 10s');
+    console.log('      Set DISABLE_DEMO_CONNECTIONS=1 to disable');
 }
 
 // ─── Demo Personal Activity Generator ───────────────────────────────────────

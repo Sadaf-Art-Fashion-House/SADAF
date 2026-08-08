@@ -1,0 +1,447 @@
+'use client';
+
+/**
+ * SADAF | Designer — Dashboard View (pure presentation)
+ *
+ * Renders the designer's atelier workspace: KPI stats, a submit-new-design
+ * form (title, category, price, description, optional preview image), and
+ * the portfolio grid with live pipeline status chips. All state/handlers
+ * come from DesignerDashboardPageClient via props.
+ */
+
+import { useState } from 'react';
+import {
+    Palette,
+    Upload,
+    X,
+    CheckCircle2,
+    AlertTriangle,
+    Clock,
+    PackageCheck,
+    Sparkles,
+    Layers,
+    Wifi,
+    WifiOff,
+} from 'lucide-react';
+import type { DesignerDashboardData, NewDesignSubmission, DesignCategory } from '../types';
+import { DESIGN_CATEGORIES, DESIGN_STATUS_STYLES } from '../constants';
+import { formatRelativeTime } from '@/features/notifications/utils/formatRelativeTime';
+import { fileToResizedDataUrl } from '@/shared/utils/fileToResizedDataUrl';
+
+// ─── Props ───────────────────────────────────────────────────────────────────
+
+interface DesignerDashboardViewProps {
+    data: DesignerDashboardData | null;
+    loading: boolean;
+    error: string | null;
+    wsLive: boolean;
+    submitting: boolean;
+    onSubmit: (input: NewDesignSubmission) => Promise<{ ok: boolean; error?: string }>;
+    onRetry: () => void;
+}
+
+// ─── KPI card ────────────────────────────────────────────────────────────────
+
+function KpiCard({
+    label,
+    value,
+    icon: Icon,
+    accent,
+}: {
+    label: string;
+    value: number;
+    icon: typeof Layers;
+    accent: string;
+}) {
+    return (
+        <div className="p-4 bg-[#0A0F2C]/60 border border-white/5 rounded-2xl">
+            <div className="flex items-center justify-between mb-2">
+                <span className="text-[8px] font-mono uppercase tracking-widest text-[#E8E0D5]/40 font-semibold">
+                    {label}
+                </span>
+                <Icon size={13} className={accent} />
+            </div>
+            <p className="text-2xl font-serif text-white font-bold tracking-tight">{value}</p>
+        </div>
+    );
+}
+
+// ─── Portfolio card ──────────────────────────────────────────────────────────
+
+function PortfolioCard({
+    title,
+    category,
+    description,
+    imageUrl,
+    status,
+    submittedAt,
+    price,
+    adminNote,
+}: {
+    title: string;
+    category: string;
+    description: string;
+    imageUrl?: string;
+    status: keyof typeof DESIGN_STATUS_STYLES;
+    submittedAt: string;
+    price: number;
+    adminNote?: string;
+}) {
+    const style = DESIGN_STATUS_STYLES[status];
+    return (
+        <div className="group rounded-2xl bg-[#0A0F2C]/80 border border-white/5 hover:border-[#A78BFA]/30 transition-all duration-300 overflow-hidden flex flex-col">
+            <div className="relative h-40 bg-gradient-to-br from-[#141B4D] to-[#0A0F2C] flex items-center justify-center overflow-hidden">
+                {imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- data-URL previews can't use next/image
+                    <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
+                ) : (
+                    <span className="font-serif text-5xl text-[#A78BFA]/30 group-hover:scale-110 transition-transform duration-500">
+                        {title.charAt(0)}
+                    </span>
+                )}
+                <span className={`absolute top-2 left-2 flex items-center gap-1.5 px-2 py-1 rounded-full border text-[8px] font-mono uppercase tracking-wider ${style.chip}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
+                    {style.label}
+                </span>
+            </div>
+            <div className="p-4 flex flex-col gap-2 flex-1">
+                <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                        <h3 className="font-serif text-white text-sm leading-snug">{title}</h3>
+                        <p className="text-[9px] font-mono uppercase tracking-wider text-[#A78BFA]/70 mt-0.5">
+                            {category} · {formatRelativeTime(submittedAt)}
+                        </p>
+                    </div>
+                    <span className="text-[11px] font-mono text-[#C9A84C] font-semibold shrink-0">
+                        ${price.toLocaleString()}
+                    </span>
+                </div>
+                <p className="text-[10px] text-[#E8E0D5]/50 leading-relaxed line-clamp-2 flex-1">
+                    {description}
+                </p>
+                {adminNote && (
+                    <p className="text-[9px] text-[#E8E0D5]/40 border-t border-white/5 pt-2 italic leading-relaxed">
+                        Atelier: “{adminNote}”
+                    </p>
+                )}
+            </div>
+        </div>
+    );
+}
+
+// ─── Main view ───────────────────────────────────────────────────────────────
+
+export default function DesignerDashboardView({
+    data,
+    loading,
+    error,
+    wsLive,
+    submitting,
+    onSubmit,
+    onRetry,
+}: DesignerDashboardViewProps) {
+    // ── Submit form state (presentation-only) ──
+    const [title, setTitle] = useState('');
+    const [category, setCategory] = useState<DesignCategory>('Abaya');
+    const [price, setPrice] = useState('');
+    const [description, setDescription] = useState('');
+    const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
+    const [statusMessage, setStatusMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
+    const [isResizingImage, setIsResizingImage] = useState(false);
+
+    const stats = data?.stats;
+
+    const handleImageChange = async (file: File | undefined) => {
+        if (!file) return;
+        setIsResizingImage(true);
+        try {
+            const resized = await fileToResizedDataUrl(file);
+            setImageUrl(resized);
+        } catch (err: unknown) {
+            setStatusMessage({
+                kind: 'error',
+                text: err instanceof Error ? err.message : 'Could not read the selected image.',
+            });
+        } finally {
+            setIsResizingImage(false);
+        }
+    };
+
+    const handleSubmit = async () => {
+        const parsedPrice = Number(price);
+        if (!title.trim()) {
+            setStatusMessage({ kind: 'error', text: 'Please give your design a title.' });
+            return;
+        }
+        if (!Number.isFinite(parsedPrice) || parsedPrice <= 0) {
+            setStatusMessage({ kind: 'error', text: 'Please enter a positive price in USD.' });
+            return;
+        }
+
+        const result = await onSubmit({
+            title: title.trim(),
+            category,
+            description: description.trim(),
+            price: parsedPrice,
+            imageUrl,
+        });
+
+        if (result.ok) {
+            setTitle('');
+            setPrice('');
+            setDescription('');
+            setImageUrl(undefined);
+            setCategory('Abaya');
+            setStatusMessage({
+                kind: 'success',
+                text: 'Design submitted to the atelier — it now appears in your portfolio as Draft.',
+            });
+        } else {
+            setStatusMessage({ kind: 'error', text: result.error ?? 'Failed to submit your design.' });
+        }
+    };
+
+    return (
+        <div className="relative w-full min-h-screen pb-20">
+            {/* Header */}
+            <section className="px-6 md:px-10 py-10 border-b border-[#A78BFA]/10 bg-gradient-to-b from-[#0A0F2C] to-[#12103A]">
+                <div className="flex items-center gap-2 mb-3">
+                    <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-[#A78BFA]">
+                        Designer Workspace
+                    </span>
+                    <span
+                        className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-[8px] font-mono uppercase tracking-wider ${
+                            wsLive
+                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                                : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                        }`}
+                    >
+                        {wsLive ? <Wifi size={9} /> : <WifiOff size={9} />}
+                        {wsLive ? 'Live' : 'Polling'}
+                    </span>
+                </div>
+                <h1 className="text-3xl md:text-4xl font-serif text-white uppercase tracking-tight">
+                    The Designer <span className="text-[#A78BFA] italic">Atelier</span>
+                </h1>
+                <p className="text-xs md:text-sm text-slate-400 max-w-2xl mt-2 leading-relaxed">
+                    Submit original designs to the SADAF atelier, track them through review and
+                    production, and grow your portfolio.
+                </p>
+            </section>
+
+            <div className="px-6 md:px-10 py-8 max-w-7xl mx-auto flex flex-col gap-8">
+                {/* Error banner */}
+                {error && (
+                    <div role="alert" className="flex items-center gap-3 p-4 bg-red-950/30 border border-red-500/30 rounded-xl">
+                        <AlertTriangle size={16} className="text-red-400 shrink-0" />
+                        <p className="text-xs text-red-200 flex-1">{error}</p>
+                        <button
+                            onClick={onRetry}
+                            className="text-[9px] font-mono uppercase tracking-wider text-[#C9A84C] border border-[#C9A84C]/30 rounded px-2 py-1 hover:bg-[#C9A84C]/10 transition-all cursor-pointer"
+                        >
+                            Retry
+                        </button>
+                    </div>
+                )}
+
+                {/* Loading skeleton */}
+                {loading && !data && (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {[0, 1, 2, 3].map((i) => (
+                            <div key={i} className="h-24 rounded-2xl bg-white/5 animate-pulse" />
+                        ))}
+                    </div>
+                )}
+
+                {/* KPI stats */}
+                {stats && (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <KpiCard label="Total Designs" value={stats.total} icon={Layers} accent="text-[#A78BFA]" />
+                        <KpiCard label="Under Review" value={stats.underReview} icon={Clock} accent="text-[#4FC3F7]" />
+                        <KpiCard label="Approved" value={stats.approved} icon={CheckCircle2} accent="text-emerald-400" />
+                        <KpiCard label="In Production" value={stats.inProduction} icon={PackageCheck} accent="text-[#C9A84C]" />
+                    </div>
+                )}
+
+                {/* Submit new design */}
+                <section className="rounded-2xl bg-[#0A0F2C]/80 border border-[#A78BFA]/15 p-6">
+                    <div className="flex items-center gap-2 mb-5">
+                        <div className="p-1.5 rounded-lg bg-[#A78BFA]/10 text-[#A78BFA]">
+                            <Upload size={14} />
+                        </div>
+                        <h2 className="text-[10px] font-mono uppercase tracking-widest text-[#A78BFA] font-bold">
+                            Submit New Design
+                        </h2>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div className="flex flex-col gap-4">
+                            <div>
+                                <label className="text-[9px] uppercase tracking-wider text-slate-400 block mb-1.5">
+                                    Design Title *
+                                </label>
+                                <input
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
+                                    placeholder="e.g. Al-Muizz Golden Kaftan"
+                                    className="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-xs text-white outline-none focus:border-[#A78BFA] transition"
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-[9px] uppercase tracking-wider text-slate-400 block mb-1.5">
+                                        Category *
+                                    </label>
+                                    <select
+                                        value={category}
+                                        onChange={(e) => setCategory(e.target.value as DesignCategory)}
+                                        className="w-full bg-[#0A0F2C] border border-white/10 rounded-lg p-2.5 text-xs text-white outline-none focus:border-[#A78BFA] transition"
+                                    >
+                                        {DESIGN_CATEGORIES.map((c) => (
+                                            <option key={c} value={c}>{c}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-[9px] uppercase tracking-wider text-slate-400 block mb-1.5">
+                                        Price (USD) *
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min={1}
+                                        value={price}
+                                        onChange={(e) => setPrice(e.target.value)}
+                                        placeholder="1450"
+                                        className="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-xs text-white outline-none focus:border-[#A78BFA] transition"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-[9px] uppercase tracking-wider text-slate-400 block mb-1.5">
+                                    Description
+                                </label>
+                                <textarea
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    rows={3}
+                                    placeholder="Describe the concept, silhouette, and craft details..."
+                                    className="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-xs text-white outline-none focus:border-[#A78BFA] transition resize-none"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col gap-4">
+                            <div>
+                                <label className="text-[9px] uppercase tracking-wider text-slate-400 block mb-1.5">
+                                    Preview Image (optional)
+                                </label>
+                                <label className="flex flex-col items-center justify-center h-40 bg-[#E8E0D5]/5 border border-dashed border-[#A78BFA]/25 rounded-xl hover:bg-[#A78BFA]/5 hover:border-[#A78BFA]/50 transition-all duration-300 cursor-pointer">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) => handleImageChange(e.target.files?.[0])}
+                                    />
+                                    {isResizingImage ? (
+                                        <span className="text-[10px] text-[#A78BFA] font-mono uppercase tracking-wider">
+                                            Processing…
+                                        </span>
+                                    ) : imageUrl ? (
+                                        <div className="relative w-full h-full">
+                                            {/* eslint-disable-next-line @next/next/no-img-element -- data-URL previews can't use next/image */}
+                                            <img src={imageUrl} alt="Design preview" className="w-full h-full object-cover rounded-xl" />
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    setImageUrl(undefined);
+                                                }}
+                                                className="absolute top-2 right-2 p-1 rounded-full bg-black/70 text-white hover:bg-red-500/80 transition-colors cursor-pointer"
+                                                aria-label="Remove preview image"
+                                            >
+                                                <X size={12} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="text-center flex flex-col items-center px-4">
+                                            <Sparkles size={18} className="text-[#A78BFA] mb-2" />
+                                            <span className="text-[10px] text-slate-400 tracking-wider">
+                                                Upload a sketch or render (auto-resized)
+                                            </span>
+                                        </div>
+                                    )}
+                                </label>
+                            </div>
+
+                            {statusMessage && (
+                                <div
+                                    role="status"
+                                    className={`flex items-center gap-2 p-3 rounded-xl border text-[11px] ${
+                                        statusMessage.kind === 'success'
+                                            ? 'bg-emerald-950/30 border-emerald-500/30 text-emerald-300'
+                                            : 'bg-red-950/30 border-red-500/30 text-red-300'
+                                    }`}
+                                >
+                                    {statusMessage.kind === 'success' ? (
+                                        <CheckCircle2 size={13} className="shrink-0" />
+                                    ) : (
+                                        <AlertTriangle size={13} className="shrink-0" />
+                                    )}
+                                    {statusMessage.text}
+                                </div>
+                            )}
+
+                            <button
+                                onClick={handleSubmit}
+                                disabled={submitting}
+                                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#A78BFA] to-[#4FC3F7] text-[#0A0F2C] text-xs font-mono font-bold uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-wait flex items-center justify-center gap-2 shadow-lg shadow-[#A78BFA]/10"
+                            >
+                                <Palette size={13} />
+                                {submitting ? 'Submitting…' : 'Submit to Atelier'}
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Portfolio */}
+                <section>
+                    <div className="flex items-center gap-2 mb-5">
+                        <div className="p-1.5 rounded-lg bg-[#A78BFA]/10 text-[#A78BFA]">
+                            <Layers size={14} />
+                        </div>
+                        <h2 className="text-[10px] font-mono uppercase tracking-widest text-[#A78BFA] font-bold">
+                            Portfolio ({stats?.total ?? 0})
+                        </h2>
+                    </div>
+
+                    {data && data.submissions.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-16 rounded-2xl bg-[#0A0F2C]/40 border border-dashed border-white/10 text-center">
+                            <Palette size={28} className="text-[#A78BFA]/40 mb-3" />
+                            <p className="text-sm font-serif text-white">No designs yet</p>
+                            <p className="text-[11px] text-slate-500 mt-1 max-w-sm">
+                                Submit your first design above and it will appear here with its
+                                pipeline status.
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                            {data?.submissions.map((submission) => (
+                                <PortfolioCard
+                                    key={submission.id}
+                                    title={submission.title}
+                                    category={submission.category}
+                                    description={submission.description}
+                                    imageUrl={submission.imageUrl}
+                                    status={submission.status}
+                                    submittedAt={submission.submittedAt}
+                                    price={submission.price}
+                                    adminNote={submission.adminNote}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </section>
+            </div>
+        </div>
+    );
+}

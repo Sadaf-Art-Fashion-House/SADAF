@@ -79,6 +79,8 @@ const defaultUsers: UserProfile[] = [
         fullName: 'Nile Designs Co.',
         createdAt: new Date().toISOString(),
         referralCode: 'SADAF-NILE-B3V',
+        city: 'Cairo',
+        focus: 'Bridal & Occasion Wear',
     },
     {
         id: 'usr-6',

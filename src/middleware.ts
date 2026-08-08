@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { UserRole } from '@/shared/types';
-import { isAdminRole, isCustomerRole } from '@/shared/types';
+import { isAdminRole, isCompanyRole, isCustomerRole, isDesignerRole, isSalesPartnerRole } from '@/shared/types';
 import { AUTH_ROLE_COOKIE } from '@/shared/utils/authRoleCookie';
 
 /**
@@ -12,6 +12,9 @@ import { AUTH_ROLE_COOKIE } from '@/shared/utils/authRoleCookie';
  *
  *   /dashboard/admin/*   → admin roles only (admin_*)
  *   /dashboard/founder/* → founder only
+ *   /dashboard/designer/* → designer only
+ *   /dashboard/sales-partner/* → sales_partner only
+ *   /dashboard/company/* → company only
  *   /dashboard/*         → customer roles only (customer_*)
  *   /auth, /auth/signup  → blocked for logged-in users (redirect to their
  *                          dashboard home so the sign-in page is only for
@@ -38,8 +41,10 @@ function parseRole(raw: string | undefined): UserRole | undefined {
 function roleHomeFor(role: UserRole): string {
     if (isAdminRole(role)) return '/dashboard/admin';
     if (role === 'founder') return '/dashboard/founder';
+    if (isDesignerRole(role)) return '/dashboard/designer';
+    if (isSalesPartnerRole(role)) return '/dashboard/sales-partner';
+    if (isCompanyRole(role)) return '/dashboard/company';
     if (isCustomerRole(role)) return '/dashboard';
-    // designer / company / sales_partner have no dashboard section — home.
     return '/';
 }
 
@@ -62,6 +67,12 @@ export function middleware(request: NextRequest) {
         allowed = !!role && isAdminRole(role);
     } else if (pathname.startsWith('/dashboard/founder')) {
         allowed = role === 'founder';
+    } else if (pathname.startsWith('/dashboard/designer')) {
+        allowed = !!role && isDesignerRole(role);
+    } else if (pathname.startsWith('/dashboard/sales-partner')) {
+        allowed = !!role && isSalesPartnerRole(role);
+    } else if (pathname.startsWith('/dashboard/company')) {
+        allowed = !!role && isCompanyRole(role);
     } else if (pathname.startsWith('/dashboard')) {
         allowed = !!role && isCustomerRole(role);
     }

@@ -18,6 +18,7 @@ import {
     Bookmark,
     CheckCircle,
     Download,
+    Hammer,
 } from 'lucide-react';
 import Link from 'next/link';
 import type { FashionProduct, ArtPiece } from '@/shared/types';
@@ -26,6 +27,7 @@ import { useDesignDraftStore } from '@/features/ai/store/useDesignDraftStore';
 import { designPublisher } from '@/features/ai/services/designPublisher';
 import { useWSAdminDashboardData } from '@/features/dashboard/hooks/useDashboardData';
 import { ErrorBanner } from '@/shared/ui/ErrorGuidance';
+import AtelierRequestsTab from '@/features/admin/components/AtelierRequestsTab';
 
 // ─── Dynamic icon resolver for API-driven KPIs ────────────────────────────
 function DynamicKpiIcon({ name, size, className }: { name: string; size: number; className: string }) {
@@ -54,7 +56,7 @@ interface AdminDashboardViewProps {
 }
 
 export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps) {
-    const [mainTab, setMainTab] = useState<'analytics' | 'products' | 'arts' | 'ai-logs' | 'orders' | 'customers' | 'designs'>('analytics');
+    const [mainTab, setMainTab] = useState<'analytics' | 'products' | 'arts' | 'ai-logs' | 'orders' | 'customers' | 'designs' | 'atelier'>('analytics');
 
     // Product management
     const [newProdName, setNewProdName] = useState('');
@@ -208,6 +210,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
         { id: 'orders', label: 'Orders', icon: ShoppingBag },
         { id: 'customers', label: 'Customers', icon: Users },
         { id: 'designs', label: 'Designs', icon: Bookmark },
+        { id: 'atelier', label: 'Atelier', icon: Hammer },
         { id: 'ai-logs', label: 'AI Logs', icon: Cpu },
     ] as const;
 
@@ -1007,6 +1010,19 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                     </div>
                                 ))}
                             </div>
+                        </motion.div>
+                    )}
+
+                    {/* Atelier Tab — Designer submissions review queue */}
+                    {mainTab === 'atelier' && (
+                        <motion.div
+                            key="atelier"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="space-y-6"
+                        >
+                            <AtelierRequestsTab />
                         </motion.div>
                     )}
                 </AnimatePresence>
