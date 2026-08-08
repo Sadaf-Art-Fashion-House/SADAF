@@ -62,6 +62,8 @@ function isValidEndpointType(type) {
     if (type.startsWith('personal:user:')) return true;
     // Global leaderboard channel
     if (type === 'leaderboard:global') return true;
+    // Admin/founder community overview channel
+    if (type === 'community:admin') return true;
     return false;
 }
 
@@ -286,6 +288,38 @@ function sendLeaderboardGlobal(kind, leaderboard) {
     });
 }
 
+// ─── Community Overview (for demo / development) ────────────────────────────
+// Pushes the platform-wide community overview (KPIs, top referrers, growth,
+// pending requests) to every client subscribed to community:admin. Fetches
+// the real /api/dashboard/community route so the aggregation math lives in
+// exactly one place — in production this already reads the live catalog.
+const DEMO_COMMUNITY_ADMIN_ENABLED = !process.env.DISABLE_DEMO_COMMUNITY_ADMIN;
+
+/** True when at least one connected client subscribes to community:admin. */
+function hasCommunityAdminSubscribers() {
+    let found = false;
+    wss.clients.forEach((client) => {
+        if (client.readyState !== WebSocketClient.OPEN) return;
+        if (getSubscriptions(client).has('community:admin')) found = true;
+    });
+    return found;
+}
+
+/** Broadcast the community overview to every client subscribed to the channel. */
+function sendCommunityAdmin(data) {
+    const message = JSON.stringify({
+        type: 'community:admin',
+        data,
+        timestamp: new Date().toISOString(),
+    });
+    wss.clients.forEach((client) => {
+        if (client.readyState !== WebSocketClient.OPEN) return;
+        if (getSubscriptions(client).has('community:admin')) {
+            client.send(message);
+        }
+    });
+}
+
 // ─── Client Subscription Tracking ────────────────────────────────────────────
 
 const clientSubscriptions = new WeakMap();
@@ -361,7 +395,7 @@ wss.on('connection', (ws, req) => {
         status: 'connected',
         clientCount,
         apiHealthy,
-        endpoints: [...ENDPOINTS.map((e) => e.type), 'notifications:user:{id}', 'notifications:global', 'personal:user:{id}', 'leaderboard:global'],
+        endpoints: [...ENDPOINTS.map((e) => e.type), 'notifications:user:{id}', 'notifications:global', 'personal:user:{id}', 'leaderboard:global', 'community:admin'],
         supportsNotifications: true,
         timestamp: new Date().toISOString(),
     }));
@@ -531,6 +565,33 @@ if (DEMO_FRIEND_REQUESTS_ENABLED) {
 
     console.log('   👥 Demo friend requests enabled — per-user push every 25s');
     console.log('      Set DISABLE_DEMO_FRIEND_REQUESTS=1 to disable');
+}
+
+// ─── Community Overview Generator ───────────────────────────────────────────
+// Pushes the live platform community overview to every client subscribed to
+// community:admin. Fetches the real /api/dashboard/community route.
+
+if (DEMO_COMMUNITY_ADMIN_ENABLED) {
+    setInterval(async () => {
+        if (!hasCommunityAdminSubscribers()) return;
+
+        try {
+            const url = `${NEXT_DEV_URL}/api/dashboard/community`;
+            const res = await fetch(url, { signal: AbortSignal.timeout(API_TIMEOUT_MS) });
+            if (!res.ok) return;
+
+            const data = await res.json();
+            sendCommunityAdmin(data);
+        } catch (err) {
+            if (err.code === 'ECONNREFUSED' || err.code === 'UND_ERR_CONNECT_TIMEOUT') {
+                return; // Next.js not ready — skip this tick
+            }
+            console.error(`   ⚠️ community:admin: ${err.message}`);
+        }
+    }, 10_000); // Every 10 seconds
+
+    console.log('   👥 Real-time community overview enabled — global push every 10s');
+    console.log('      Set DISABLE_DEMO_COMMUNITY_ADMIN=1 to disable');
 }
 
 // ─── Demo Personal Activity Generator ───────────────────────────────────────
