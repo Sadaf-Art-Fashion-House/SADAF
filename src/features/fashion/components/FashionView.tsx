@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { Compass, ZoomIn, ArrowRight, Heart, ShoppingCart, X } from "lucide-react";

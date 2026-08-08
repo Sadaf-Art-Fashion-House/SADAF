@@ -1,12 +1,10 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/features/cart/store/useCartStore';
 import CheckoutView from './CheckoutView';
 import type { OrderPayload } from '../types';
 
 export default function CheckoutPageClient() {
-    const router = useRouter();
     const items = useCartStore((state) => state.items);
     const subtotal = useCartStore((state) => state.getSubtotal());
     const clearCart = useCartStore((state) => state.clearCart);
@@ -21,16 +19,11 @@ export default function CheckoutPageClient() {
         clearCart();
     };
 
-    const handleGoBackToCart = () => {
-        router.push('/cart');
-    };
-
     return (
         <CheckoutView
             items={items}
             subtotal={subtotal}
             onPlaceOrder={handlePlaceOrder}
-            onGoBackToCart={handleGoBackToCart}
         />
     );
 }

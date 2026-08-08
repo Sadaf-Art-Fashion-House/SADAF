@@ -7,7 +7,7 @@
  * @see AIClothingDesign in @/shared/types — the raw AI output this draft wraps.
  */
 
-import type { AIClothingDesign, FashionProduct, ArtPiece, Collection } from '@/shared/types';
+import type { AIClothingDesign } from '@/shared/types';
 
 /** Where a DesignDraft is in its lifecycle. */
 export type DraftStatus = 'draft' | 'published' | 'archived';

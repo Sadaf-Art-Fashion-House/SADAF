@@ -31,5 +31,5 @@ export default function AdminDashboardPageClient() {
         );
     }
 
-    return <AdminDashboardView user={user} onLogout={handleLogout} />;
+    return <AdminDashboardView onLogout={handleLogout} />;
 }

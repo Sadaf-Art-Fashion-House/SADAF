@@ -34,7 +34,6 @@ interface CheckoutViewProps {
     items: CartItem[];
     subtotal: number;
     onPlaceOrder: (order: OrderPayload) => void;
-    onGoBackToCart: () => void;
 }
 
 /** Default country if we have no user profile. */
@@ -86,7 +85,6 @@ export default function CheckoutView({
     items,
     subtotal,
     onPlaceOrder,
-    onGoBackToCart,
 }: CheckoutViewProps) {
     const [step, setStep] = useState<CheckoutStep>('shipping');
     const [isPlacing, setIsPlacing] = useState(false);

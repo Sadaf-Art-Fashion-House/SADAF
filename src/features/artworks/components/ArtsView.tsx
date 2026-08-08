@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, ShoppingCart, Tag, Eye, Layers, Compass, Grid } from 'lucide-react';
+import { ShoppingCart, Eye, Compass, Grid } from 'lucide-react';
 import type { ArtPiece } from '@/shared/types';
 
 interface ArtsViewProps {

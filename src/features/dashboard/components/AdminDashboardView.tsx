@@ -20,7 +20,7 @@ import {
     Download,
 } from 'lucide-react';
 import Link from 'next/link';
-import type { UserProfile, FashionProduct, ArtPiece, AIClothingDesign, Collection } from '@/shared/types';
+import type { FashionProduct, ArtPiece } from '@/shared/types';
 import { fashionDatabase, artDatabase, collections } from '@/data';
 import { useDesignDraftStore } from '@/features/ai/store/useDesignDraftStore';
 import { designPublisher } from '@/features/ai/services/designPublisher';
@@ -50,11 +50,10 @@ interface SimulatedOrder {
 }
 
 interface AdminDashboardViewProps {
-    user: UserProfile;
     onLogout: () => void;
 }
 
-export default function AdminDashboardView({ user, onLogout }: AdminDashboardViewProps) {
+export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps) {
     const [mainTab, setMainTab] = useState<'analytics' | 'products' | 'arts' | 'ai-logs' | 'orders' | 'customers' | 'designs'>('analytics');
 
     // Product management
@@ -94,7 +93,7 @@ export default function AdminDashboardView({ user, onLogout }: AdminDashboardVie
     const [formSuccess, setFormSuccess] = useState(false);
 
     // Design drafts
-    const { drafts, setDraftStatus, deleteDraft } = useDesignDraftStore();
+    const { drafts, deleteDraft } = useDesignDraftStore();
     const [collectionMode, setCollectionMode] = useState(false);
     const [selectedDraftIds, setSelectedDraftIds] = useState<string[]>([]);
     const [collectionName, setCollectionName] = useState('');

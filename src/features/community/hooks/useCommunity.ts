@@ -28,7 +28,7 @@ export function useCommunity() {
     const [connections, setConnections] = useState<Connection[]>(MOCK_CONNECTIONS);
     const [pendingRequests, setPendingRequests] = useState<ConnectionRequest[]>(MOCK_PENDING_REQUESTS);
     const [networkGraph] = useState<NetworkGraph>(MOCK_NETWORK_GRAPH);
-    const [referralInfo, setReferralInfo] = useState<ReferralInfo>(MOCK_REFERRAL_INFO);
+    const [referralInfo] = useState<ReferralInfo>(MOCK_REFERRAL_INFO);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterType, setFilterType] = useState<ConnectionType | 'all'>('all');
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);

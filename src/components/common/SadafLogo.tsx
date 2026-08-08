@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface SadafLogoProps {
     size?: number;
     showText?: boolean;

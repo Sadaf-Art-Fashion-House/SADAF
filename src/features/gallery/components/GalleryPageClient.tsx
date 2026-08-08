@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import GalleryView from "./GalleryView";
 import type { GalleryItem } from "../types";
 
