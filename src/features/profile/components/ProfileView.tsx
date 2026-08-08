@@ -20,27 +20,29 @@ import {
     Edit3,
     PenLine,
     Copy,
+    X,
 } from 'lucide-react';
 import type { UserProfile } from '@/shared/types';
 import { isCustomerRole, isAdminRole } from '@/shared/types';
 import { ROLE_BADGES, ROLE_BADGE_COLORS } from '@/features/auth/types';
-import { mockAuth } from '@/lib/supabase';
 import { ROUTES } from '@/config/routes';
 import { useWishlistStore } from '@/features/wishlist/store/useWishlistStore';
 import { useOrdersStore } from '@/features/orders/store/useOrdersStore';
+import { fileToResizedDataUrl } from '@/shared/utils/fileToResizedDataUrl';
 
 interface ProfileViewProps {
     user: UserProfile;
     onLogout: () => void;
+    /** Persist a profile change (avatar, name) — updates context + storage. */
+    onUpdateProfile: (patch: Partial<UserProfile>) => void;
 }
 
-export default function ProfileView({ user, onLogout }: ProfileViewProps) {
+export default function ProfileView({ user, onLogout, onUpdateProfile }: ProfileViewProps) {
     // ── Profile state ──
     const [fullName, setFullName] = useState(user.fullName || '');
     const [bio, setBio] = useState('Passionate about authentic Cairo heritage calligraphies and fine jacquard abayas.');
     const [shippingAddress, setShippingAddress] = useState('Villa 14, Al-Yasmine District, New Cairo, Egypt');
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
-    const [avatarUrl, setAvatarUrl] = useState<string | undefined>(user.avatarUrl);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // ── Wishlist count ──
@@ -51,33 +53,38 @@ export default function ProfileView({ user, onLogout }: ProfileViewProps) {
     const badgeColor = ROLE_BADGE_COLORS[user.role] || 'bg-slate-500/10 text-slate-400 border-slate-500/30';
 
     // ── Handlers ──
-    const handleAvatarUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => {
-            const base64 = reader.result as string;
-            setAvatarUrl(base64);
-            const stored = mockAuth.getCurrentUser();
-            if (stored) {
-                const updated = { ...stored, avatarUrl: base64 } as UserProfile;
-                mockAuth.setCurrentUser(updated);
-                const users = mockAuth.getUsers();
-                const idx = users.findIndex((u) => u.id === updated.id);
-                if (idx !== -1) {
-                    users[idx] = updated;
-                    mockAuth.saveUsers(users);
-                }
+    const handleAvatarUpload = useCallback(
+        async (e: React.ChangeEvent<HTMLInputElement>) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            try {
+                const dataUrl = await fileToResizedDataUrl(file);
+                onUpdateProfile({ avatarUrl: dataUrl });
+                setSuccessMsg('Profile picture updated.');
+                setTimeout(() => setSuccessMsg(null), 2500);
+            } catch (err: unknown) {
+                setSuccessMsg(err instanceof Error ? err.message : 'Could not upload the image.');
+                setTimeout(() => setSuccessMsg(null), 3500);
+            } finally {
+                // Allow re-selecting the same file after a failed/again pick.
+                e.target.value = '';
             }
-        };
-        reader.readAsDataURL(file);
-    }, []);
+        },
+        [onUpdateProfile],
+    );
+
+    const handleRemoveAvatar = useCallback(() => {
+        onUpdateProfile({ avatarUrl: undefined });
+        setSuccessMsg('Profile picture removed.');
+        setTimeout(() => setSuccessMsg(null), 2500);
+    }, [onUpdateProfile]);
 
     const handleUpdateProfile = useCallback((e: React.FormEvent) => {
         e.preventDefault();
+        onUpdateProfile({ fullName: fullName.trim() });
         setSuccessMsg('Your profile has been updated successfully.');
         setTimeout(() => setSuccessMsg(null), 3000);
-    }, []);
+    }, [fullName, onUpdateProfile]);
 
     const handleCopyReferral = useCallback(() => {
         if (user.referralCode) {
@@ -115,8 +122,8 @@ export default function ProfileView({ user, onLogout }: ProfileViewProps) {
                                 className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden bg-gradient-to-br from-[#C9A84C] to-[#4FC3F7] flex items-center justify-center text-3xl font-serif text-white shadow-lg shadow-[#C9A84C]/20 cursor-pointer group relative"
                                 title="Upload profile picture"
                             >
-                                {avatarUrl ? (
-                                    <img src={avatarUrl} alt={fullName} className="w-full h-full object-cover" />
+                                {user.avatarUrl ? (
+                                    <img src={user.avatarUrl} alt={fullName} className="w-full h-full object-cover" />
                                 ) : (
                                     fullName.charAt(0).toUpperCase()
                                 )}
@@ -125,6 +132,16 @@ export default function ProfileView({ user, onLogout }: ProfileViewProps) {
                                 </div>
                             </button>
                             <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
+                            {user.avatarUrl && (
+                                <button
+                                    onClick={handleRemoveAvatar}
+                                    className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-red-500/15 border border-red-500/40 text-red-400 flex items-center justify-center hover:bg-red-500/25 transition-all cursor-pointer"
+                                    title="Remove profile picture"
+                                    aria-label="Remove profile picture"
+                                >
+                                    <X size={12} />
+                                </button>
+                            )}
                         </div>
 
                         {/* Info */}

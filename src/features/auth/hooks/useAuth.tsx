@@ -11,6 +11,7 @@ import {
 import { supabase, isSupabaseConfigured, mockAuth } from '@/lib/supabase';
 import type { UserProfile, UserRole, SignUpData } from '@/features/auth/types';
 import { REFERRAL_REQUIRED_ROLES } from '@/features/auth/types';
+import { setAuthRoleCookie } from '@/shared/utils/authRoleCookie';
 
 // ─── Context value ───────────────────────────────────────────────────────────
 
@@ -21,6 +22,9 @@ interface AuthContextValue {
     signup: (data: SignUpData) => Promise<{ success: boolean; error?: string }>;
     logout: () => void;
     signInWithGoogle: () => Promise<{ success: boolean; error?: string }>;
+    /** Merge a partial profile (e.g. avatarUrl) into the current user — updates
+     * the context AND the persisted mockAuth storage in one place. */
+    updateProfile: (patch: Partial<UserProfile>) => void;
 }
 
 /**
@@ -67,9 +71,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 // Ensure the role is in the new expanded format
                 const mappedRole = mapLegacyRole(profile.role);
                 setUser({ ...profile, role: mappedRole });
+                setAuthRoleCookie(mappedRole);
+            } else {
+                setAuthRoleCookie(null);
             }
         } catch {
             // localStorage unavailable — continue as anonymous
+            setAuthRoleCookie(null);
         }
         setIsLoading(false);
     }, []);
@@ -112,6 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                             };
 
                             setUser(profile);
+                            setAuthRoleCookie(role);
                             return { success: true };
                         }
                         return { success: false, error: 'No user data returned.' };
@@ -134,6 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     const profile = matched as UserProfile;
                     mockAuth.setCurrentUser(profile);
                     setUser(profile);
+                    setAuthRoleCookie(profile.role);
                     return { success: true };
                 }
 
@@ -152,6 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 mockAuth.saveUsers(updated);
                 mockAuth.setCurrentUser(newProfile);
                 setUser(newProfile);
+                setAuthRoleCookie(newProfile.role);
                 return { success: true };
             } catch (err: any) {
                 return {
@@ -272,6 +283,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 mockAuth.saveUsers(updated);
                 mockAuth.setCurrentUser(newProfile);
                 setUser(newProfile);
+                setAuthRoleCookie(newProfile.role);
                 return { success: true };
             } catch (err: any) {
                 return {
@@ -285,11 +297,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         [login],
     );
 
+    // ── Profile updates ──────────────────────────────────────────────────────
+    // Single source of truth for profile mutations (avatar upload, name edits):
+    // updates the context so every consumer (Header, Profile, Dashboard)
+    // re-renders immediately, and mirrors the change into the persisted
+    // sandbox storage (current user + users list) for reloads.
+
+    const updateProfile = useCallback((patch: Partial<UserProfile>) => {
+        setUser((current) => {
+            if (!current) return current;
+            const updated = { ...current, ...patch };
+            mockAuth.setCurrentUser(updated);
+            const users = mockAuth.getUsers();
+            const idx = users.findIndex((u) => u.id === updated.id);
+            if (idx !== -1) {
+                users[idx] = updated;
+                mockAuth.saveUsers(users);
+            }
+            return updated;
+        });
+    }, []);
+
     // ── Logout ───────────────────────────────────────────────────────────────
 
     const logout = useCallback(() => {
         mockAuth.clearCurrentUser();
         setUser(null);
+        setAuthRoleCookie(null);
     }, []);
 
     // ── Google Sign-In (Sandbox mode — real OAuth needs Supabase Google provider configured) ──
@@ -315,6 +349,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             };
             mockAuth.setCurrentUser(profile);
             setUser(profile);
+            setAuthRoleCookie(profile.role);
             return { success: true };
         } catch (err: any) {
             return {
@@ -330,7 +365,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return (
         <AuthContext.Provider
-            value={{ user, isLoading, login, signup, logout, signInWithGoogle }}
+            value={{ user, isLoading, login, signup, logout, signInWithGoogle, updateProfile }}
         >
             {children}
         </AuthContext.Provider>

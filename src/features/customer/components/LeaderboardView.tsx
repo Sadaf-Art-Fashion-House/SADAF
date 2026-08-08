@@ -23,6 +23,8 @@ interface LeaderboardViewProps {
     error: string | null;
     /** First name of the logged-in user (for the highlight row). */
     memberName: string;
+    /** The signed-in user's avatar — shown on their "You" row. */
+    currentUserAvatar?: string;
     /** Which metric the leaderboard is ranked by. */
     kind?: LeaderboardKind;
     /** Optional kinds to show as a switcher (admin/founder variants). */
@@ -70,6 +72,7 @@ export default function LeaderboardView({
     loading,
     error,
     memberName,
+    currentUserAvatar,
     kind = 'points',
     kinds,
     activeKind,
@@ -517,14 +520,18 @@ export default function LeaderboardView({
                                         <span className={`flex items-center gap-2.5 text-xs font-medium min-w-0 ${
                                             isCurrentUser ? 'text-[#C9A84C] font-bold' : 'text-[#E8E0D5]/85'
                                         }`}>
-                                            <span className={`w-7 h-7 shrink-0 rounded-full flex items-center justify-center text-[9px] font-bold text-white ${
+                                            <span className={`w-7 h-7 shrink-0 rounded-full overflow-hidden flex items-center justify-center text-[9px] font-bold text-white ${
                                                 isCurrentUser
                                                     ? 'bg-gradient-to-br from-[#C9A84C] to-[#8B6914]'
                                                     : index < 3
                                                         ? 'bg-gradient-to-br from-[#1B2A6B] to-[#4FC3F7]/60'
                                                         : 'bg-[#0A0F2C] border border-white/10'
                                             }`}>
-                                                {(isCurrentUser ? memberName.charAt(0) : entry.name.charAt(0)).toUpperCase()}
+                                                {isCurrentUser && currentUserAvatar ? (
+                                                    <img src={currentUserAvatar} alt="" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    (isCurrentUser ? memberName.charAt(0) : entry.name.charAt(0)).toUpperCase()
+                                                )}
                                             </span>
                                             <span className="flex flex-col min-w-0">
                                                 <span className="truncate">

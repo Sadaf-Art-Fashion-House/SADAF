@@ -20,12 +20,14 @@ import {
 import type { UserProfile, UserRole } from '@/shared/types';
 import { isCustomerRole, isAdminRole, getRoleCategory } from '@/shared/types';
 import { ROLE_BADGES, ROLE_BADGE_COLORS } from '@/features/auth/types';
-import { mockAuth } from '@/lib/supabase';
 import { ROUTES } from '@/config/routes';
+import { fileToResizedDataUrl } from '@/shared/utils/fileToResizedDataUrl';
 
 interface DashboardViewProps {
     user: UserProfile;
     onLogout: () => void;
+    /** Persist a profile change (avatar) — updates context + storage. */
+    onUpdateProfile: (patch: Partial<UserProfile>) => void;
 }
 
 const quickLinks = [
@@ -93,34 +95,29 @@ function getRoleSpecificSections(role: UserProfile['role']) {
     return sections;
 }
 
-export default function DashboardView({ user, onLogout }: DashboardViewProps) {
+export default function DashboardView({ user, onLogout, onUpdateProfile }: DashboardViewProps) {
     const availableSections = getRoleSpecificSections(user.role);
     const badgeText = ROLE_BADGES[user.role] || user.role;
     const badgeColor = ROLE_BADGE_COLORS[user.role] || 'bg-slate-500/10 text-slate-400 border-slate-500/30';
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const [avatarUrl, setAvatarUrl] = useState<string | undefined>(user.avatarUrl);
+    const [avatarError, setAvatarError] = useState<string | null>(null);
 
-    const handleAvatarUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => {
-            const base64 = reader.result as string;
-            setAvatarUrl(base64);
-            const stored = mockAuth.getCurrentUser();
-            if (stored) {
-                const updated = { ...stored, avatarUrl: base64 } as UserProfile;
-                mockAuth.setCurrentUser(updated);
-                const users = mockAuth.getUsers();
-                const idx = users.findIndex((u) => u.id === updated.id);
-                if (idx !== -1) {
-                    users[idx] = updated;
-                    mockAuth.saveUsers(users);
-                }
+    const handleAvatarUpload = useCallback(
+        async (e: React.ChangeEvent<HTMLInputElement>) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            try {
+                const dataUrl = await fileToResizedDataUrl(file);
+                onUpdateProfile({ avatarUrl: dataUrl });
+                setAvatarError(null);
+            } catch (err: unknown) {
+                setAvatarError(err instanceof Error ? err.message : 'Could not upload the image.');
+            } finally {
+                e.target.value = '';
             }
-        };
-        reader.readAsDataURL(file);
-    }, []);
+        },
+        [onUpdateProfile],
+    );
 
     return (
         <div className="relative w-full min-h-screen pb-20">
@@ -144,9 +141,9 @@ export default function DashboardView({ user, onLogout }: DashboardViewProps) {
                                 className="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-[#C9A84C] to-[#4FC3F7] flex items-center justify-center text-2xl font-serif text-white shadow-lg shadow-[#C9A84C]/20 cursor-pointer group relative"
                                 title="Upload profile picture"
                             >
-                                {avatarUrl ? (
+                                {user.avatarUrl ? (
                                     <img
-                                        src={avatarUrl}
+                                        src={user.avatarUrl}
                                         alt={user.fullName}
                                         className="w-full h-full object-cover"
                                     />
@@ -164,6 +161,9 @@ export default function DashboardView({ user, onLogout }: DashboardViewProps) {
                                 onChange={handleAvatarUpload}
                                 className="hidden"
                             />
+                            {avatarError && (
+                                <p className="mt-2 text-[9px] font-mono text-red-400">{avatarError}</p>
+                            )}
                         </div>
 
                         {/* Info */}

@@ -7,7 +7,7 @@ import DashboardView from './DashboardView';
 
 export default function DashboardPageClient() {
     const router = useRouter();
-    const { user, logout } = useAuth();
+    const { user, logout, updateProfile } = useAuth();
 
     const handleLogout = () => {
         logout();
@@ -36,5 +36,5 @@ export default function DashboardPageClient() {
         );
     }
 
-    return <DashboardView user={user} onLogout={handleLogout} />;
+    return <DashboardView user={user} onLogout={handleLogout} onUpdateProfile={updateProfile} />;
 }
