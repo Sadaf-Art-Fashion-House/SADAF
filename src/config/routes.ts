@@ -45,6 +45,8 @@ export const ROUTES = {
     DASHBOARD_FOUNDER_LEADERBOARD: '/dashboard/founder/leaderboard',
     DASHBOARD_ADMIN_ANALYTICS: '/dashboard/admin/analytics',
     DASHBOARD_FOUNDER_ANALYTICS: '/dashboard/founder/analytics',
+    DASHBOARD_ADMIN_COMMUNITY: '/dashboard/admin/community',
+    DASHBOARD_FOUNDER_COMMUNITY: '/dashboard/founder/community',
     DASHBOARD_SETTINGS: '/dashboard/settings',
 } as const;
 

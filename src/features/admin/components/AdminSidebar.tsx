@@ -20,6 +20,7 @@ import {
     Mail,
     TrendingUp,
     Trophy,
+    Users,
 } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
 import { getUnreadErrorCount } from '@/features/error-logging';
@@ -55,6 +56,7 @@ export default function AdminSidebar() {
         { href: ROUTES.DASHBOARD_ERROR_LOGS, label: 'Error Logs', icon: FileWarning, badge: unreadErrors },
         { href: ROUTES.DASHBOARD_EMAIL_SETTINGS, label: 'Email Settings', icon: Mail },
         { href: ROUTES.DASHBOARD_ADMIN_LEADERBOARD, label: 'Leaderboard', icon: Trophy },
+        { href: ROUTES.DASHBOARD_ADMIN_COMMUNITY, label: 'Community', icon: Users },
         { href: ROUTES.STORE, label: 'Store', icon: Store },
         { href: ROUTES.AI_STUDIO, label: 'AI Studio', icon: Cpu },
         { href: ROUTES.ATELIER, label: 'Atelier', icon: Brush },

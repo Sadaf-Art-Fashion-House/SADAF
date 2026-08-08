@@ -1,18 +1,24 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import type { LeaderboardEntry } from '../types';
 import { CITIES } from '../utils/leaderboard';
 
 /**
- * useCityFilter — shared city-filtering for the leaderboard lists.
+ * useCityFilter — shared city-filtering for any list with a `city` field.
  *
- * Used by both the full LeaderboardView (search/tier filters applied on top)
- * and the compact RewardsPanel so the dropdown, counts, and empty-state
- * detection stay identical across the two surfaces. Every CITIES city is
- * selectable — including 0-count ones — and populated cities float to the top.
+ * Used by the leaderboard lists (full LeaderboardView + compact RewardsPanel)
+ * and the admin/founder Community Overview pending requests so the dropdown,
+ * counts, and empty-state detection stay identical across surfaces. Every
+ * CITIES city is selectable — including 0-count ones — and populated cities
+ * float to the top.
  */
-export function useCityFilter(entries: LeaderboardEntry[], initialCity: string = 'All') {
+
+/** Minimal shape any list needs to be city-filterable. */
+export interface CityFilterable {
+    city: string;
+}
+
+export function useCityFilter<T extends CityFilterable>(entries: T[], initialCity: string = 'All') {
     // Initial city may arrive from the URL (?city=...) so the RewardsPanel's
     // "View Full Leaderboard" deep-link opens pre-filtered. Garbage input
     // (an unknown city) degrades gracefully to 'All' instead of leaving the
@@ -40,7 +46,7 @@ export function useCityFilter(entries: LeaderboardEntry[], initialCity: string =
         [entries, cityFilter],
     );
 
-    /** True when the selected city has no members at all (a 0-count city). */
+    /** True when the selected city has no entries at all (a 0-count city). */
     const selectedCityHasNoMembers =
         cityFilter !== 'All' && !entries.some((entry) => entry.city === cityFilter);
 
