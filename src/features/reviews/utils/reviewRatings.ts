@@ -16,6 +16,24 @@ function normalizeProductName(name: string): string {
 }
 
 /**
+ * Reviews matching the product — by id OR name (order-written reviews carry
+ * the order-item name). Shared so the average, the star distribution and the
+ * recent-reviews list all match the exact same set.
+ */
+export function reviewsForProduct(
+    reviews: Review[],
+    productId: string,
+    productName: string,
+): Review[] {
+    const normalizedName = normalizeProductName(productName);
+    return reviews.filter(
+        (review) =>
+            review.productId === productId ||
+            normalizeProductName(review.productName) === normalizedName,
+    );
+}
+
+/**
  * Average rating + count for a product, aggregated from the given reviews.
  * A review matches the product when its productId equals the product id OR
  * its product name equals the product name (order-written reviews carry the
@@ -26,12 +44,7 @@ export function averageRatingForProduct(
     productId: string,
     productName: string,
 ): { average: number; count: number } | null {
-    const normalizedName = normalizeProductName(productName);
-    const matches = reviews.filter(
-        (review) =>
-            review.productId === productId ||
-            normalizeProductName(review.productName) === normalizedName,
-    );
+    const matches = reviewsForProduct(reviews, productId, productName);
 
     if (matches.length === 0) return null;
 

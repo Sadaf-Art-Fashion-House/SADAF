@@ -722,6 +722,87 @@ if (DEMO_DESIGNER_ENABLED) {
     console.log('      Set DISABLE_DEMO_DESIGNER=1 to disable');
 }
 
+// ─── Atelier Team Decision Generator ─────────────────────────────────────────
+// Pushes real atelier decisions (approve / reject / start production) to
+// every team member — the owner and each collaborator — via their
+// notifications:user:{id} channel. Polls /api/dashboard/designer/events
+// with a `since` cursor so each decision is delivered exactly once; the
+// same events are merged into /api/notifications for the REST fallback.
+
+const DEMO_ATELIER_EVENTS_ENABLED = !process.env.DISABLE_DEMO_ATELIER_EVENTS;
+let lastAtelierEventCursor = 0;
+
+/** Human-readable copy per event (mirrors the API route). */
+function atelierEventTitle(status, kind) {
+    if (kind === 'collaborator_added') return 'Added as a collaborator';
+    switch (status) {
+        case 'approved': return 'Design approved by the atelier';
+        case 'rejected': return 'Design rejected by the atelier';
+        case 'in_production': return 'Design entered production';
+        case 'under_review': return 'Design is under review';
+        default: return 'Atelier decision';
+    }
+}
+
+function atelierEventMessage(event) {
+    if (event.kind === 'collaborator_added') {
+        return `You were added as a collaborator to “${event.title}” — role: ${event.collaboratorRole || 'Collaborator'}.`;
+    }
+    const base = `“${event.title}”`;
+    switch (event.status) {
+        case 'approved': return `${base} was approved — the atelier begins sampling.`;
+        case 'rejected':
+            return event.adminNote
+                ? `${base} was rejected. Atelier note: “${event.adminNote}”`
+                : `${base} was rejected — check the atelier feedback.`;
+        case 'in_production': return `${base} is now in production in the atelier.`;
+        case 'under_review': return `${base} is being reviewed by the atelier.`;
+        default: return `The atelier updated “${event.title}”.`;
+    }
+}
+
+if (DEMO_ATELIER_EVENTS_ENABLED) {
+    setInterval(async () => {
+        try {
+            const url = `${NEXT_DEV_URL}/api/dashboard/designer/events?since=${lastAtelierEventCursor}`;
+            const res = await fetch(url, { signal: AbortSignal.timeout(API_TIMEOUT_MS) });
+            if (!res.ok) return;
+
+            const { events } = await res.json();
+            if (!Array.isArray(events) || events.length === 0) return;
+
+            // Track the cursor first so a crash mid-loop never re-sends.
+            lastAtelierEventCursor = Math.max(
+                lastAtelierEventCursor,
+                ...events.map((e) => e.id),
+            );
+
+            for (const event of events) {
+                const notification = {
+                    id: `atelier-event-${event.id}`,
+                    type: 'system',
+                    title: atelierEventTitle(event.status, event.kind),
+                    message: atelierEventMessage(event),
+                    href: `/dashboard/designer/portfolio/${event.submissionId}`,
+                    createdAt: event.createdAt,
+                    read: false,
+                };
+                for (const recipientId of event.recipientIds) {
+                    sendToUserNotificationChannel(recipientId, notification);
+                }
+            }
+        } catch (err) {
+            if (err.code === 'ECONNREFUSED' || err.code === 'UND_ERR_CONNECT_TIMEOUT') {
+                return; // Next.js not ready — skip this tick
+            }
+            console.error(`   ⚠️ atelier-events: ${err.message}`);
+        }
+    }, 3_000); // Every 3 seconds — same cadence as the designer payload poll
+
+    console.log('   📣 Real-time atelier decisions enabled — team push every 3s');
+    console.log('      Set DISABLE_DEMO_ATELIER_EVENTS=1 to disable');
+}
+
 // ─── Sales Partner Overview Generator ───────────────────────────────────────
 // Pushes the live sales partner referral overview to every client
 // subscribed to sales-partner:global. Fetches the real

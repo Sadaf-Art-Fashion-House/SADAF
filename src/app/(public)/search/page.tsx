@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import SearchPageClient from '@/features/search/components/SearchPageClient';
+import { getMockReviews } from '@/features/reviews/data/mockReviews';
 import type { SearchResult } from '@/features/search/types';
+import type { Review } from '@/features/reviews/types';
 
 export const metadata: Metadata = {
     title: 'Search | SADAF Atelier',
@@ -100,5 +102,8 @@ function getMockSearchResults(): SearchResult[] {
 
 export default async function SearchPage() {
     const allResults = getMockSearchResults();
-    return <SearchPageClient allResults={allResults} />;
+    // Catalog reviews feed the aggregated rating shown on product cards
+    // (merged with the user's own reviews client-side).
+    const mockReviews: Review[] = getMockReviews();
+    return <SearchPageClient allResults={allResults} mockReviews={mockReviews} />;
 }

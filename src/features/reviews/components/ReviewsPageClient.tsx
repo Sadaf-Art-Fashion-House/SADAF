@@ -43,8 +43,12 @@ export default function ReviewsPageClient({ reviews }: ReviewsPageClientProps) {
         };
     }, [refreshUserReviews]);
 
-    // User-written reviews first (newest), then the catalog reviews.
-    const mergedReviews = [...userReviews, ...reviews];
+    // User-written reviews first (newest), then the catalog reviews. The
+    // user's own reviews are flagged so the view can badge them "YOU".
+    const mergedReviews = [
+        ...userReviews.map((review) => ({ ...review, isMine: true })),
+        ...reviews,
+    ];
 
     return <ReviewsView reviews={mergedReviews} />;
 }

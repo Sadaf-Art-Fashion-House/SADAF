@@ -14,16 +14,20 @@ import {
     Grid,
     List,
     SlidersHorizontal,
+    Star,
 } from 'lucide-react';
 import { useSearch } from '../hooks/useSearch';
 import { SEARCH_CATEGORIES } from '../constants/searchCategories';
+import type { RatingsByProduct } from '@/features/reviews/hooks/useAggregatedRatings';
 import type { SearchResult, SearchCategory } from '../types';
 
 interface SearchViewProps {
     allResults: SearchResult[];
+    /** Aggregated mock + user ratings per product id (null = no reviews yet). */
+    ratingsByProduct?: RatingsByProduct;
 }
 
-export default function SearchView({ allResults }: SearchViewProps) {
+export default function SearchView({ allResults, ratingsByProduct = {} }: SearchViewProps) {
     const {
         query,
         setQuery,
@@ -219,7 +223,11 @@ export default function SearchView({ allResults }: SearchViewProps) {
                                     className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
                                 >
                                     {filteredResults.map((result) => (
-                                        <SearchCard key={result.id} result={result} />
+                                        <SearchCard
+                                            key={result.id}
+                                            result={result}
+                                            rating={ratingsByProduct[result.id]}
+                                        />
                                     ))}
                                 </motion.div>
                             ) : (
@@ -231,7 +239,11 @@ export default function SearchView({ allResults }: SearchViewProps) {
                                     className="flex flex-col gap-4"
                                 >
                                     {filteredResults.map((result) => (
-                                        <SearchListItem key={result.id} result={result} />
+                                        <SearchListItem
+                                            key={result.id}
+                                            result={result}
+                                            rating={ratingsByProduct[result.id]}
+                                        />
                                     ))}
                                 </motion.div>
                             )}
@@ -258,7 +270,7 @@ export default function SearchView({ allResults }: SearchViewProps) {
 
 // ─── Grid Card ────────────────────────────────────────────────────────────────
 
-function SearchCard({ result }: { result: SearchResult }) {
+function SearchCard({ result, rating }: { result: SearchResult; rating?: RatingsByProduct[string] }) {
     return (
         <Link
             href={result.href}
@@ -284,7 +296,22 @@ function SearchCard({ result }: { result: SearchResult }) {
                     <h3 className="font-serif text-[#E8E0D5] text-sm group-hover:text-[#F0D080] transition-colors duration-300 mb-1 leading-tight line-clamp-2">
                         {result.title}
                     </h3>
-                    <p className="text-[10px] text-slate-500 font-sans line-clamp-1">{result.subtitle}</p>
+                    <p className="text-[10px] text-slate-500 font-sans line-clamp-1 mb-2">{result.subtitle}</p>
+
+                    {/* Aggregated rating on product cards (mock + user reviews) */}
+                    {result.type === 'product' && (
+                        <div className="flex items-center gap-1.5">
+                            <Star size={10} className="text-[#C9A84C]" fill="currentColor" />
+                            <span className="text-[10px] font-mono text-[#E8E0D5]">
+                                {rating ? rating.average.toFixed(1) : 'New'}
+                            </span>
+                            {rating && (
+                                <span className="text-[9px] text-slate-500 font-mono">
+                                    &middot; {rating.count} review{rating.count === 1 ? '' : 's'}
+                                </span>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex justify-between items-center mt-3 pt-3 border-t border-[#E8E0D5]/10">
@@ -302,7 +329,7 @@ function SearchCard({ result }: { result: SearchResult }) {
 
 // ─── List Item ────────────────────────────────────────────────────────────────
 
-function SearchListItem({ result }: { result: SearchResult }) {
+function SearchListItem({ result, rating }: { result: SearchResult; rating?: RatingsByProduct[string] }) {
     return (
         <Link
             href={result.href}
@@ -328,6 +355,21 @@ function SearchListItem({ result }: { result: SearchResult }) {
                     {result.title}
                 </h3>
                 <p className="text-[11px] text-slate-400 truncate">{result.subtitle}</p>
+
+                {/* Aggregated rating on product cards (mock + user reviews) */}
+                {result.type === 'product' && (
+                    <div className="flex items-center gap-1.5 mt-1">
+                        <Star size={10} className="text-[#C9A84C]" fill="currentColor" />
+                        <span className="text-[10px] font-mono text-[#E8E0D5]">
+                            {rating ? rating.average.toFixed(1) : 'New'}
+                        </span>
+                        {rating && (
+                            <span className="text-[9px] text-slate-500 font-mono">
+                                &middot; {rating.count} review{rating.count === 1 ? '' : 's'}
+                            </span>
+                        )}
+                    </div>
+                )}
             </div>
 
             <div className="text-right shrink-0">

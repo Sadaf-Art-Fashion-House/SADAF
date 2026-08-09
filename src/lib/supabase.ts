@@ -34,7 +34,8 @@ export const isSupabaseConfigured = !!(
 );
 
 const MOCK_USERS_KEY = 'sadaf_mock_users';
-const MOCK_CURRENT_KEY = 'sadaf_mock_current';
+/** Exported so the auth provider can react to cross-tab session/profile changes. */
+export const MOCK_CURRENT_KEY = 'sadaf_mock_current';
 
 const defaultUsers: UserProfile[] = [
     {

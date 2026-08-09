@@ -10,7 +10,7 @@
  * (hydration-safe — no window access during render).
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
     Link2,
     Copy,
@@ -23,9 +23,10 @@ import {
     Wifi,
     WifiOff,
     AlertTriangle,
+    Info,
 } from 'lucide-react';
 import type { SalesPartnerOverview, ReferralStatus } from '../types';
-import { REFERRAL_STATUS_STYLES } from '../constants';
+import { COMMISSION_RATE, REFERRAL_STATUS_STYLES } from '../constants';
 import { formatRelativeTime } from '@/features/notifications/utils/formatRelativeTime';
 
 // ─── Props ───────────────────────────────────────────────────────────────────
@@ -46,25 +47,42 @@ function KpiCard({
     suffix,
     icon: Icon,
     accent,
+    hoverDetail,
 }: {
     label: string;
     value: string;
     suffix?: string;
     icon: typeof Users;
     accent: string;
+    hoverDetail?: ReactNode;
 }) {
     return (
-        <div className="p-4 bg-[#0A0F2C]/60 border border-white/5 rounded-2xl">
+        <div className="relative group p-4 bg-[#0A0F2C]/60 border border-white/5 rounded-2xl">
             <div className="flex items-center justify-between mb-2">
                 <span className="text-[8px] font-mono uppercase tracking-widest text-[#E8E0D5]/40 font-semibold">
                     {label}
                 </span>
                 <Icon size={13} className={accent} />
             </div>
-            <p className="text-2xl font-serif text-white font-bold tracking-tight">
+            <p className="text-2xl font-serif text-white font-bold tracking-tight flex items-center gap-2">
                 {value}
                 {suffix && <span className="text-sm text-[#E8E0D5]/50 ml-1">{suffix}</span>}
+                {hoverDetail && (
+                    <span
+                        title="Per-referral projection breakdown"
+                        className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#C9A84C]/15 text-[#C9A84C] shrink-0"
+                    >
+                        <Info size={9} />
+                    </span>
+                )}
             </p>
+            {hoverDetail && (
+                <div className="absolute z-30 right-0 bottom-full mb-2 w-64 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none">
+                    <div className="rounded-xl bg-[#141B4D] border border-emerald-500/30 shadow-2xl shadow-black/50 p-3">
+                        {hoverDetail}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
@@ -318,11 +336,78 @@ export default function SalesPartnerDashboardView({
 
                 {/* KPI stats */}
                 {stats && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                         <KpiCard label="Total Referrals" value={String(stats.totalReferrals)} icon={Users} accent="text-emerald-400" />
                         <KpiCard label="Converted" value={String(stats.converted)} icon={UserCheck} accent="text-[#4FC3F7]" />
                         <KpiCard label="Pending" value={String(stats.pending)} icon={Clock} accent="text-amber-400" />
                         <KpiCard label="Total Commission" value={`$${stats.totalCommission.toLocaleString()}`} icon={Wallet} accent="text-[#C9A84C]" />
+                        <KpiCard
+                            label="Expected Commission"
+                            value={`$${stats.expectedCommission.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+                            icon={TrendingUp}
+                            accent="text-emerald-400"
+                            hoverDetail={
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[8px] font-mono uppercase tracking-widest text-emerald-400 font-bold">
+                                            Projected Commission
+                                        </span>
+                                        <TrendingUp size={10} className="text-emerald-400" />
+                                    </div>
+                                    {stats.pending === 0 ? (
+                                        <p className="text-[10px] text-[#E8E0D5]/50 italic">
+                                            No pending referrals yet — share your link to start projecting.
+                                        </p>
+                                    ) : (
+                                        <ul className="flex flex-col gap-2 max-h-44 overflow-y-auto pr-1">
+                                            {data?.referrals
+                                                .filter((r) => r.status === 'pending')
+                                                .map((r) => {
+                                                    const estimate = stats.expectedCommission / stats.pending;
+                                                    return (
+                                                        <li key={r.id} className="flex flex-col gap-0.5">
+                                                            <div className="flex items-center justify-between gap-2">
+                                                                <span
+                                                                    className="text-[10px] text-[#E8E0D5]/80 truncate min-w-0"
+                                                                    title={r.name}
+                                                                >
+                                                                    {r.name}
+                                                                </span>
+                                                                <span className="text-[10px] font-mono text-emerald-400 font-semibold shrink-0">
+                                                                    est. $
+                                                                    {estimate.toLocaleString(undefined, {
+                                                                        maximumFractionDigits: 2,
+                                                                    })}
+                                                                </span>
+                                                            </div>
+                                                            <span className="text-[8px] font-mono uppercase tracking-wider text-[#E8E0D5]/40">
+                                                                {r.city} · Pending lead
+                                                            </span>
+                                                        </li>
+                                                    );
+                                                })}
+                                        </ul>
+                                    )}
+                                    <div className="pt-2 border-t border-white/10 flex flex-col gap-1">
+                                        <span className="text-[8px] font-mono uppercase tracking-wider text-[#E8E0D5]/40">
+                                            {COMMISSION_RATE * 100}% of avg order ${stats.avgOrderValue.toLocaleString()} · {stats.pending} pending{' '}
+                                            {stats.pending === 1 ? 'lead' : 'leads'}
+                                        </span>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-[8px] font-mono uppercase tracking-wider text-[#E8E0D5]/40">
+                                                Total projected
+                                            </span>
+                                            <span className="text-[11px] font-mono text-emerald-400 font-bold">
+                                                $
+                                                {stats.expectedCommission.toLocaleString(undefined, {
+                                                    maximumFractionDigits: 2,
+                                                })}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        />
                     </div>
                 )}
 

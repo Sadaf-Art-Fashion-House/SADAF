@@ -14,6 +14,19 @@ const STORAGE_KEY = 'sadaf_notifications';
  * which pushes new notifications from the WebSocket server.
  */
 export function useNotifications(initialNotifications: Notification[] = []) {
+    // Stable identity by CONTENT, not reference. Callers can hand us inline
+    // arrays (a fresh reference every render); keying the effect below on the
+    // reference alone would re-run it every render, and since it calls
+    // setNotifications that would loop — the same "Maximum update depth
+    // exceeded" seen on /store. The serialized signature only changes when
+    // the actual data changes.
+    const initialKey = JSON.stringify(initialNotifications);
+    const stableInitialNotifications = useMemo(
+        () => initialNotifications,
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- content signature, see above
+        [initialKey],
+    );
+
     const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
     const [filterType, setFilterType] = useState<string>('all');
 
@@ -32,22 +45,23 @@ export function useNotifications(initialNotifications: Notification[] = []) {
         }
     }, []);
 
-    // Update notifications when initial prop changes.
-    // Guard: the default `[]` is a fresh reference on every render, so without
-    // this check the effect would re-run constantly and wipe notifications
-    // added at runtime via addNotification (WebSocket pushes). Only merge
-    // when the caller actually passes meaningful initial data.
+    // Update notifications when initial prop changes. The default `[]` is a
+    // fresh reference on every render, so without this check the effect would
+    // re-run constantly and wipe notifications added at runtime via
+    // addNotification (WebSocket pushes). The content-signature above keeps
+    // the dependency stable unless the actual data changes, and the empty
+    // guard only merges when the caller passes meaningful initial data.
     useEffect(() => {
-        if (initialNotifications.length === 0) return;
+        if (stableInitialNotifications.length === 0) return;
 
         setNotifications((prev) => {
             // Merge: keep read status from state, use new data
             const stateMap = new Map(prev.map((n) => [n.id, n]));
-            return initialNotifications.map(
+            return stableInitialNotifications.map(
                 (n) => stateMap.get(n.id) ?? n,
             );
         });
-    }, [initialNotifications]);
+    }, [stableInitialNotifications]);
 
     const unreadCount = useMemo(
         () => notifications.filter((n) => !n.read).length,

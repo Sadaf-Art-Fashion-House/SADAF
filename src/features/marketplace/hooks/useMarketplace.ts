@@ -16,6 +16,28 @@ import {
  * the numbers this page needs to display.
  */
 export function useMarketplace(products: FashionProduct[], cartItems: CartItem[]) {
+    // Stable identities by CONTENT, not reference. Callers can hand us inline
+    // arrays (fresh references every render); keying the derived memos below
+    // on the references alone would recompute them every render. The
+    // signatures below only change when the actual data changes. Products are
+    // keyed by id (large image payloads make a full serialize wasteful); cart
+    // lines by id + quantity + price so a quantity change still refreshes the
+    // totals.
+    const productsKey = products.map((p) => p.id).join('\u0001');
+    const stableProducts = useMemo(
+        () => products,
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- content signature, see above
+        [productsKey],
+    );
+    const cartKey = cartItems
+        .map((item) => `${item.id}\u0000${item.quantity}\u0000${item.totalPrice}`)
+        .join('\u0001');
+    const stableCartItems = useMemo(
+        () => cartItems,
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- content signature, see above
+        [cartKey],
+    );
+
     const [selectedCategory, setSelectedCategory] = useState<FashionCategory | "All">("All");
     const [priceRange, setPriceRange] = useState<number>(3000);
     const [activeProductDetail, setActiveProductDetail] = useState<FashionProduct | null>(null);
@@ -28,12 +50,12 @@ export function useMarketplace(products: FashionProduct[], cartItems: CartItem[]
     const [couponApplied, setCouponApplied] = useState<boolean>(false);
 
     const filteredProducts = useMemo(() => {
-        return products.filter((product) => {
+        return stableProducts.filter((product) => {
             const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
             const matchesPrice = product.price <= priceRange;
             return matchesCategory && matchesPrice;
         });
-    }, [priceRange, products, selectedCategory]);
+    }, [priceRange, stableProducts, selectedCategory]);
 
     const openProductDetail = (product: FashionProduct) => {
         setActiveProductDetail(product);
@@ -52,8 +74,8 @@ export function useMarketplace(products: FashionProduct[], cartItems: CartItem[]
     };
 
     const cartSubtotal = useMemo(
-        () => cartItems.reduce((sum, item) => sum + item.totalPrice, 0),
-        [cartItems]
+        () => stableCartItems.reduce((sum, item) => sum + item.totalPrice, 0),
+        [stableCartItems]
     );
     const discountAmount = (cartSubtotal * discountPercent) / 100;
     const shippingFee = cartSubtotal > FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING_FEE;

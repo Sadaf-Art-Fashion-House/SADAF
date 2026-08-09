@@ -13,7 +13,7 @@
  * reflects the new status within the next WS push.
  */
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
     Layers,
     Clock,
@@ -26,11 +26,15 @@ import {
     Hammer,
     MessageSquare,
     Send,
+    FileImage,
+    FileText,
     X,
 } from 'lucide-react';
-import type { DesignStatus } from '@/features/designer/types';
+import type { DesignCollaboration, DesignStatus } from '@/features/designer/types';
 import { DESIGN_STATUS_STYLES } from '@/features/designer/constants';
+import { COMMISSION_POOL_RATE, computeCommissionSplit, participantsFor } from '@/features/designer/utils/commissionSplit';
 import { useAtelierRequests } from '../hooks/useAtelierRequests';
+import { useExportChart } from '@/features/analytics/hooks/useExportChart';
 import { formatRelativeTime } from '@/features/notifications/utils/formatRelativeTime';
 
 // ─── Status filter options ───────────────────────────────────────────────────
@@ -91,6 +95,7 @@ function SubmissionCard({
     status,
     submittedAt,
     adminNote,
+    collaboration,
     reviewing,
     onReview,
     onFeedback,
@@ -103,12 +108,28 @@ function SubmissionCard({
     status: DesignStatus;
     submittedAt: string;
     adminNote?: string;
+    collaboration?: DesignCollaboration;
     reviewing: boolean;
     onReview: (id: string, status: DesignStatus, adminNote?: string) => Promise<{ ok: boolean; error?: string }>;
     onFeedback: (message: { kind: 'success' | 'error'; text: string }) => void;
 }) {
     const [rejecting, setRejecting] = useState(false);
     const [note, setNote] = useState('');
+
+    // Projected commission split — shown once the atelier commits to
+    // producing the piece (approved / in production). Same math and
+    // participant list as the designer's detail page (shared helpers).
+    const commissionData = useMemo(() => {
+        if (status !== 'approved' && status !== 'in_production') return null;
+        if (!collaboration) return null;
+        const participants = participantsFor(collaboration);
+        if (participants.length === 0) return null;
+        return {
+            participants,
+            shares: computeCommissionSplit(participants, price),
+            pool: Math.round(price * COMMISSION_POOL_RATE * 100) / 100,
+        };
+    }, [status, collaboration, price]);
 
     const handleReview = async (nextStatus: DesignStatus, requireNote = false) => {
         const trimmedNote = note.trim();
@@ -159,6 +180,43 @@ function SubmissionCard({
                 <p className="text-[9px] text-[#E8E0D5]/40 border-t border-white/5 pt-2 italic leading-relaxed">
                     Atelier note: “{adminNote}”
                 </p>
+            )}
+
+            {/* Projected commission split for committed designs */}
+            {commissionData && (
+                <div className="p-3 rounded-xl bg-[#C9A84C]/5 border border-[#C9A84C]/15">
+                    <p className="text-[8px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold mb-1">
+                        Projected Commission Split
+                    </p>
+                    <p className="text-[8px] text-slate-500 mb-1.5">
+                        Pool: {Math.round(COMMISSION_POOL_RATE * 100)}% of ${price.toLocaleString()} =
+                        ${commissionData.pool.toLocaleString()} · {commissionData.participants.length} participants
+                    </p>
+                    <div className="flex flex-col gap-1">
+                        {commissionData.shares.map((share) => {
+                            const member = commissionData.participants.find((m) => m.id === share.memberId);
+                            if (!member) return null;
+                            return (
+                                <div
+                                    key={share.memberId}
+                                    className="flex items-center justify-between text-[9px]"
+                                >
+                                    <span className="text-slate-300 truncate">
+                                        {member.name}
+                                        {member.id === collaboration?.ownerId && (
+                                            <span className="ml-1 text-[7px] font-mono uppercase text-[#C9A84C]/70">
+                                                (owner)
+                                            </span>
+                                        )}
+                                    </span>
+                                    <span className="font-mono text-[#C9A84C] shrink-0 ml-2">
+                                        {share.percent}% · ${share.amount.toLocaleString()}
+                                    </span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
             )}
 
             {/* Actions by pipeline state */}
@@ -251,6 +309,19 @@ export default function AtelierRequestsTab() {
     const [filter, setFilter] = useState<DesignStatus | 'all'>('all');
     const [feedback, setFeedback] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
 
+    // Exportable atelier report — the table below is captured as PNG/PDF with
+    // the shared useExportChart (same watermark + error reporting as the
+    // Analytics dashboard).
+    const reportRef = useRef<HTMLDivElement>(null);
+    const {
+        exportAsPNG,
+        exportAsPDF,
+        isExportingPNG,
+        isExportingPDF,
+        exportError,
+        clearError,
+    } = useExportChart(reportRef, 'atelier_report', 'report');
+
     const stats = data?.stats;
     const submissions = useMemo(() => {
         const list = data?.submissions ?? [];
@@ -307,6 +378,145 @@ export default function AtelierRequestsTab() {
                     <KpiCard label="Approved" value={stats.approved} icon={CheckCircle2} accent="text-emerald-400" />
                     <KpiCard label="In Production" value={stats.inProduction} icon={PackageCheck} accent="text-[#C9A84C]" />
                     <KpiCard label="Rejected" value={stats.rejected} icon={XCircle} accent="text-red-400" />
+                </div>
+            )}
+
+            {/* Atelier report — exportable PNG/PDF table */}
+            {data && (
+                <div
+                    ref={reportRef}
+                    className="rounded-2xl bg-[#090D2A]/80 border border-white/5 p-5"
+                >
+                    <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                        <div>
+                            <h4 className="font-serif text-[#C9A84C] text-sm font-semibold uppercase tracking-wider">
+                                Atelier Report
+                            </h4>
+                            <p className="text-[10px] text-slate-500 mt-0.5">
+                                Expected commission per committed design — exportable as PNG or PDF.
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            {exportError && (
+                                <span className="flex items-center gap-1.5 text-[9px] font-mono text-red-400">
+                                    <AlertTriangle size={11} />
+                                    {exportError}
+                                    <button
+                                        onClick={clearError}
+                                        className="hover:text-white transition-colors cursor-pointer"
+                                        aria-label="Dismiss export error"
+                                    >
+                                        <X size={10} />
+                                    </button>
+                                </span>
+                            )}
+                            <button
+                                onClick={exportAsPNG}
+                                disabled={isExportingPNG || isExportingPDF}
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#4FC3F7]/10 text-[#4FC3F7] border border-[#4FC3F7]/30 text-[9px] font-mono uppercase tracking-wider hover:bg-[#4FC3F7]/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-wait"
+                                title="Export report as PNG"
+                            >
+                                {isExportingPNG ? (
+                                    <span className="block w-3 h-3 rounded-full border-2 border-[#4FC3F7] border-t-transparent animate-spin" />
+                                ) : (
+                                    <FileImage size={11} />
+                                )}
+                                PNG
+                            </button>
+                            <button
+                                onClick={exportAsPDF}
+                                disabled={isExportingPNG || isExportingPDF}
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#C9A84C]/10 text-[#C9A84C] border border-[#C9A84C]/30 text-[9px] font-mono uppercase tracking-wider hover:bg-[#C9A84C]/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-wait"
+                                title="Export report as PDF"
+                            >
+                                {isExportingPDF ? (
+                                    <span className="block w-3 h-3 rounded-full border-2 border-[#C9A84C] border-t-transparent animate-spin" />
+                                ) : (
+                                    <FileText size={11} />
+                                )}
+                                PDF
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse min-w-[640px]">
+                            <thead>
+                                <tr className="border-b border-white/10">
+                                    <th className="py-2 pr-3 text-[8px] font-mono uppercase tracking-widest text-slate-500 font-semibold">Design</th>
+                                    <th className="py-2 pr-3 text-[8px] font-mono uppercase tracking-widest text-slate-500 font-semibold">Category</th>
+                                    <th className="py-2 pr-3 text-[8px] font-mono uppercase tracking-widest text-slate-500 font-semibold">Status</th>
+                                    <th className="py-2 pr-3 text-[8px] font-mono uppercase tracking-widest text-slate-500 font-semibold">Price</th>
+                                    <th className="py-2 text-[8px] font-mono uppercase tracking-widest text-[#C9A84C] font-semibold">
+                                        Expected Commission
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {submissions.map((s) => {
+                                    const participants = participantsFor(s.collaboration);
+                                    const isCommitted =
+                                        (s.status === 'approved' || s.status === 'in_production') &&
+                                        participants.length > 0;
+                                    const commission = isCommitted
+                                        ? {
+                                              pool: Math.round(s.price * COMMISSION_POOL_RATE * 100) / 100,
+                                              shares: computeCommissionSplit(participants, s.price),
+                                          }
+                                        : null;
+                                    return (
+                                        <tr key={s.id} className="border-b border-white/5 last:border-b-0 align-top">
+                                            <td className="py-2.5 pr-3">
+                                                <p className="text-[11px] font-medium text-white">{s.title}</p>
+                                            </td>
+                                            <td className="py-2.5 pr-3">
+                                                <span className="text-[9px] font-mono uppercase tracking-wider text-[#C9A84C]/70">
+                                                    {s.category}
+                                                </span>
+                                            </td>
+                                            <td className="py-2.5 pr-3">
+                                                <StatusChip status={s.status} />
+                                            </td>
+                                            <td className="py-2.5 pr-3 text-[11px] font-mono text-[#E8E0D5]/80">
+                                                ${s.price.toLocaleString()}
+                                            </td>
+                                            <td className="py-2.5">
+                                                {commission ? (
+                                                    <div className="flex flex-col gap-1">
+                                                        <p className="text-[9px] font-mono text-[#C9A84C]">
+                                                            Pool: ${commission.pool.toLocaleString()} · {participants.length} participants
+                                                        </p>
+                                                        {commission.shares.map((share) => {
+                                                            const member = participants.find((m) => m.id === share.memberId);
+                                                            if (!member) return null;
+                                                            return (
+                                                                <p
+                                                                    key={share.memberId}
+                                                                    className="text-[9px] text-slate-400"
+                                                                >
+                                                                    {member.name}
+                                                                    {member.id === s.collaboration?.ownerId && (
+                                                                        <span className="ml-1 text-[7px] font-mono uppercase text-[#C9A84C]/60">
+                                                                            (owner)
+                                                                        </span>
+                                                                    )}
+                                                                    : {share.percent}% · ${share.amount.toLocaleString()}
+                                                                </p>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-[9px] font-mono text-slate-600">
+                                                        —
+                                                    </span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             )}
 
@@ -377,6 +587,7 @@ export default function AtelierRequestsTab() {
                             status={s.status}
                             submittedAt={s.submittedAt}
                             adminNote={s.adminNote}
+                            collaboration={s.collaboration}
                             reviewing={reviewing}
                             onReview={reviewSubmission}
                             onFeedback={setFeedback}

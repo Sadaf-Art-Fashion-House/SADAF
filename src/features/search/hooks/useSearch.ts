@@ -15,6 +15,17 @@ export function useSearch(
     allResults: SearchResult[],
     initialCategory: SearchCategory = 'All',
 ) {
+    // Stable identity by CONTENT, not reference. Callers can hand us inline
+    // arrays (fresh references every render); keying the results memo below
+    // on the reference alone would recompute it on every render. The
+    // signature only changes when the actual results change.
+    const allResultsKey = allResults.map((r) => `${r.id}\u0000${r.title}`).join('\u0001');
+    const stableAllResults = useMemo(
+        () => allResults,
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- content signature, see above
+        [allResultsKey],
+    );
+
     const [query, setQuery] = useState('');
     const [category, setCategory] = useState<SearchCategory>(initialCategory);
     const [isSearching, setIsSearching] = useState(false);
@@ -47,7 +58,7 @@ export function useSearch(
         if (!query.trim()) return [];
 
         const normalized = query.toLowerCase().trim();
-        let results = allResults.filter(
+        let results = stableAllResults.filter(
             (r) =>
                 r.title.toLowerCase().includes(normalized) ||
                 r.subtitle.toLowerCase().includes(normalized) ||
@@ -68,7 +79,7 @@ export function useSearch(
         }
 
         return results;
-    }, [query, category, allResults]);
+    }, [query, category, stableAllResults]);
 
     const saveRecentSearch = useCallback(
         (searchQuery: string) => {

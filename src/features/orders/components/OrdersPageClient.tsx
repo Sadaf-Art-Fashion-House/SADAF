@@ -5,62 +5,27 @@ import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useOrderStatus } from '../hooks/useOrderStatus';
 import OrdersView from './OrdersView';
 import type { Order } from '@/features/orders/types';
+import { MOCK_ORDERS } from '../data/mockOrders';
 import { ROUTES } from '@/config/routes';
 import { getUserReviews, saveUserReview, hasReviewForOrder } from '@/features/reviews/utils/userReviewsStorage';
+import { titleForRating } from '@/features/reviews/utils/titleForRating';
+import { getMockReviews } from '@/features/reviews/data/mockReviews';
+import { useAggregatedRatings } from '@/features/reviews/hooks/useAggregatedRatings';
 import type { Review } from '@/features/reviews/types';
 
-const SIMULATED_ORDERS: Order[] = [
-    {
-        id: 'SDF-2026-9041',
-        date: '2026-05-28',
-        total: 1250,
-        status: 'Tailoring',
-        shippingAddress: 'Villa 14, Al-Yasmine District, New Cairo, Egypt',
-        items: [
-            {
-                name: 'Al-Muizz El-Faraeda Abaya',
-                quantity: 1,
-                size: 'M',
-                price: 1250,
-                image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=300&q=80',
-            },
-        ],
-        trackingId: 'SDF-TRK-9041',
-        estimatedDelivery: '2026-07-15',
-    },
-    {
-        id: 'SDF-2026-4412',
-        date: '2026-04-12',
-        total: 3400,
-        status: 'Delivered',
-        shippingAddress: 'Villa 14, Al-Yasmine District, New Cairo, Egypt',
-        items: [
-            {
-                name: 'The Golden Diwani Diptych Fine Art',
-                quantity: 1,
-                size: 'Original Framing',
-                price: 3400,
-                image: 'https://images.unsplash.com/photo-1561214115-f2f134cc4912?auto=format&fit=crop&w=300&q=80',
-            },
-        ],
-        trackingId: 'SDF-TRK-4412',
-        estimatedDelivery: '2026-05-01',
-    },
-];
-
-/** Short review titles derived from the star rating. */
-function titleForRating(rating: number): string {
-    if (rating >= 5) return 'Exceptional — exceeded every expectation';
-    if (rating === 4) return 'Loved my SADAF piece';
-    if (rating === 3) return 'Good, with room to improve';
-    if (rating === 2) return 'Not quite what I expected';
-    return 'Disappointed with the experience';
-}
-
 export default function OrdersPageClient() {
-    const [orders] = useState<Order[]>(SIMULATED_ORDERS);
+    const [orders] = useState<Order[]>(MOCK_ORDERS);
     const { user } = useAuth();
     const { statuses, events, loading, wsLive, error } = useOrderStatus(user?.id ?? null);
+
+    // Aggregated product ratings (mock catalog reviews + the user's own),
+    // matched by product name — order items carry the catalog product name.
+    const ratingsByProduct = useAggregatedRatings(
+        Array.from(new Set(orders.flatMap((order) => order.items.map((item) => item.name)))).map(
+            (name) => ({ id: name, name }),
+        ),
+        getMockReviews(),
+    );
 
     // Order ids that already have a review — read on mount (hydration-safe,
     // per signed-in user) and updated optimistically after each submit.
@@ -112,6 +77,7 @@ export default function OrdersPageClient() {
             liveLoading={loading}
             liveError={error}
             reviewedOrderIds={reviewedOrderIds}
+            ratingsByProduct={ratingsByProduct}
             onReviewSubmit={handleReviewSubmit}
         />
     );

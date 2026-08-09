@@ -16,12 +16,26 @@ interface ReviewFormProps {
     productName: string;
     onSubmit: (rating: number, comment: string) => Promise<{ ok: boolean; error?: string }>;
     onCancel?: () => void;
+    /** Pre-fill the form — edit mode for an existing review. */
+    initialRating?: number;
+    initialComment?: string;
+    /** Custom header / submit labels (e.g. "Edit your review" / "Update Review"). */
+    title?: string;
+    submitLabel?: string;
 }
 
-export default function ReviewForm({ productName, onSubmit, onCancel }: ReviewFormProps) {
-    const [rating, setRating] = useState(0);
+export default function ReviewForm({
+    productName,
+    onSubmit,
+    onCancel,
+    initialRating = 0,
+    initialComment = '',
+    title,
+    submitLabel = 'Submit Review',
+}: ReviewFormProps) {
+    const [rating, setRating] = useState(initialRating);
     const [hoverRating, setHoverRating] = useState(0);
-    const [comment, setComment] = useState('');
+    const [comment, setComment] = useState(initialComment);
     const [submitting, setSubmitting] = useState(false);
     const [status, setStatus] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
 
@@ -56,7 +70,7 @@ export default function ReviewForm({ productName, onSubmit, onCancel }: ReviewFo
             <div className="flex items-center gap-2">
                 <MessageSquare size={13} className="text-[#C9A84C]" />
                 <span className="text-[9px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold">
-                    Write a Review — {productName}
+                    {title ?? `Write a Review — ${productName}`}
                 </span>
             </div>
 
@@ -126,7 +140,7 @@ export default function ReviewForm({ productName, onSubmit, onCancel }: ReviewFo
                     disabled={submitting}
                     className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/90 text-[#0A0F2C] text-[10px] font-mono font-bold uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-wait"
                 >
-                    {submitting ? 'Submitting…' : 'Submit Review'}
+                    {submitting ? 'Submitting…' : submitLabel}
                 </button>
                 {onCancel && (
                     <button

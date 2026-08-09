@@ -216,6 +216,27 @@ export function useRealtimeNotifications(
 
         connectWS();
 
+        // Hydrate real atelier team events (owner + collaborators) on mount.
+        // The WS push is fire-and-forget to currently-subscribed clients, so
+        // an event created while this page was closed would otherwise be
+        // missed. The REST API merges those events; we only take the
+        // `atelier-event-` items and addNotification dedupes by id, so the
+        // demo global feed never gets duplicated.
+        const hydrateAtelierEvents = async () => {
+            try {
+                const res = await fetch(`/api/notifications?userId=${userId}`);
+                if (!res.ok) return;
+                const data = await res.json();
+                if (!Array.isArray(data.notifications)) return;
+                data.notifications
+                    .filter((n: Notification) => n.id?.startsWith('atelier-event-'))
+                    .forEach((n: Notification) => addNotification(n));
+            } catch {
+                // Silent — the WS path or the fallback poll covers it.
+            }
+        };
+        hydrateAtelierEvents();
+
         // Fallback: start polling after 5s if WS didn't connect
         const fallbackTimer = setTimeout(() => {
             if (!wsConnectedRef.current) {

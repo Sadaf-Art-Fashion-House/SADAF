@@ -35,6 +35,7 @@ export const ROUTES = {
     DASHBOARD_FOUNDER: '/dashboard/founder',
     DASHBOARD_DESIGNER: '/dashboard/designer',
     DASHBOARD_DESIGNER_CONNECTIONS: '/dashboard/designer/connections',
+    DASHBOARD_DESIGNER_PORTFOLIO: '/dashboard/designer/portfolio',
     DASHBOARD_SALES_PARTNER: '/dashboard/sales-partner',
     DASHBOARD_COMPANY: '/dashboard/company',
     DASHBOARD_COMPANY_CONNECTIONS: '/dashboard/company/connections',
