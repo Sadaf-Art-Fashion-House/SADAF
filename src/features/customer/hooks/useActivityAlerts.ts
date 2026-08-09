@@ -16,7 +16,7 @@
  *   the initial batch is treated as historical and stays silent.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PersonalActivityEvent } from '../types';
 import { playSoftChime } from '@/shared/utils/playSoftChime';
 
@@ -56,6 +56,18 @@ function isNotificationSupported(): boolean {
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
 export function useActivityAlerts(events: PersonalActivityEvent[]) {
+    // Stable identity by CONTENT, not reference. The caller may pass an
+    // inline array (fresh reference every render); keying the new-event
+    // effect below on the reference alone would re-run it every render and
+    // re-check every event. The serialized signature only changes when the
+    // actual events change.
+    const eventsKey = events.map((event) => event.id).join('\u0001');
+    const stableEvents = useMemo(
+        () => events,
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- content signature, see above
+        [eventsKey],
+    );
+
     const [preferences, setPreferences] = useState<AlertPreferences>(DEFAULT_PREFERENCES);
     const [isSupported, setIsSupported] = useState(false);
     const [permissionDenied, setPermissionDenied] = useState(false);
@@ -109,12 +121,12 @@ export function useActivityAlerts(events: PersonalActivityEvent[]) {
     useEffect(() => {
         // The first batch is historical — seed the seen set and stay silent.
         if (!seededRef.current) {
-            events.forEach((event) => seenIdsRef.current.add(event.id));
+            stableEvents.forEach((event) => seenIdsRef.current.add(event.id));
             seededRef.current = true;
             return;
         }
 
-        const fresh = events.filter((event) => event && !seenIdsRef.current.has(event.id));
+        const fresh = stableEvents.filter((event) => event && !seenIdsRef.current.has(event.id));
         if (fresh.length === 0) return;
         fresh.forEach((event) => seenIdsRef.current.add(event.id));
 
@@ -123,7 +135,7 @@ export function useActivityAlerts(events: PersonalActivityEvent[]) {
             if (sound) playSoftChime();
             if (browser) notifyBrowser(event);
         });
-    }, [events, notifyBrowser]);
+    }, [stableEvents, notifyBrowser]);
 
     // ─── Toggle actions ─────────────────────────────────────────────────────
 

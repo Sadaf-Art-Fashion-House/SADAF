@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
@@ -13,6 +14,7 @@ import {
     Sparkles,
     Palette,
     Shirt,
+    CheckCircle2,
 } from 'lucide-react';
 import type { CartItem } from '@/shared/types';
 
@@ -102,6 +104,17 @@ export default function CartView({
 }: CartViewProps) {
     const subtotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
     const isEmpty = items.length === 0;
+
+    // Clear-bag confirmation + cleared toast (presentation state).
+    const [confirmClear, setConfirmClear] = useState(false);
+    const [showClearedToast, setShowClearedToast] = useState(false);
+
+    const handleClear = () => {
+        onClearCart();
+        setConfirmClear(false);
+        setShowClearedToast(true);
+        window.setTimeout(() => setShowClearedToast(false), 3_000);
+    };
 
     return (
         <div className="relative w-full min-h-screen pb-20">
@@ -314,12 +327,35 @@ export default function CartView({
                                         Proceed to Checkout
                                     </Link>
 
-                                    <button
-                                        onClick={onClearCart}
-                                        className="w-full py-2.5 rounded border border-red-500/20 text-red-400 text-[10px] font-mono uppercase tracking-wider hover:bg-red-950/30 transition-all duration-300 cursor-pointer"
-                                    >
-                                        Clear Bag
-                                    </button>
+                                    {confirmClear ? (
+                                        <div className="p-3 rounded-lg bg-red-950/30 border border-red-500/30">
+                                            <p className="text-[10px] text-red-300 font-mono text-center mb-3">
+                                                Remove all {items.length} item{items.length === 1 ? '' : 's'} from your bag?
+                                            </p>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={handleClear}
+                                                    className="flex-1 py-2 rounded bg-red-500/20 border border-red-500/40 text-red-300 text-[10px] font-mono uppercase tracking-wider hover:bg-red-500/30 transition-all duration-300 cursor-pointer"
+                                                >
+                                                    Yes, Clear Bag
+                                                </button>
+                                                <button
+                                                    onClick={() => setConfirmClear(false)}
+                                                    className="flex-1 py-2 rounded bg-white/5 border border-white/10 text-slate-400 text-[10px] font-mono uppercase tracking-wider hover:text-white transition-all duration-300 cursor-pointer"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => setConfirmClear(true)}
+                                            className="w-full py-2.5 rounded border border-red-500/20 text-red-400 text-[10px] font-mono uppercase tracking-wider hover:bg-red-950/30 transition-all duration-300 cursor-pointer flex items-center justify-center gap-1.5"
+                                        >
+                                            <Trash2 size={12} />
+                                            Clear Bag
+                                        </button>
+                                    )}
                                 </div>
 
                                 <div className="mt-6 p-3 rounded-lg bg-[#C9A84C]/5 border border-[#C9A84C]/10">
@@ -364,6 +400,23 @@ export default function CartView({
                     </div>
                 </section>
             )}
+
+            {/* Cleared-bag confirmation toast */}
+            <AnimatePresence>
+                {showClearedToast && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                        transition={{ duration: 0.25, ease: 'easeOut' }}
+                        role="status"
+                        className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-5 py-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs shadow-2xl shadow-black/50 backdrop-blur-md"
+                    >
+                        <CheckCircle2 size={15} className="shrink-0" />
+                        Your bag has been cleared.
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

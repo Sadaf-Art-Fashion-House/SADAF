@@ -3,14 +3,17 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
-import { ShoppingCart, Heart, Filter, ChevronRight, X, CreditCard } from "lucide-react";
+import { ShoppingCart, Heart, Filter, ChevronRight, X, CreditCard, Star } from "lucide-react";
 import { ROUTES } from "@/config/routes";
 import type { CartItem, FashionProduct } from "@/shared/types";
+import type { RatingsByProduct } from "@/features/reviews/hooks/useAggregatedRatings";
 import { useMarketplace } from "../hooks/useMarketplace";
 
 interface StoreViewProps {
     products: FashionProduct[];
     cartItems: CartItem[];
+    /** Aggregated mock + user ratings per product (null = no reviews yet). */
+    ratingsByProduct?: RatingsByProduct;
     isWishlisted: (productId: string) => boolean;
     onAddToCart: (product: FashionProduct, size: string, color: string) => void;
     onRemoveFromCart: (cartLineId: string) => void;
@@ -21,6 +24,7 @@ interface StoreViewProps {
 export default function StoreView({
     products,
     cartItems,
+    ratingsByProduct = {},
     isWishlisted,
     onAddToCart,
     onRemoveFromCart,
@@ -223,9 +227,29 @@ export default function StoreView({
                                             >
                                                 {prod.name}
                                             </Link>
-                                            <p className="text-xs text-[#E8E0D5]/65 line-clamp-2 leading-relaxed mb-4">
+                                            <p className="text-xs text-[#E8E0D5]/65 line-clamp-2 leading-relaxed mb-3">
                                                 {prod.description}
                                             </p>
+
+                                            {/* Aggregated rating (mock + user reviews), falls back to the catalog rating */}
+                                            <div className="flex items-center gap-1.5 mb-4">
+                                                <Star
+                                                    size={11}
+                                                    className="text-[#C9A84C]"
+                                                    fill="currentColor"
+                                                />
+                                                <span className="text-[11px] font-mono text-[#E8E0D5]">
+                                                    {ratingsByProduct[prod.id]
+                                                        ? ratingsByProduct[prod.id]!.average.toFixed(1)
+                                                        : prod.rating.toFixed(1)}
+                                                </span>
+                                                {ratingsByProduct[prod.id] && (
+                                                    <span className="text-[10px] text-gray-500 font-mono">
+                                                        &middot; {ratingsByProduct[prod.id]!.count} review
+                                                        {ratingsByProduct[prod.id]!.count === 1 ? "" : "s"}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
 
                                         <button

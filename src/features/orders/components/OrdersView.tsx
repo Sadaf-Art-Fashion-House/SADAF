@@ -16,6 +16,7 @@ import {
     Star,
 } from 'lucide-react';
 import type { Order, OrderStatus, OrderStatusEvent } from '@/features/orders/types';
+import type { RatingsByProduct } from '@/features/reviews/hooks/useAggregatedRatings';
 import LiveOrderStatus from './LiveOrderStatus';
 import ReviewForm from '@/features/reviews/components/ReviewForm';
 
@@ -33,6 +34,8 @@ interface OrdersViewProps {
     liveError: string | null;
     /** Order ids that already have a review written from the orders page. */
     reviewedOrderIds: string[];
+    /** Aggregated mock + user ratings per product name, shown on order items. */
+    ratingsByProduct?: RatingsByProduct;
     /** Persist a review for a delivered order; resolves ok on success. */
     onReviewSubmit: (order: Order, rating: number, comment: string) => Promise<{ ok: boolean; error?: string }>;
 }
@@ -62,6 +65,7 @@ export default function OrdersView({
     liveLoading,
     liveError,
     reviewedOrderIds,
+    ratingsByProduct = {},
     onReviewSubmit,
 }: OrdersViewProps) {
     // Which order's review form is currently expanded (presentation state).
@@ -198,6 +202,23 @@ export default function OrdersView({
                                                     <p className="text-[10px] font-mono text-slate-500 mt-0.5">
                                                         Size: {item.size} &bull; Qty: {item.quantity}
                                                     </p>
+                                                    {/* Aggregated product rating (mock + user reviews) */}
+                                                    {ratingsByProduct[item.name] && (
+                                                        <p className="flex items-center gap-1 mt-1 text-[10px]">
+                                                            <Star
+                                                                size={10}
+                                                                className="text-[#C9A84C]"
+                                                                fill="currentColor"
+                                                            />
+                                                            <span className="font-mono text-[#E8E0D5]">
+                                                                {ratingsByProduct[item.name]!.average.toFixed(1)}
+                                                            </span>
+                                                            <span className="font-mono text-slate-500">
+                                                                &middot; {ratingsByProduct[item.name]!.count} review
+                                                                {ratingsByProduct[item.name]!.count === 1 ? '' : 's'}
+                                                            </span>
+                                                        </p>
+                                                    )}
                                                 </div>
                                                 <div className="text-right shrink-0">
                                                     <span className="text-xs font-semibold text-[#C9A84C] font-mono">${item.price.toLocaleString()}</span>

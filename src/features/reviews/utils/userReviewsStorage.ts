@@ -16,6 +16,7 @@
  */
 
 import type { Review } from '../types';
+import { reviewsForProduct } from './reviewRatings';
 
 const USER_REVIEWS_KEY_PREFIX = 'sadaf_user_reviews';
 /** Legacy global key (pre user-scoping) — migrated once on first read. */
@@ -71,6 +72,29 @@ export function hasReviewForOrder(orderId: string, userId: string): boolean {
 }
 
 /**
+ * Whether the user already reviewed this product — matched by id OR name
+ * (the same matching rules as the aggregated ratings, so a review written
+ * from an order also prevents a duplicate one from the product page).
+ */
+export function hasReviewForProduct(productId: string, productName: string, userId: string): boolean {
+    if (!userId) return false;
+    return reviewsForProduct(getUserReviews(userId), productId, productName).length > 0;
+}
+
+/**
+ * The user's own review for this product (newest match), or null — used by
+ * the PDP to show their review under the "You reviewed this piece" state.
+ */
+export function findUserReviewForProduct(
+    productId: string,
+    productName: string,
+    userId: string,
+): Review | null {
+    if (!userId) return null;
+    return reviewsForProduct(getUserReviews(userId), productId, productName)[0] ?? null;
+}
+
+/**
  * Persist a new user review (prepended) and notify listeners via the custom
  * window event. Requires a signed-in user — reviews are never saved for
  * guests (errors are surfaced to the caller, never swallowed).
@@ -81,5 +105,53 @@ export function saveUserReview(review: Review, userId: string): void {
     }
     const reviews = getUserReviews(userId);
     window.localStorage.setItem(userReviewsKey(userId), JSON.stringify([review, ...reviews]));
+    window.dispatchEvent(new CustomEvent(USER_REVIEWS_CHANGED_EVENT));
+}
+
+/**
+ * Replace the user's existing review for the same product (matched by id OR
+ * name, same rules as the ratings) with the edited one. The original id,
+ * creation date and list position are kept; `editedAt` is stamped so the UI
+ * can show an "Edited" marker. If no matching review exists it falls back to
+ * a plain save. Dispatches the same change event so open pages refresh.
+ */
+export function updateUserReview(review: Review, userId: string): void {
+    if (!userId) {
+        throw new Error('Sign in to update a review.');
+    }
+    const reviews = getUserReviews(userId);
+    const existing = findUserReviewForProduct(review.productId, review.productName, userId);
+    if (!existing) {
+        saveUserReview(review, userId);
+        return;
+    }
+
+    const updated = reviews.map((item) => {
+        if (item.id === existing.id) {
+            return {
+                ...review,
+                id: existing.id,
+                createdAt: existing.createdAt,
+                editedAt: new Date().toISOString(),
+            };
+        }
+        return item;
+    });
+    window.localStorage.setItem(userReviewsKey(userId), JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent(USER_REVIEWS_CHANGED_EVENT));
+}
+
+/**
+ * Remove the user's own review by id. No-ops when the id is not found and
+ * dispatches the same change event, so the PDP, /reviews and every rating
+ * summary re-read storage the moment the review is gone. Requires a
+ * signed-in user — errors are surfaced to the caller, never swallowed.
+ */
+export function deleteUserReview(reviewId: string, userId: string): void {
+    if (!userId) {
+        throw new Error('Sign in to delete a review.');
+    }
+    const reviews = getUserReviews(userId).filter((review) => review.id !== reviewId);
+    window.localStorage.setItem(userReviewsKey(userId), JSON.stringify(reviews));
     window.dispatchEvent(new CustomEvent(USER_REVIEWS_CHANGED_EVENT));
 }

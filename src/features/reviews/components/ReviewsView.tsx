@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Star, ThumbsUp, MessageSquare, Quote, ChevronDown, Filter, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import type { Review, ReviewSortOption } from '../types';
+import type { Review, ReviewSortOption, ReviewRatingFilter } from '../types';
+import { RATING_FILTER_MIN } from '../types';
 
 interface ReviewsViewProps {
     reviews: Review[];
@@ -14,10 +15,29 @@ interface ReviewsViewProps {
 export default function ReviewsView({ reviews }: ReviewsViewProps) {
     const [sortBy, setSortBy] = useState<ReviewSortOption>('newest');
     const [filterVerified, setFilterVerified] = useState(false);
+    const [ratingFilter, setRatingFilter] = useState<ReviewRatingFilter>('all');
+    // Exact-star filter driven by the interactive distribution bars — each
+    // bar shows exactly that star count; pressing the active bar again
+    // clears it. Clicking a bar resets the range chips to 'all' so the two
+    // controls can never fight (a range + an exact star is always redundant
+    // or empty).
+    const [exactStarFilter, setExactStarFilter] = useState<number | null>(null);
     const [showSortDropdown, setShowSortDropdown] = useState(false);
 
+    const toggleExactStar = (star: number) => {
+        setExactStarFilter((prev) => (prev === star ? null : star));
+        setRatingFilter('all');
+    };
+
     const sortedAndFiltered = useMemo(() => {
-        let result = filterVerified ? reviews.filter((r) => r.verified) : [...reviews];
+        const minRating = RATING_FILTER_MIN[ratingFilter];
+        let result = reviews.filter((r) => r.rating >= minRating);
+        if (exactStarFilter !== null) {
+            result = result.filter((r) => r.rating === exactStarFilter);
+        }
+        if (filterVerified) {
+            result = result.filter((r) => r.verified);
+        }
 
         switch (sortBy) {
             case 'newest':
@@ -32,7 +52,7 @@ export default function ReviewsView({ reviews }: ReviewsViewProps) {
         }
 
         return result;
-    }, [reviews, sortBy, filterVerified]);
+    }, [reviews, sortBy, filterVerified, ratingFilter, exactStarFilter]);
 
     // Aggregate stats
     const averageRating = useMemo(() => {
@@ -98,24 +118,52 @@ export default function ReviewsView({ reviews }: ReviewsViewProps) {
                         </div>
                     </div>
 
-                    {/* Rating Distribution Bars */}
-                    <div className="md:col-span-5 flex flex-col gap-2 justify-center">
+                    {/* Rating Distribution Bars — each bar is a button that
+                        filters to exactly that star count; press again to clear. */}
+                    <div className="md:col-span-5 flex flex-col gap-1.5 justify-center">
                         {[5, 4, 3, 2, 1].map((star) => {
                             const count = ratingCounts[star - 1];
                             const pct = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
+                            const active = exactStarFilter === star;
                             return (
-                                <div key={star} className="flex items-center gap-3 text-xs">
-                                    <span className="w-12 text-right text-slate-400 font-mono">{star} ★</span>
+                                <button
+                                    key={star}
+                                    onClick={() => toggleExactStar(star)}
+                                    aria-pressed={active}
+                                    title={active ? 'Clear this star filter' : `Show only ${star}-star reviews`}
+                                    className={`flex items-center gap-3 text-xs w-full rounded-lg px-2 py-1 transition-all duration-300 cursor-pointer ${
+                                        active
+                                            ? 'bg-[#C9A84C]/10 ring-1 ring-[#C9A84C]/40'
+                                            : 'hover:bg-white/5'
+                                    }`}
+                                >
+                                    <span
+                                        className={`w-12 text-right font-mono transition-colors ${
+                                            active ? 'text-[#C9A84C] font-bold' : 'text-slate-400'
+                                        }`}
+                                    >
+                                        {star} ★
+                                    </span>
                                     <div className="flex-1 h-2.5 rounded-full bg-white/5 overflow-hidden">
                                         <motion.div
                                             initial={{ width: 0 }}
                                             animate={{ width: `${pct}%` }}
                                             transition={{ duration: 0.8, ease: 'easeOut' }}
-                                            className="h-full rounded-full bg-gradient-to-r from-[#C9A84C] to-[#F0D080]"
+                                            className={`h-full rounded-full transition-colors duration-300 ${
+                                                active
+                                                    ? 'bg-gradient-to-r from-[#C9A84C] to-[#F0D080]'
+                                                    : 'bg-gradient-to-r from-[#C9A84C]/60 to-[#F0D080]/60'
+                                            }`}
                                         />
                                     </div>
-                                    <span className="w-8 text-left text-slate-500 font-mono">{count}</span>
-                                </div>
+                                    <span
+                                        className={`w-8 text-left font-mono transition-colors ${
+                                            active ? 'text-[#C9A84C] font-bold' : 'text-slate-500'
+                                        }`}
+                                    >
+                                        {count}
+                                    </span>
+                                </button>
                             );
                         })}
                     </div>
@@ -172,6 +220,29 @@ export default function ReviewsView({ reviews }: ReviewsViewProps) {
                             </AnimatePresence>
                         </div>
 
+                        {/* Rating Filter (All / 4★+ / 3★+) */}
+                        <div className="flex items-center gap-1.5">
+                            {(
+                                [
+                                    { value: 'all', label: 'All Stars' },
+                                    { value: 'fourPlus', label: '4★ & Up' },
+                                    { value: 'threePlus', label: '3★ & Up' },
+                                ] as { value: ReviewRatingFilter; label: string }[]
+                            ).map((option) => (
+                                <button
+                                    key={option.value}
+                                    onClick={() => setRatingFilter(option.value)}
+                                    className={`px-3 py-2 rounded-lg border text-[10px] font-mono uppercase tracking-wider transition-all cursor-pointer ${ 
+                                        ratingFilter === option.value
+                                            ? 'bg-[#C9A84C]/10 text-[#C9A84C] border-[#C9A84C]/30'
+                                            : 'border-white/10 bg-white/5 text-slate-400 hover:text-white'
+                                    }`}
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>
+
                         {/* Verified Filter */}
                         <button
                             onClick={() => setFilterVerified(!filterVerified)}
@@ -204,8 +275,10 @@ export default function ReviewsView({ reviews }: ReviewsViewProps) {
                                 <MessageSquare size={24} className="mx-auto text-slate-500 mb-4" />
                                 <p className="text-sm text-slate-400">
                                     {filterVerified
-                                        ? 'No verified reviews yet. Clear the filter to see all reviews.'
-                                        : 'No reviews to display yet.'}
+                                        ? 'No verified reviews match the current filters. Clear a filter to see more.'
+                                        : exactStarFilter !== null
+                                            ? `No ${exactStarFilter}-star reviews match the current filters.`
+                                            : 'No reviews to display yet.'}
                                 </p>
                             </motion.div>
                         ) : (
@@ -282,8 +355,13 @@ function ReviewCard({ review }: { review: Review }) {
                         </div>
                         <div>
                             <span className="text-[10px] text-slate-300 font-medium">{review.userName}</span>
+                            {review.isMine && (
+                                <span className="ml-2 px-1.5 py-0.5 rounded bg-[#A78BFA]/20 text-[#C9A84C] text-[8px] font-mono uppercase tracking-wider border border-[#A78BFA]/40 font-bold">
+                                    You
+                                </span>
+                            )}
                             {review.verified && (
-                                <span className="ml-2 px-1.5 py-0.5 rounded bg-[#C9A84C]/10 text-[#C9A84C] text-[8px] font-mono uppercase tracking-wider">
+                                <span className="ml-1.5 px-1.5 py-0.5 rounded bg-[#C9A84C]/10 text-[#C9A84C] text-[8px] font-mono uppercase tracking-wider">
                                     Verified
                                 </span>
                             )}
@@ -294,6 +372,9 @@ function ReviewCard({ review }: { review: Review }) {
                                 month: 'short',
                                 day: 'numeric',
                             })}
+                            {review.editedAt && (
+                                <span className="text-[#C9A84C]/70"> · Edited</span>
+                            )}
                         </span>
                     </div>
 

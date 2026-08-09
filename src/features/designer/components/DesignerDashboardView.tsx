@@ -9,7 +9,8 @@
  * come from DesignerDashboardPageClient via props.
  */
 
-import { useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
+import Link from 'next/link';
 import {
     Palette,
     Upload,
@@ -17,16 +18,21 @@ import {
     CheckCircle2,
     AlertTriangle,
     Clock,
+    Info,
     PackageCheck,
     Sparkles,
     Layers,
     Wifi,
     WifiOff,
+    Users,
+    User,
 } from 'lucide-react';
-import type { DesignerDashboardData, NewDesignSubmission, DesignCategory } from '../types';
+import type { DesignerDashboardData, NewDesignSubmission, DesignCategory, DesignCollaboration } from '../types';
 import { DESIGN_CATEGORIES, DESIGN_STATUS_STYLES } from '../constants';
+import { COMMISSION_POOL_RATE, participantsFor } from '../utils/commissionSplit';
 import { formatRelativeTime } from '@/features/notifications/utils/formatRelativeTime';
 import { fileToResizedDataUrl } from '@/shared/utils/fileToResizedDataUrl';
+import { ROUTES } from '@/config/routes';
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 
@@ -47,21 +53,40 @@ function KpiCard({
     value,
     icon: Icon,
     accent,
+    hoverDetail,
 }: {
     label: string;
-    value: number;
+    value: number | string;
     icon: typeof Layers;
     accent: string;
+    hoverDetail?: ReactNode;
 }) {
     return (
-        <div className="p-4 bg-[#0A0F2C]/60 border border-white/5 rounded-2xl">
+        <div className="relative group p-4 bg-[#0A0F2C]/60 border border-white/5 rounded-2xl">
             <div className="flex items-center justify-between mb-2">
                 <span className="text-[8px] font-mono uppercase tracking-widest text-[#E8E0D5]/40 font-semibold">
                     {label}
                 </span>
                 <Icon size={13} className={accent} />
             </div>
-            <p className="text-2xl font-serif text-white font-bold tracking-tight">{value}</p>
+            <p className="text-2xl font-serif text-white font-bold tracking-tight flex items-center gap-2">
+                {value}
+                {hoverDetail && (
+                    <span
+                        title="Per-design commission breakdown"
+                        className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#C9A84C]/15 text-[#C9A84C] shrink-0"
+                    >
+                        <Info size={9} />
+                    </span>
+                )}
+            </p>
+            {hoverDetail && (
+                <div className="absolute z-30 right-0 bottom-full mb-2 w-64 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none">
+                    <div className="rounded-xl bg-[#141B4D] border border-[#A78BFA]/30 shadow-2xl shadow-black/50 p-3">
+                        {hoverDetail}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
@@ -69,6 +94,7 @@ function KpiCard({
 // ─── Portfolio card ──────────────────────────────────────────────────────────
 
 function PortfolioCard({
+    id,
     title,
     category,
     description,
@@ -77,7 +103,9 @@ function PortfolioCard({
     submittedAt,
     price,
     adminNote,
+    collaboration,
 }: {
+    id: string;
     title: string;
     category: string;
     description: string;
@@ -86,14 +114,28 @@ function PortfolioCard({
     submittedAt: string;
     price: number;
     adminNote?: string;
+    collaboration?: DesignCollaboration;
 }) {
     const style = DESIGN_STATUS_STYLES[status];
+    const isTeam = collaboration?.type === 'team';
+    // Credits model: the owner is always a participant, so the count matches
+    // the detail page (owner + collaborators, deduped by id).
+    const participantCount = collaboration
+        ? new Set([collaboration.ownerId, ...collaboration.members.map((m) => m.id)]).size
+        : 0;
     return (
-        <div className="group rounded-2xl bg-[#0A0F2C]/80 border border-white/5 hover:border-[#A78BFA]/30 transition-all duration-300 overflow-hidden flex flex-col">
+        <Link
+            href={`${ROUTES.DASHBOARD_DESIGNER_PORTFOLIO}/${id}`}
+            className="group rounded-2xl bg-[#0A0F2C]/80 border border-white/5 hover:border-[#A78BFA]/40 hover:shadow-[0_0_24px_rgba(167,139,250,0.08)] transition-all duration-300 overflow-hidden flex flex-col cursor-pointer"
+        >
             <div className="relative h-40 bg-gradient-to-br from-[#141B4D] to-[#0A0F2C] flex items-center justify-center overflow-hidden">
                 {imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element -- data-URL previews can't use next/image
-                    <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
+                    <img
+                        src={imageUrl}
+                        alt={title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
                 ) : (
                     <span className="font-serif text-5xl text-[#A78BFA]/30 group-hover:scale-110 transition-transform duration-500">
                         {title.charAt(0)}
@@ -107,7 +149,9 @@ function PortfolioCard({
             <div className="p-4 flex flex-col gap-2 flex-1">
                 <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                        <h3 className="font-serif text-white text-sm leading-snug">{title}</h3>
+                        <h3 className="font-serif text-white text-sm leading-snug group-hover:text-[#A78BFA] transition-colors">
+                            {title}
+                        </h3>
                         <p className="text-[9px] font-mono uppercase tracking-wider text-[#A78BFA]/70 mt-0.5">
                             {category} · {formatRelativeTime(submittedAt)}
                         </p>
@@ -124,8 +168,17 @@ function PortfolioCard({
                         Atelier: “{adminNote}”
                     </p>
                 )}
+                <div className="flex items-center justify-between pt-2 border-t border-white/5 mt-auto">
+                    <span className="flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-wider text-[#A78BFA]/60">
+                        {isTeam ? <Users size={10} /> : <User size={10} />}
+                        {isTeam ? `${participantCount} Collaborators` : 'Solo Project'}
+                    </span>
+                    <span className="text-[9px] font-mono uppercase tracking-wider text-[#E8E0D5]/40 group-hover:text-[#A78BFA] transition-colors">
+                        View Project
+                    </span>
+                </div>
             </div>
-        </div>
+        </Link>
     );
 }
 
@@ -150,6 +203,40 @@ export default function DesignerDashboardView({
     const [isResizingImage, setIsResizingImage] = useState(false);
 
     const stats = data?.stats;
+
+    // Total projected commission across committed designs (approved + in
+    // production) — the sum of the 10% pools, same shared math as the admin
+    // atelier report and the designer detail page (no duplicated logic).
+    const expectedCommission = useMemo(() => {
+        const list = data?.submissions ?? [];
+        return list.reduce((sum, submission) => {
+            const isCommitted =
+                submission.status === 'approved' || submission.status === 'in_production';
+            if (!isCommitted || participantsFor(submission.collaboration).length === 0) return sum;
+            return sum + submission.price * COMMISSION_POOL_RATE;
+        }, 0);
+    }, [data]);
+
+    // Per-design pool breakdown for the Expected Commission KPI tooltip — one
+    // row per committed design (approved / in production), same shared math as
+    // the total above and the admin atelier report (no duplicated logic).
+    const commissionBreakdown = useMemo(() => {
+        const list = data?.submissions ?? [];
+        return list
+            .filter((submission) => {
+                const isCommitted =
+                    submission.status === 'approved' || submission.status === 'in_production';
+                return isCommitted && participantsFor(submission.collaboration).length > 0;
+            })
+            .map((submission) => ({
+                id: submission.id,
+                title: submission.title,
+                price: submission.price,
+                pool: submission.price * COMMISSION_POOL_RATE,
+                participants: participantsFor(submission.collaboration).length,
+                status: submission.status,
+            }));
+    }, [data]);
 
     const handleImageChange = async (file: File | undefined) => {
         if (!file) return;
@@ -255,11 +342,72 @@ export default function DesignerDashboardView({
 
                 {/* KPI stats */}
                 {stats && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                         <KpiCard label="Total Designs" value={stats.total} icon={Layers} accent="text-[#A78BFA]" />
                         <KpiCard label="Under Review" value={stats.underReview} icon={Clock} accent="text-[#4FC3F7]" />
                         <KpiCard label="Approved" value={stats.approved} icon={CheckCircle2} accent="text-emerald-400" />
                         <KpiCard label="In Production" value={stats.inProduction} icon={PackageCheck} accent="text-[#C9A84C]" />
+                        <KpiCard
+                            label="Expected Commission"
+                            value={`$${Math.round(expectedCommission).toLocaleString()}`}
+                            icon={Sparkles}
+                            accent="text-[#C9A84C]"
+                            hoverDetail={
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[8px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold">
+                                            Commission Pools
+                                        </span>
+                                        <Sparkles size={10} className="text-[#C9A84C]" />
+                                    </div>
+                                    {commissionBreakdown.length === 0 ? (
+                                        <p className="text-[10px] text-[#E8E0D5]/50 italic">
+                                            No committed designs yet.
+                                        </p>
+                                    ) : (
+                                        <ul className="flex flex-col gap-2 max-h-44 overflow-y-auto pr-1">
+                                            {commissionBreakdown.map((item) => (
+                                                <li key={item.id} className="flex flex-col gap-0.5">
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <span
+                                                            className="text-[10px] text-[#E8E0D5]/80 truncate min-w-0"
+                                                            title={item.title}
+                                                        >
+                                                            {item.title}
+                                                        </span>
+                                                        <span className="text-[10px] font-mono text-[#C9A84C] font-semibold shrink-0">
+                                                            $
+                                                            {item.pool.toLocaleString(undefined, {
+                                                                maximumFractionDigits: 2,
+                                                            })}
+                                                        </span>
+                                                    </div>
+                                                    <span className="text-[8px] font-mono uppercase tracking-wider text-[#E8E0D5]/40">
+                                                        {item.status === 'in_production'
+                                                            ? 'In Production'
+                                                            : 'Approved'}
+                                                        {' · 10% of $'}
+                                                        {item.price.toLocaleString()}
+                                                        {' · '}
+                                                        {item.participants}
+                                                        {item.participants === 1 ? ' member' : ' members'}
+                                                    </span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                    <div className="pt-2 border-t border-white/10 flex items-center justify-between">
+                                        <span className="text-[8px] font-mono uppercase tracking-wider text-[#E8E0D5]/40">
+                                            Total
+                                        </span>
+                                        <span className="text-[11px] font-mono text-[#C9A84C] font-bold">
+                                            $
+                                            {Math.round(expectedCommission).toLocaleString()}
+                                        </span>
+                                    </div>
+                                </div>
+                            }
+                        />
                     </div>
                 )}
 
@@ -428,6 +576,7 @@ export default function DesignerDashboardView({
                             {data?.submissions.map((submission) => (
                                 <PortfolioCard
                                     key={submission.id}
+                                    id={submission.id}
                                     title={submission.title}
                                     category={submission.category}
                                     description={submission.description}
@@ -436,6 +585,7 @@ export default function DesignerDashboardView({
                                     submittedAt={submission.submittedAt}
                                     price={submission.price}
                                     adminNote={submission.adminNote}
+                                    collaboration={submission.collaboration}
                                 />
                             ))}
                         </div>

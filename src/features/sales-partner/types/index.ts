@@ -33,6 +33,10 @@ export interface SalesPartnerOverview {
         pending: number;
         totalCommission: number;
         thisMonthCommission: number;
+        /** Average order value of converted referrals — basis for the projection. */
+        avgOrderValue: number;
+        /** Projected commission from pending leads (rate × avg order × pending). */
+        expectedCommission: number;
     };
     referrals: ReferralRecord[];
 }

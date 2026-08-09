@@ -58,14 +58,27 @@ export async function GET(): Promise<NextResponse<SalesPartnerOverview>> {
         })
         .reduce((sum, r) => sum + (r.commission ?? 0), 0);
 
+    // Expected Commission projection: if each pending lead converts at the
+    // partner's average converted order value, they earn COMMISSION_RATE of
+    // it. All math stays here (one source of truth — the view only displays).
+    const pending = referrals.length - converted.length;
+    const avgOrderValue =
+        converted.length > 0
+            ? converted.reduce((sum, r) => sum + (r.orderValue ?? 0), 0) / converted.length
+            : 0;
+    const expectedCommission =
+        pending > 0 ? Math.round(avgOrderValue * COMMISSION_RATE * pending * 100) / 100 : 0;
+
     const overview: SalesPartnerOverview = {
         referralCode: 'SADAF-SALEH-D6N',
         stats: {
             totalReferrals: referrals.length,
             converted: converted.length,
-            pending: referrals.length - converted.length,
+            pending,
             totalCommission: Math.round(totalCommission * 100) / 100,
             thisMonthCommission: Math.round(thisMonthCommission * 100) / 100,
+            avgOrderValue: Math.round(avgOrderValue * 100) / 100,
+            expectedCommission,
         },
         referrals,
     };

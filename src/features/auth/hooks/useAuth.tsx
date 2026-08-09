@@ -8,7 +8,7 @@ import {
     useCallback,
     type ReactNode,
 } from 'react';
-import { supabase, isSupabaseConfigured, mockAuth } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured, mockAuth, MOCK_CURRENT_KEY } from '@/lib/supabase';
 import type { UserProfile, UserRole, SignUpData } from '@/features/auth/types';
 import { REFERRAL_REQUIRED_ROLES } from '@/features/auth/types';
 import { setAuthRoleCookie } from '@/shared/utils/authRoleCookie';
@@ -53,6 +53,14 @@ function mapLegacyRole(raw: string | undefined | null): UserRole {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+/**
+ * Custom window event dispatched after a profile mutation (avatar upload,
+ * name edit) so same-tab listeners refresh the moment it happens. Other tabs
+ * receive the same change via the native `storage` event on the current-user
+ * key — same sync pattern as the reviews/cart/wishlist data.
+ */
+const PROFILE_CHANGED_EVENT = 'sadaf:profile-changed';
 
 // ─── Provider ────────────────────────────────────────────────────────────────
 
@@ -301,7 +309,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Single source of truth for profile mutations (avatar upload, name edits):
     // updates the context so every consumer (Header, Profile, Dashboard)
     // re-renders immediately, and mirrors the change into the persisted
-    // sandbox storage (current user + users list) for reloads.
+    // sandbox storage (current user + users list) for reloads. The custom
+    // event notifies same-tab listeners; cross-tab sync arrives via the
+    // native storage event handled below.
 
     const updateProfile = useCallback((patch: Partial<UserProfile>) => {
         setUser((current) => {
@@ -316,6 +326,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
             return updated;
         });
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent(PROFILE_CHANGED_EVENT));
+        }
+    }, []);
+
+    // Keep the profile (avatar, name) in sync across tabs: the tab that edits
+    // dispatches PROFILE_CHANGED_EVENT (same-tab), other tabs get the native
+    // `storage` event when the current-user key changes (login/logout/avatar).
+    useEffect(() => {
+        const syncUserFromStorage = () => {
+            try {
+                const current = mockAuth.getCurrentUser();
+                if (current) {
+                    const profile = current as UserProfile;
+                    setUser({ ...profile, role: mapLegacyRole(profile.role) });
+                } else {
+                    setUser(null);
+                    setAuthRoleCookie(null);
+                }
+            } catch {
+                // localStorage unavailable — keep the current in-memory user.
+            }
+        };
+
+        const onStorage = (event: StorageEvent) => {
+            // `key === null` covers a full localStorage.clear() in another tab.
+            if (event.key === MOCK_CURRENT_KEY || event.key === null) {
+                syncUserFromStorage();
+            }
+        };
+
+        window.addEventListener(PROFILE_CHANGED_EVENT, syncUserFromStorage);
+        window.addEventListener('storage', onStorage);
+        return () => {
+            window.removeEventListener(PROFILE_CHANGED_EVENT, syncUserFromStorage);
+            window.removeEventListener('storage', onStorage);
+        };
     }, []);
 
     // ── Logout ───────────────────────────────────────────────────────────────

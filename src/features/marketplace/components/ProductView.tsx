@@ -12,8 +12,26 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ChevronRight, Check, Heart, Minus, Plus, ShoppingBag } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import {
+    ChevronRight,
+    Check,
+    Heart,
+    Minus,
+    Plus,
+    ShoppingBag,
+    Star,
+    PenLine,
+    CheckCircle2,
+    Pencil,
+    Trash2,
+    AlertTriangle,
+    X,
+} from 'lucide-react';
 import type { FashionProduct } from '@/shared/types';
+import type { Review } from '@/features/reviews/types';
+import type { RatingCounts } from './ProductPageClient';
+import ReviewForm from '@/features/reviews/components/ReviewForm';
 import { ROUTES } from '@/config/routes';
 
 interface ProductViewProps {
@@ -22,6 +40,23 @@ interface ProductViewProps {
     /** Combined average from catalog + user reviews — falls back to the
      * catalog's editorial rating when null (no reviews yet). */
     ratingSummary?: { average: number; count: number } | null;
+    /** Star-level counts (index 0 = 1★ … index 4 = 5★) for the bars. */
+    ratingCounts?: RatingCounts;
+    /** All reviews for this product (newest first) — the card shows the
+     * latest two and can expand to the full list; the distribution bars
+     * filter it by exact star count. */
+    reviews?: Review[];
+    /** Whether the signed-in user already reviewed this product — hides the form. */
+    hasReviewedProduct?: boolean;
+    /** The signed-in user's own review for this product — shown under the
+     * "You reviewed this piece" state with an edit action. */
+    myReview?: Review | null;
+    /** Persist a review written from the PDP — same contract as the orders form. */
+    onSubmitReview: (rating: number, comment: string) => Promise<{ ok: boolean; error?: string }>;
+    /** Update the user's own review (edit mode) — same contract as submit. */
+    onUpdateReview: (rating: number, comment: string) => Promise<{ ok: boolean; error?: string }>;
+    /** Delete the user's own review — same contract as submit. */
+    onDeleteReview: (reviewId: string) => Promise<{ ok: boolean; error?: string }>;
     isWishlisted: boolean;
     onAddToCart: (size: string, color: string) => void;
     onToggleWishlist: () => void;
@@ -31,6 +66,13 @@ export default function ProductView({
     product,
     relatedProducts,
     ratingSummary,
+    ratingCounts = [0, 0, 0, 0, 0],
+    reviews = [],
+    hasReviewedProduct = false,
+    myReview = null,
+    onSubmitReview,
+    onUpdateReview,
+    onDeleteReview,
     isWishlisted,
     onAddToCart,
     onToggleWishlist,
@@ -39,6 +81,33 @@ export default function ProductView({
     const [selectedColor, setSelectedColor] = useState<string>(product.colors[0]?.name ?? '');
     const [quantity, setQuantity] = useState(1);
     const [addedToCart, setAddedToCart] = useState(false);
+    const [showReviewForm, setShowReviewForm] = useState(false);
+    const [showEditForm, setShowEditForm] = useState(false);
+    // Delete flow — confirm card replaces the review body, then a toast
+    // confirms (green) or reports the failure (red), same pattern as the
+    // cart-clear confirmation.
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteToast, setDeleteToast] = useState<'removed' | 'error' | null>(null);
+
+    const handleConfirmDelete = async () => {
+        if (!myReview) return;
+        const result = await onDeleteReview(myReview.id);
+        setShowDeleteConfirm(false);
+        setDeleteToast(result.ok ? 'removed' : 'error');
+        window.setTimeout(() => setDeleteToast(null), 3_000);
+    };
+
+    // Interactive distribution: clicking a bar filters the reviews to exactly
+    // that star count; pressing it again clears (same pattern as /reviews).
+    const [exactStarFilter, setExactStarFilter] = useState<number | null>(null);
+    // Expanded state — "Latest reviews" shows two by default, all when open.
+    const [showAllReviews, setShowAllReviews] = useState(false);
+
+    const filteredReviews =
+        exactStarFilter === null
+            ? reviews
+            : reviews.filter((r) => r.rating === exactStarFilter);
+    const displayedReviews = showAllReviews ? filteredReviews : filteredReviews.slice(0, 2);
 
     const handleAdd = () => {
         onAddToCart(selectedSize, selectedColor);
@@ -111,6 +180,320 @@ export default function ProductView({
                         <p className="text-sm text-[#E8E0D5]/70 leading-relaxed">
                             {product.description}
                         </p>
+
+                        {/* Rating breakdown: star distribution + latest reviews, under the description */}
+                        {ratingSummary && ratingSummary.count > 0 && (
+                            <div className="p-5 rounded-2xl bg-[#0F1535] border border-white/5">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <span className="font-serif text-3xl text-white leading-none">
+                                        {ratingSummary.average.toFixed(1)}
+                                    </span>
+                                    <div>
+                                        <div className="flex gap-0.5">
+                                            {[1, 2, 3, 4, 5].map((star) => (
+                                                <Star
+                                                    key={star}
+                                                    size={12}
+                                                    fill={star <= Math.round(ratingSummary.average) ? '#C9A84C' : 'none'}
+                                                    className={
+                                                        star <= Math.round(ratingSummary.average)
+                                                            ? 'text-[#C9A84C]'
+                                                            : 'text-slate-600'
+                                                    }
+                                                />
+                                            ))}
+                                        </div>
+                                        <span className="text-[10px] text-slate-500 font-mono">
+                                            {ratingSummary.count} review{ratingSummary.count === 1 ? '' : 's'} · from customers
+                                        </span>
+                                    </div>
+                                    <Link
+                                        href={ROUTES.REVIEWS}
+                                        className="ml-auto inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-wider text-[#4FC3F7] hover:text-[#C9A84C] transition-colors"
+                                    >
+                                        View all <ChevronRight size={10} />
+                                    </Link>
+                                </div>
+
+                                {/* Star distribution bars — each bar is a button
+                                    that filters the reviews to exactly that star
+                                    count; press again to clear (same as /reviews). */}
+                                <div className="flex flex-col gap-1 mb-4">
+                                    {[5, 4, 3, 2, 1].map((star) => {
+                                        const count = ratingCounts[star - 1];
+                                        const pct = ratingSummary.count > 0 ? (count / ratingSummary.count) * 100 : 0;
+                                        const active = exactStarFilter === star;
+                                        return (
+                                            <button
+                                                key={star}
+                                                onClick={() =>
+                                                    setExactStarFilter((prev) => (prev === star ? null : star))
+                                                }
+                                                aria-pressed={active}
+                                                title={active ? 'Clear this star filter' : `Show only ${star}-star reviews`}
+                                                className={`flex items-center gap-3 text-xs w-full rounded-lg px-1.5 py-0.5 transition-all duration-300 cursor-pointer ${
+                                                    active ? 'bg-[#C9A84C]/10 ring-1 ring-[#C9A84C]/40' : 'hover:bg-white/5'
+                                                }`}
+                                            >
+                                                <span
+                                                    className={`w-9 text-right font-mono transition-colors ${
+                                                        active ? 'text-[#C9A84C] font-bold' : 'text-slate-400'
+                                                    }`}
+                                                >
+                                                    {star} ★
+                                                </span>
+                                                <div className="flex-1 h-2 rounded-full bg-white/5 overflow-hidden">
+                                                    <motion.div
+                                                        initial={{ width: 0 }}
+                                                        animate={{ width: `${pct}%` }}
+                                                        transition={{ duration: 0.8, ease: 'easeOut' }}
+                                                        className={`h-full rounded-full transition-colors duration-300 ${
+                                                            active
+                                                                ? 'bg-gradient-to-r from-[#C9A84C] to-[#F0D080]'
+                                                                : 'bg-gradient-to-r from-[#C9A84C]/60 to-[#F0D080]/60'
+                                                        }`}
+                                                    />
+                                                </div>
+                                                <span
+                                                    className={`w-6 text-left font-mono transition-colors ${
+                                                        active ? 'text-[#C9A84C] font-bold' : 'text-slate-500'
+                                                    }`}
+                                                >
+                                                    {count}
+                                                </span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Latest reviews */}
+                                <div className="flex items-center justify-between mb-1">
+                                    <span className="text-[9px] font-mono uppercase tracking-widest text-[#C9A84C]/80 font-bold">
+                                        Latest Reviews
+                                    </span>
+                                    {hasReviewedProduct ? (
+                                        <span className="flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-wider text-emerald-400">
+                                            <CheckCircle2 size={11} />
+                                            You reviewed this piece
+                                        </span>
+                                    ) : !showReviewForm ? (
+                                        <button
+                                            onClick={() => setShowReviewForm(true)}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#C9A84C]/10 border border-[#C9A84C]/30 text-[#C9A84C] text-[9px] font-mono uppercase tracking-wider hover:bg-[#C9A84C]/20 transition-all duration-300 cursor-pointer"
+                                        >
+                                            <PenLine size={10} />
+                                            Write a Review
+                                        </button>
+                                    ) : null}
+                                </div>
+
+                                {/* Active exact-star filter + expand/collapse toggle */}
+                                <div className="flex items-center justify-between gap-3 mb-2">
+                                    {exactStarFilter !== null ? (
+                                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#C9A84C]/10 border border-[#C9A84C]/40 text-[#C9A84C] text-[8px] font-mono uppercase tracking-wider">
+                                            {exactStarFilter}★ only ({filteredReviews.length})
+                                            <button
+                                                onClick={() => setExactStarFilter(null)}
+                                                aria-label="Clear star filter"
+                                                className="hover:text-white transition-colors cursor-pointer"
+                                            >
+                                                <X size={9} />
+                                            </button>
+                                        </span>
+                                    ) : (
+                                        <span />
+                                    )}
+                                    {reviews.length > 2 && (
+                                        <button
+                                            onClick={() => setShowAllReviews((v) => !v)}
+                                            className="flex items-center gap-1 text-[9px] font-mono uppercase tracking-wider text-[#4FC3F7] hover:text-[#C9A84C] transition-colors cursor-pointer"
+                                        >
+                                            {showAllReviews ? 'Show fewer' : `Show all reviews (${reviews.length})`}
+                                            <ChevronRight
+                                                size={10}
+                                                className={`transition-transform duration-300 ${showAllReviews ? 'rotate-90' : ''}`}
+                                            />
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Your review — shown under the "You reviewed this piece" state,
+                                    with an edit action that re-opens the form pre-filled. */}
+                                {hasReviewedProduct && myReview && !showEditForm && (
+                                    <div className="pt-3 border-t border-white/5">
+                                        <div className="flex items-center justify-between mb-1.5">
+                                            <span className="text-[9px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold">
+                                                Your Review
+                                            </span>
+                                            <div className="flex items-center gap-1.5">
+                                                <button
+                                                    onClick={() => setShowEditForm(true)}
+                                                    className="flex items-center gap-1 px-2 py-1 rounded-md bg-white/5 border border-white/10 text-[9px] font-mono uppercase tracking-wider text-slate-300 hover:text-[#C9A84C] hover:border-[#C9A84C]/40 transition-all duration-300 cursor-pointer"
+                                                >
+                                                    <Pencil size={9} />
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    onClick={() => setShowDeleteConfirm(true)}
+                                                    className="flex items-center gap-1 px-2 py-1 rounded-md bg-red-500/5 border border-red-500/20 text-[9px] font-mono uppercase tracking-wider text-red-400/80 hover:text-red-400 hover:border-red-500/50 transition-all duration-300 cursor-pointer"
+                                                >
+                                                    <Trash2 size={9} />
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </div>
+                                        {showDeleteConfirm ? (
+                                            <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-3">
+                                                <p className="text-[11px] font-medium text-red-300 mb-2">
+                                                    Remove your review? This can&apos;t be undone.
+                                                </p>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={handleConfirmDelete}
+                                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/15 border border-red-500/40 text-red-300 text-[9px] font-mono uppercase tracking-wider hover:bg-red-500/25 transition-all duration-300 cursor-pointer"
+                                                    >
+                                                        <Trash2 size={10} />
+                                                        Remove Review
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setShowDeleteConfirm(false)}
+                                                        className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[9px] font-mono uppercase tracking-wider text-slate-300 hover:text-white hover:border-white/25 transition-all duration-300 cursor-pointer"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <div className="flex gap-0.5">
+                                                        {[1, 2, 3, 4, 5].map((star) => (
+                                                            <Star
+                                                                key={star}
+                                                                size={10}
+                                                                fill={star <= myReview.rating ? '#C9A84C' : 'none'}
+                                                                className={
+                                                                    star <= myReview.rating ? 'text-[#C9A84C]' : 'text-slate-600'
+                                                                }
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                    <span className="text-[8px] font-mono text-slate-500">
+                                                        {new Date(myReview.createdAt).toLocaleDateString('en-US', {
+                                                            year: 'numeric',
+                                                            month: 'short',
+                                                            day: 'numeric',
+                                                        })}
+                                                        {myReview.editedAt && (
+                                                            <span className="text-[#C9A84C]/70"> · Edited</span>
+                                                        )}
+                                                    </span>
+                                                </div>
+                                                {myReview.title && (
+                                                    <p className="text-[11px] font-medium text-white/90 mb-0.5">
+                                                        {myReview.title}
+                                                    </p>
+                                                )}
+                                                <p className="text-[11px] text-slate-400 leading-relaxed">{myReview.comment}</p>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+
+                                {showEditForm && myReview && (
+                                    <ReviewForm
+                                        productName={product.name}
+                                        initialRating={myReview.rating}
+                                        initialComment={myReview.comment}
+                                        title={`Edit your review — ${product.name}`}
+                                        submitLabel="Update Review"
+                                        onSubmit={async (rating, comment) => {
+                                            const result = await onUpdateReview(rating, comment);
+                                            if (result.ok) {
+                                                setShowEditForm(false);
+                                            }
+                                            return result;
+                                        }}
+                                        onCancel={() => setShowEditForm(false)}
+                                    />
+                                )}
+
+                                {showReviewForm && !hasReviewedProduct && (
+                                    <ReviewForm
+                                        productName={product.name}
+                                        onSubmit={async (rating, comment) => {
+                                            const result = await onSubmitReview(rating, comment);
+                                            if (result.ok) {
+                                                setShowReviewForm(false);
+                                            }
+                                            return result;
+                                        }}
+                                        onCancel={() => setShowReviewForm(false)}
+                                    />
+                                )}
+
+                                <div className="flex flex-col gap-3">
+                                    {filteredReviews.length === 0 ? (
+                                        <p className="pt-3 border-t border-white/5 text-[11px] text-slate-500">
+                                            No {exactStarFilter}-star reviews yet.
+                                        </p>
+                                    ) : (
+                                        displayedReviews.map((review) => (
+                                        <div
+                                            key={review.id}
+                                            className="pt-3 border-t border-white/5 first:border-t-0 first:pt-0"
+                                        >
+                                            <div className="flex items-center justify-between mb-1.5">
+                                                <div className="flex gap-0.5">
+                                                    {[1, 2, 3, 4, 5].map((star) => (
+                                                        <Star
+                                                            key={star}
+                                                            size={10}
+                                                            fill={star <= review.rating ? '#C9A84C' : 'none'}
+                                                            className={
+                                                                star <= review.rating ? 'text-[#C9A84C]' : 'text-slate-600'
+                                                            }
+                                                        />
+                                                    ))}
+                                                </div>
+                                                <span className="text-[9px] text-slate-600 font-mono">
+                                                    {new Date(review.createdAt).toLocaleDateString('en-US', {
+                                                        year: 'numeric',
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                    })}
+                                                </span>
+                                            </div>
+                                            <h4 className="font-serif text-white text-xs font-semibold mb-1">
+                                                {review.title}
+                                            </h4>
+                                            <p className="text-[11px] text-slate-400 leading-relaxed mb-2">
+                                                {review.comment}
+                                            </p>
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#C9A84C] to-[#4FC3F7] flex items-center justify-center text-[8px] font-bold text-white overflow-hidden shrink-0">
+                                                    {review.userAvatar ? (
+                                                        // Same avatar pattern as the /reviews cards
+                                                        <img src={review.userAvatar} alt="" className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        review.userName.charAt(0).toUpperCase()
+                                                    )}
+                                                </div>
+                                                <span className="text-[10px] text-slate-300 font-medium">
+                                                    {review.userName}
+                                                </span>
+                                                {review.verified && (
+                                                    <span className="px-1.5 py-0.5 rounded bg-[#C9A84C]/10 text-[#C9A84C] text-[8px] font-mono uppercase tracking-wider">
+                                                        Verified
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Details */}
                         <ul className="flex flex-col gap-2">
@@ -267,6 +650,33 @@ export default function ProductView({
                     </section>
                 )}
             </div>
+
+            {/* Delete-review confirmation toast */}
+            <AnimatePresence>
+                {deleteToast && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                        transition={{ duration: 0.25, ease: 'easeOut' }}
+                        role="status"
+                        className={`fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-5 py-3.5 rounded-xl text-xs shadow-2xl shadow-black/50 backdrop-blur-md border ${
+                            deleteToast === 'removed'
+                                ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300'
+                                : 'bg-red-950/40 border-red-500/40 text-red-300'
+                        }`}
+                    >
+                        {deleteToast === 'removed' ? (
+                            <CheckCircle2 size={15} className="shrink-0" />
+                        ) : (
+                            <AlertTriangle size={15} className="shrink-0" />
+                        )}
+                        {deleteToast === 'removed'
+                            ? 'Your review has been removed.'
+                            : 'Could not remove your review.'}
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

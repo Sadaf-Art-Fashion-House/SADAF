@@ -25,11 +25,11 @@ export const MOCK_ORDERS: Order[] = [
         shippingAddress: 'Villa 14, Al-Yasmine District, New Cairo, Egypt',
         items: [
             {
-                name: 'Al-Muizz El-Faraeda Abaya',
+                name: 'Empress Diwani Abaya Cape',
                 quantity: 1,
                 size: 'M',
                 price: 1250,
-                image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=300&q=80',
+                image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=300&q=80',
             },
         ],
         trackingId: 'SDF-TRK-9041',
@@ -43,7 +43,7 @@ export const MOCK_ORDERS: Order[] = [
         shippingAddress: 'Villa 14, Al-Yasmine District, New Cairo, Egypt',
         items: [
             {
-                name: 'The Golden Diwani Diptych Fine Art',
+                name: 'The Golden Diwani Diptych',
                 quantity: 1,
                 size: 'Original Framing',
                 price: 3400,
@@ -61,11 +61,11 @@ export const MOCK_ORDERS: Order[] = [
         shippingAddress: 'Villa 14, Al-Yasmine District, New Cairo, Egypt',
         items: [
             {
-                name: 'Omani-Born Kaftan',
+                name: 'Gilded Caliph Streetwear Hoodie',
                 quantity: 1,
                 size: 'L',
                 price: 890,
-                image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=300&q=80',
+                image: 'https://images.unsplash.com/photo-1509967419530-da38b4704bc6?auto=format&fit=crop&w=300&q=80',
             },
         ],
         trackingId: 'SDF-TRK-2287',
@@ -79,11 +79,11 @@ export const MOCK_ORDERS: Order[] = [
         shippingAddress: 'Villa 14, Al-Yasmine District, New Cairo, Egypt',
         items: [
             {
-                name: 'Pearl Evening Gown',
+                name: 'Sadaf Inlaid Peak Tuxedo',
                 quantity: 1,
                 size: 'M',
                 price: 2150,
-                image: 'https://images.unsplash.com/photo-1561214115-f2f134cc4912?auto=format&fit=crop&w=300&q=80',
+                image: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=300&q=80',
             },
         ],
         trackingId: 'SDF-TRK-1053',
@@ -97,11 +97,11 @@ export const MOCK_ORDERS: Order[] = [
         shippingAddress: 'Villa 14, Al-Yasmine District, New Cairo, Egypt',
         items: [
             {
-                name: 'Silk Heritage Scarf',
+                name: 'Royal Heir Linen Set',
                 quantity: 1,
                 size: 'One Size',
                 price: 460,
-                image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=300&q=80',
+                image: 'https://images.unsplash.com/photo-1519457431-44ccd64a579b?auto=format&fit=crop&w=300&q=80',
             },
         ],
         trackingId: 'SDF-TRK-8820',
@@ -115,25 +115,25 @@ export const MOCK_ORDERS: Order[] = [
         shippingAddress: 'Villa 14, Al-Yasmine District, New Cairo, Egypt',
         items: [
             {
-                name: 'Omani-Born Kaftan',
+                name: 'Gilded Caliph Streetwear Hoodie',
                 quantity: 1,
                 size: 'L',
                 price: 890,
-                image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=300&q=80',
+                image: 'https://images.unsplash.com/photo-1509967419530-da38b4704bc6?auto=format&fit=crop&w=300&q=80',
             },
             {
-                name: 'Heritage Thobe Belt',
+                name: 'Sadaf Inlaid Peak Tuxedo',
                 quantity: 1,
                 size: 'One Size',
                 price: 590,
-                image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=300&q=80',
+                image: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=300&q=80',
             },
             {
-                name: 'Silk Heritage Scarf',
+                name: 'Royal Heir Linen Set',
                 quantity: 1,
                 size: 'One Size',
                 price: 300,
-                image: 'https://images.unsplash.com/photo-1561214115-f2f134cc4912?auto=format&fit=crop&w=300&q=80',
+                image: 'https://images.unsplash.com/photo-1519457431-44ccd64a579b?auto=format&fit=crop&w=300&q=80',
             },
         ],
         trackingId: 'SDF-TRK-6631',
@@ -147,11 +147,11 @@ export const MOCK_ORDERS: Order[] = [
         shippingAddress: 'Villa 14, Al-Yasmine District, New Cairo, Egypt',
         items: [
             {
-                name: 'Heritage Fusion Abaya',
+                name: 'Empress Diwani Abaya Cape',
                 quantity: 2,
                 size: 'M',
                 price: 910,
-                image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=300&q=80',
+                image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=300&q=80',
             },
         ],
         trackingId: 'SDF-TRK-4410',
@@ -165,11 +165,11 @@ export const MOCK_ORDERS: Order[] = [
         shippingAddress: 'Villa 14, Al-Yasmine District, New Cairo, Egypt',
         items: [
             {
-                name: 'Limited Edition Wrap',
+                name: 'Fatimid Star Silk Slip Dress',
                 quantity: 1,
                 size: 'One Size',
                 price: 1500,
-                image: 'https://images.unsplash.com/photo-1561214115-f2f134cc4912?auto=format&fit=crop&w=300&q=80',
+                image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=300&q=80',
             },
         ],
         trackingId: 'SDF-TRK-8877',
@@ -183,11 +183,11 @@ export const MOCK_ORDERS: Order[] = [
         shippingAddress: 'Villa 14, Al-Yasmine District, New Cairo, Egypt',
         items: [
             {
-                name: 'Tailored Heritage Thobe',
+                name: 'Sadaf Inlaid Peak Tuxedo',
                 quantity: 1,
                 size: 'M',
                 price: 1400,
-                image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=300&q=80',
+                image: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=300&q=80',
             },
         ],
         trackingId: 'SDF-TRK-5560',
