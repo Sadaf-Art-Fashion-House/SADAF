@@ -14,9 +14,11 @@ import {
     Sparkles,
     Palette,
     Shirt,
-    CheckCircle2,
 } from 'lucide-react';
+import SuccessToast from '@/shared/components/SuccessToast';
 import type { CartItem } from '@/shared/types';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
+import { localizedAiItemName, localizedArtTitle, localizedProductName } from '@/features/i18n/productNames';
 
 interface CartViewProps {
     items: CartItem[];
@@ -27,11 +29,12 @@ interface CartViewProps {
 
 /** Renders a single line-item thumbnail — handles fashion, art, and AI custom designs. */
 function CartItemThumbnail({ item }: { item: CartItem }) {
+    const { language } = useLanguage();
     if (item.product) {
         return (
             <Image
                 src={item.product.image}
-                alt={item.product.name}
+                alt={localizedProductName(item.product, language)}
                 fill
                 className="object-cover"
             />
@@ -41,7 +44,7 @@ function CartItemThumbnail({ item }: { item: CartItem }) {
         return (
             <Image
                 src={item.artPiece.image}
-                alt={item.artPiece.title}
+                alt={localizedArtTitle(item.artPiece, language)}
                 fill
                 className="object-cover"
             />
@@ -64,11 +67,11 @@ function CartItemThumbnail({ item }: { item: CartItem }) {
     );
 }
 
-/** Returns a human-readable item name regardless of item type. */
-function getItemName(item: CartItem): string {
-    if (item.product) return item.product.name;
-    if (item.artPiece) return item.artPiece.title;
-    if (item.aiCustomDesign) return `${item.aiCustomDesign.clothingType} — AI Custom`;
+/** Returns a human-readable item name regardless of item type (catalog products use the localized name). */
+function getItemName(item: CartItem, language: 'en' | 'ar'): string {
+    if (item.product) return localizedProductName(item.product, language);
+    if (item.artPiece) return localizedArtTitle(item.artPiece, language);
+    if (item.aiCustomDesign) return localizedAiItemName(item.aiCustomDesign.clothingType, language);
     return 'Unknown Item';
 }
 
@@ -102,6 +105,7 @@ export default function CartView({
     onRemoveFromCart,
     onClearCart,
 }: CartViewProps) {
+    const { language } = useLanguage();
     const subtotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
     const isEmpty = items.length === 0;
 
@@ -210,7 +214,7 @@ export default function CartView({
                                                     <div className="flex justify-between items-start gap-2">
                                                         <div className="min-w-0">
                                                             <h3 className="font-serif text-sm md:text-base text-white truncate">
-                                                                {getItemName(item)}
+                                                                {getItemName(item, language)}
                                                             </h3>
                                                             <div className="flex items-center gap-2 mt-1">
                                                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-mono uppercase tracking-wider bg-[#C9A84C]/10 text-[#C9A84C] border border-[#C9A84C]/20">
@@ -401,22 +405,14 @@ export default function CartView({
                 </section>
             )}
 
-            {/* Cleared-bag confirmation toast */}
-            <AnimatePresence>
-                {showClearedToast && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                        transition={{ duration: 0.25, ease: 'easeOut' }}
-                        role="status"
-                        className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-5 py-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs shadow-2xl shadow-black/50 backdrop-blur-md"
-                    >
-                        <CheckCircle2 size={15} className="shrink-0" />
-                        Your bag has been cleared.
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {/* Cleared-bag confirmation toast — shared SuccessToast shell. */}
+            <SuccessToast
+                visible={showClearedToast}
+                title="Bag cleared"
+                message="Your bag has been cleared."
+                onDismiss={() => setShowClearedToast(false)}
+                position="bottom-right"
+            />
         </div>
     );
 }

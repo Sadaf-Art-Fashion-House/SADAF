@@ -94,6 +94,8 @@ export interface LeaderboardEntry {
     tier: LoyaltyTier;
     /** Home city — drives the city filter on the leaderboard page. */
     city: string;
+    /** Membership sub-type (individual/family/friend) — shown as a role badge. */
+    role: string;
     /** True for the logged-in user's own row. */
     isCurrentUser?: boolean;
 }

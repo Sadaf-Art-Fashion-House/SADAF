@@ -14,6 +14,7 @@ import Link from 'next/link';
 import type { UserProfile } from '@/shared/types';
 import { useWSFounderDashboardData } from '@/features/dashboard/hooks/useDashboardData';
 import { ErrorBanner } from '@/shared/ui/ErrorGuidance';
+import { ErrorBoundary } from '@/shared/ui/ErrorBoundary';
 
 interface TeamMember {
     id: string;
@@ -207,6 +208,7 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
                                     exit={{ opacity: 0, y: -10 }}
                                     className="space-y-6"
                                 >
+                                    <ErrorBoundary label="founder:analytics">
                                     <div className="flex items-center justify-between">
                                         <span className="text-[8px] font-mono uppercase tracking-widest text-gray-600">
                                             EXECUTIVE FOUNDER METRICS
@@ -251,6 +253,7 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
                                             ))}
                                         </div>
                                     </div>
+                                    </ErrorBoundary>
                                 </motion.div>
                             )}
 
@@ -263,6 +266,7 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
                                     exit={{ opacity: 0, y: -10 }}
                                     className="space-y-6"
                                 >
+                                    <ErrorBoundary label="founder:revenue">
                                     <h3 className="font-serif text-[#C9A84C] text-lg font-semibold uppercase tracking-wider">
                                         Transaction Ledger
                                     </h3>
@@ -290,6 +294,7 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
                                             </tbody>
                                         </table>
                                     </div>
+                                    </ErrorBoundary>
                                 </motion.div>
                             )}
 
@@ -302,6 +307,7 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
                                     exit={{ opacity: 0, y: -10 }}
                                     className="space-y-6"
                                 >
+                                    <ErrorBoundary label="founder:team">
                                     <div className="flex justify-between items-center">
                                         <h3 className="font-serif text-[#C9A84C] text-lg font-semibold uppercase tracking-wider">
                                             Artisan Personnel
@@ -369,6 +375,7 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
                                             </button>
                                         </form>
                                     </div>
+                                    </ErrorBoundary>
                                 </motion.div>
                             )}
                         </AnimatePresence>

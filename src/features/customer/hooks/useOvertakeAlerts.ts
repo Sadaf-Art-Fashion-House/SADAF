@@ -16,6 +16,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { playSoftChime } from '@/shared/utils/playSoftChime';
+import { usePreferencesStore } from '@/features/settings/store/usePreferencesStore';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
@@ -49,6 +50,13 @@ function readStoredPreferences(): OvertakeAlertPreferences {
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
 export function useOvertakeAlerts() {
+    // The settings-hub "Alert sound" preference is the single source of
+    // truth for the chime: the leaderboard's own sound toggle mirrors into
+    // it, and the hub toggle disables the chime everywhere (leaderboard,
+    // referral toasts, etc.).
+    const alertSoundPref = usePreferencesStore((state) => state.preferences.alertSound);
+    const setPreference = usePreferencesStore((state) => state.setPreference);
+
     const [preferences, setPreferences] = useState<OvertakeAlertPreferences>(DEFAULT_PREFERENCES);
     const preferencesRef = useRef<OvertakeAlertPreferences>(DEFAULT_PREFERENCES);
     const preferencesLoadedRef = useRef(false);
@@ -72,17 +80,26 @@ export function useOvertakeAlerts() {
         }
     }, [preferences]);
 
+    // Mirror the settings-hub master toggle into the local preference so the
+    // leaderboard ALERTS/SOUND buttons reflect the hub state (and vice versa
+    // happens in toggleSound below).
+    useEffect(() => {
+        setPreferences((prev) => (prev.sound === alertSoundPref ? prev : { ...prev, sound: alertSoundPref }));
+        preferencesRef.current = { ...preferencesRef.current, sound: alertSoundPref };
+    }, [alertSoundPref]);
+
     const toggleEnabled = useCallback(() => {
         setPreferences((prev) => ({ ...prev, enabled: !prev.enabled }));
     }, []);
 
     const toggleSound = useCallback(() => {
         const turningOn = !preferencesRef.current.sound;
+        // Mirror into the settings-hub master preference (single source of
+        // truth). The confirmation chime only plays when the hub toggle is on.
+        setPreference('alertSound', turningOn);
         setPreferences((prev) => ({ ...prev, sound: turningOn }));
-        // Play a confirmation chime when enabling — primes the AudioContext
-        // inside the click gesture so the first real alert has no delay.
         if (turningOn) playSoftChime();
-    }, []);
+    }, [setPreference]);
 
     return {
         preferences,

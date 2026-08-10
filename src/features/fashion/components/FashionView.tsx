@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from "motion/react";
 import { Compass, ZoomIn, ArrowRight, Heart, ShoppingCart, X } from "lucide-react";
 import type { FashionCategory, FashionProduct, LookbookItem } from "@/shared/types";
 import { FASHION_CATEGORIES } from "../constants/fashionCategories";
+import { useLanguage } from "@/features/i18n/LanguageProvider";
+import { localizedProductName } from "@/features/i18n/productNames";
 
 interface FashionViewProps {
     products: FashionProduct[];
@@ -47,6 +49,7 @@ export default function FashionView({
     onAddToCart,
     onAddToWishlist,
 }: FashionViewProps) {
+    const { t, tc, language } = useLanguage();
     const [activeCategory, setActiveCategory] = useState<FashionCategory | "All">(
         () => resolveInitialCategory(initialCategory),
     );
@@ -82,14 +85,13 @@ export default function FashionView({
                 <div className="absolute bottom-0 right-10 w-[500px] h-[500px] rounded-full bg-[#C9A84C]/5 blur-[130px] pointer-events-none" />
 
                 <span className="text-xs font-semibold text-[#C9A84C] tracking-[0.45em] uppercase mb-3 block">
-                    SADAF ATELIER LABELS
+                    {t("fashion.kicker")}
                 </span>
                 <h1 className="text-4xl md:text-6xl font-serif text-white uppercase tracking-tight leading-none mb-4">
-                    LUXURY <span className="text-gold-gradient font-serif italic">Couture</span>
+                    {t("fashion.title")} <span className="text-gold-gradient font-serif italic">{t("fashion.titleAccent")}</span>
                 </h1>
                 <p className="text-sm md:text-base text-[#E8E0D5]/70 max-w-2xl mx-auto font-sans tracking-wide leading-relaxed">
-                    Unveil garments tailored with super-140s Egyptian wool, raw coastal silks, and 18k gold
-                    embroideries. Browse across traditional fusion lines, elegant outerwear, and limited drops.
+                    {t("fashion.subtitle")}
                 </p>
 
                 {/* Category filter tabs */}
@@ -104,7 +106,7 @@ export default function FashionView({
                                     : "bg-[#0A0F2C]/60 text-[#E8E0D5]/70 hover:text-white border border-[#E8E0D5]/10 hover:border-[#4FC3F7]/40"
                             }`}
                         >
-                            {category}
+                            {tc(`store.category.${category}`, category)}
                         </button>
                     ))}
                 </div>
@@ -115,19 +117,18 @@ export default function FashionView({
                 <div className="max-w-7xl mx-auto px-4 md:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
                     <div className="text-left">
                         <span className="text-xs text-[#C9A84C] font-mono tracking-widest uppercase">
-                            EXHIBITIONS CONTINUED
+                            {t("fashion.campaign.kicker")}
                         </span>
                         <h3 className="text-xl md:text-2xl font-serif text-white mt-1">
-                            THE SANDS OF AL-MUIZZ COLLECTION
+                            {t("fashion.campaign.title")}
                         </h3>
                         <p className="text-slate-400 text-xs mt-1 font-sans">
-                            Strictly limited capsule deliveries. Global priority shipping includes luxury
-                            packaging casing.
+                            {t("fashion.campaign.body")}
                         </p>
                     </div>
                     <div className="flex gap-4">
                         <span className="text-xs border border-[#C9A84C]/30 text-[#C9A84C] px-3 py-1.5 rounded uppercase font-mono tracking-widest">
-                            Limited to 150 Prints
+                            {t("fashion.campaign.limited")}
                         </span>
                     </div>
                 </div>
@@ -192,7 +193,7 @@ export default function FashionView({
                                     {/* Inspect overlay */}
                                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex justify-between items-center">
                                         <span className="text-[10px] uppercase font-mono tracking-widest text-[#4FC3F7]">
-                                            Inspect Details
+                                            {t("fashion.inspect")}
                                         </span>
                                         <ZoomIn size={14} className="text-[#C9A84C]" />
                                     </div>
@@ -205,7 +206,7 @@ export default function FashionView({
                                             className="font-serif text-[#E8E0D5] text-lg group-hover:text-[#F0D080] transition-colors duration-300 mb-1.5 cursor-pointer"
                                             onClick={() => openProductDetail(product)}
                                         >
-                                            {product.name}
+                                            {localizedProductName(product, language)}
                                         </h3>
                                         <p className="text-xs text-[#E8E0D5]/70 line-clamp-2 leading-relaxed mb-4">
                                             {product.description}
@@ -226,7 +227,7 @@ export default function FashionView({
                                     <div className="flex justify-between items-center border-t border-[#E8E0D5]/10 pt-4 mt-auto">
                                         <div className="flex items-center gap-1.5">
                                             <span className="text-[10px] font-mono uppercase text-[#C9A84C]">
-                                                Fabric:
+                                                {t("fashion.fabric")}:
                                             </span>
                                             <span className="text-[10px] text-gray-400 font-sans truncate max-w-[124px] inline-block">
                                                 {product.fabric}
@@ -237,7 +238,7 @@ export default function FashionView({
                                             onClick={() => openProductDetail(product)}
                                             className="px-4 py-2 bg-[#1B2A6B] hover:bg-[#C9A84C] hover:text-[#0A0F2C] text-xs text-white uppercase tracking-wider font-semibold rounded transition-all duration-300 flex items-center gap-1 cursor-pointer"
                                         >
-                                            Configure Item <ArrowRight size={11} />
+                                            {t("fashion.configure")} <ArrowRight size={11} />
                                         </button>
                                     </div>
                                 </div>
@@ -279,7 +280,7 @@ export default function FashionView({
                                         {activeProduct.category}
                                     </span>
                                     <h2 className="font-serif text-2xl md:text-3xl text-white font-bold tracking-tight uppercase leading-none mt-2 mb-3">
-                                        {activeProduct.name}
+                                        {localizedProductName(activeProduct, language)}
                                     </h2>
                                     <p className="text-[#C9A84C] font-mono text-lg font-bold mb-4">
                                         ${activeProduct.price.toLocaleString()}
@@ -290,7 +291,7 @@ export default function FashionView({
 
                                     <div className="mb-4">
                                         <span className="text-[10px] font-mono uppercase text-gray-400 block mb-2">
-                                            Select Size
+                                            {t("fashion.selectSize")}
                                         </span>
                                         <div className="flex gap-2">
                                             {activeProduct.sizes.map((size) => (
@@ -311,7 +312,7 @@ export default function FashionView({
 
                                     <div className="mb-6">
                                         <span className="text-[10px] font-mono uppercase text-gray-400 block mb-2">
-                                            Select Color
+                                            {t("fashion.selectColor")}
                                         </span>
                                         <div className="flex gap-3">
                                             {activeProduct.colors.map((color) => (
@@ -343,7 +344,7 @@ export default function FashionView({
                                         }}
                                         className="flex-1 py-3 bg-[#C9A84C] hover:bg-white text-[#0A0F2C] text-xs font-semibold uppercase tracking-wider rounded transition flex items-center justify-center gap-1.5 cursor-pointer shadow-lg"
                                     >
-                                        <ShoppingCart size={12} /> Add to bag
+                                        <ShoppingCart size={12} /> {t("fashion.addToBag")}
                                     </button>
                                     <button
                                         onClick={() => onAddToWishlist(activeProduct)}
@@ -367,9 +368,9 @@ export default function FashionView({
                 <div className="max-w-7xl mx-auto px-4 md:px-8">
                     <div className="text-center mb-16">
                         <span className="text-xs font-semibold text-[#C9A84C] tracking-[0.35em] uppercase block mb-3">
-                            DIGITAL CINEMATIC LOOKBOOK
+                            {t("fashion.lookbook.kicker")}
                         </span>
-                        <h2 className="text-3xl md:text-5xl font-serif text-white">ECHOES OF ELEGANCE</h2>
+                        <h2 className="text-3xl md:text-5xl font-serif text-white">{t("fashion.lookbook.title")}</h2>
                         <div className="w-12 h-[1px] bg-[#C9A84C] mx-auto mt-4" />
                     </div>
 
@@ -388,7 +389,7 @@ export default function FashionView({
                                     }`}
                                 >
                                     <span className="text-[9px] font-mono tracking-widest text-[#C9A84C] block mb-1">
-                                        {item.year} Campaign
+                                        {t("fashion.campaignYear", { year: item.year })}
                                     </span>
                                     <h3 className="font-serif text-lg font-bold mb-2">{item.title}</h3>
                                     <p className="text-xs text-gray-400 line-clamp-2">{item.subtitle}</p>
@@ -419,18 +420,17 @@ export default function FashionView({
                                 <div className="flex-1 flex flex-col justify-center text-left p-4 md:p-8 bg-gradient-to-tr from-[#050A1C] to-[#121E4E] border border-white/10 rounded-xl">
                                     <Compass className="text-[#C9A84C] mb-4" size={28} />
                                     <span className="text-[10px] font-mono uppercase tracking-widest text-[#4FC3F7] mb-2">
-                                        {activeLookDetails.year} Collection Description
+                                        {t("fashion.collectionDesc", { year: activeLookDetails.year })}
                                     </span>
                                     <p className="text-[#E8E0D5]/80 text-xs md:text-sm leading-relaxed mb-6 font-sans">
                                         {activeLookDetails.description}
                                     </p>
                                     <div className="flex items-center gap-3 border-t border-white/10 pt-4 mt-auto">
                                         <div className="text-xs uppercase font-mono text-[#C9A84C]">
-                                            Atelier Notes:
+                                            {t("fashion.atelierNotes")}
                                         </div>
                                         <div className="text-xs text-gray-400">
-                                            Preserving Fatimid geometric alignments. Crafted with custom
-                                            jacquard silk layers.
+                                            {t("fashion.atelierNotes.body")}
                                         </div>
                                     </div>
                                 </div>

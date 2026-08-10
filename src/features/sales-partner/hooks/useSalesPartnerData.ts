@@ -16,7 +16,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { SalesPartnerOverview } from '../types';
+import type { ReferralRecord, ReferralStatus, SalesPartnerOverview } from '../types';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
@@ -35,11 +35,28 @@ export function useSalesPartnerData() {
     const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const abortRef = useRef<AbortController | null>(null);
     const wsConnectedRef = useRef(false);
+    // Last known status per referral id — the diff baseline for conversion
+    // detection. Seeded by the first payload, so the initial load never fires
+    // a toast for referrals that were already converted.
+    const previousStatusesRef = useRef<Map<string, ReferralStatus>>(new Map());
+    // Most recent pending → converted transition (a referred customer placed
+    // a paying order) — consumed by the dashboard toast. Works on both
+    // transports: WS pushes and the REST fallback poll.
+    const [latestConvertedReferral, setLatestConvertedReferral] = useState<ReferralRecord | null>(null);
 
     // ─── Apply incoming overview payload ──────────────────────────────────────
 
     const applyData = useCallback((payload: SalesPartnerOverview) => {
         if (!payload || !Array.isArray(payload.referrals)) return;
+        // Diff against the last snapshot: a referral that was 'pending' and is
+        // now 'converted' is a real conversion event → surface it once.
+        for (const referral of payload.referrals) {
+            const previous = previousStatusesRef.current.get(referral.id);
+            if (previous === 'pending' && referral.status === 'converted') {
+                setLatestConvertedReferral(referral);
+            }
+            previousStatusesRef.current.set(referral.id, referral.status);
+        }
         setData(payload);
         setError(null);
         setLoading(false);
@@ -152,5 +169,5 @@ export function useSalesPartnerData() {
         };
     }, [connectWS, startPolling]);
 
-    return { data, loading, error, wsLive, refetch: fetchData };
+    return { data, loading, error, wsLive, refetch: fetchData, latestConvertedReferral };
 }

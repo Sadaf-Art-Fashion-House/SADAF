@@ -28,6 +28,8 @@ import {
 import type { SalesPartnerOverview, ReferralStatus } from '../types';
 import { COMMISSION_RATE, REFERRAL_STATUS_STYLES } from '../constants';
 import { formatRelativeTime } from '@/features/notifications/utils/formatRelativeTime';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
+import { ShareLinks } from '@/shared/components/ShareLinks';
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 
@@ -90,6 +92,7 @@ function KpiCard({
 // ─── Referral link panel ─────────────────────────────────────────────────────
 
 function ReferralLinkPanel({ referralCode }: { referralCode: string }) {
+    const { t } = useLanguage();
     const [origin, setOrigin] = useState('');
     const [copied, setCopied] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -152,6 +155,15 @@ function ReferralLinkPanel({ referralCode }: { referralCode: string }) {
                 Share this link with new customers — when they sign up and place a paying order,
                 you earn commission on the order value. Code: <strong className="text-emerald-400">{referralCode}</strong>
             </p>
+
+            {origin && (
+                <div className="mt-4 pt-4 border-t border-white/5">
+                    <p className="text-[9px] font-mono uppercase tracking-widest text-[#E8E0D5]/40 mb-2">
+                        {t('share.via')}
+                    </p>
+                    <ShareLinks url={link} text={t('share.referralText')} ariaLabel={t('share.via')} />
+                </div>
+            )}
         </section>
     );
 }

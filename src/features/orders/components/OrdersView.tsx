@@ -19,6 +19,8 @@ import type { Order, OrderStatus, OrderStatusEvent } from '@/features/orders/typ
 import type { RatingsByProduct } from '@/features/reviews/hooks/useAggregatedRatings';
 import LiveOrderStatus from './LiveOrderStatus';
 import ReviewForm from '@/features/reviews/components/ReviewForm';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
+import { localizedOrderItemName } from '@/features/i18n/productNames';
 
 interface OrdersViewProps {
     orders: Order[];
@@ -68,6 +70,8 @@ export default function OrdersView({
     ratingsByProduct = {},
     onReviewSubmit,
 }: OrdersViewProps) {
+    const { language } = useLanguage();
+
     // Which order's review form is currently expanded (presentation state).
     const [openReviewOrderId, setOpenReviewOrderId] = useState<string | null>(null);
 
@@ -195,10 +199,10 @@ export default function OrdersView({
                                         {/* Order items */}
                                         {ord.items.map((item, idx) => (
                                             <div key={idx} className="flex gap-4 items-center py-2">
-                                                <img src={item.image} alt={item.name}
+                                                <img src={item.image} alt={localizedOrderItemName(item, language)}
                                                     className="w-14 h-14 rounded-xl object-cover border border-white/10 shrink-0" />
                                                 <div className="flex-1 min-w-0">
-                                                    <h4 className="text-xs md:text-sm font-serif text-white font-semibold truncate">{item.name}</h4>
+                                                    <h4 className="text-xs md:text-sm font-serif text-white font-semibold truncate">{localizedOrderItemName(item, language)}</h4>
                                                     <p className="text-[10px] font-mono text-slate-500 mt-0.5">
                                                         Size: {item.size} &bull; Qty: {item.quantity}
                                                     </p>

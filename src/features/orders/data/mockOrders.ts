@@ -26,6 +26,7 @@ export const MOCK_ORDERS: Order[] = [
         items: [
             {
                 name: 'Empress Diwani Abaya Cape',
+                productId: 'f-1',
                 quantity: 1,
                 size: 'M',
                 price: 1250,
@@ -44,6 +45,7 @@ export const MOCK_ORDERS: Order[] = [
         items: [
             {
                 name: 'The Golden Diwani Diptych',
+                productId: 'art-1',
                 quantity: 1,
                 size: 'Original Framing',
                 price: 3400,
@@ -62,6 +64,7 @@ export const MOCK_ORDERS: Order[] = [
         items: [
             {
                 name: 'Gilded Caliph Streetwear Hoodie',
+                productId: 'f-4',
                 quantity: 1,
                 size: 'L',
                 price: 890,
@@ -80,6 +83,7 @@ export const MOCK_ORDERS: Order[] = [
         items: [
             {
                 name: 'Sadaf Inlaid Peak Tuxedo',
+                productId: 'f-2',
                 quantity: 1,
                 size: 'M',
                 price: 2150,
@@ -98,6 +102,7 @@ export const MOCK_ORDERS: Order[] = [
         items: [
             {
                 name: 'Royal Heir Linen Set',
+                productId: 'f-5',
                 quantity: 1,
                 size: 'One Size',
                 price: 460,
@@ -116,6 +121,7 @@ export const MOCK_ORDERS: Order[] = [
         items: [
             {
                 name: 'Gilded Caliph Streetwear Hoodie',
+                productId: 'f-4',
                 quantity: 1,
                 size: 'L',
                 price: 890,
@@ -123,6 +129,7 @@ export const MOCK_ORDERS: Order[] = [
             },
             {
                 name: 'Sadaf Inlaid Peak Tuxedo',
+                productId: 'f-2',
                 quantity: 1,
                 size: 'One Size',
                 price: 590,
@@ -130,6 +137,7 @@ export const MOCK_ORDERS: Order[] = [
             },
             {
                 name: 'Royal Heir Linen Set',
+                productId: 'f-5',
                 quantity: 1,
                 size: 'One Size',
                 price: 300,
@@ -148,6 +156,7 @@ export const MOCK_ORDERS: Order[] = [
         items: [
             {
                 name: 'Empress Diwani Abaya Cape',
+                productId: 'f-1',
                 quantity: 2,
                 size: 'M',
                 price: 910,
@@ -166,6 +175,7 @@ export const MOCK_ORDERS: Order[] = [
         items: [
             {
                 name: 'Fatimid Star Silk Slip Dress',
+                productId: 'f-3',
                 quantity: 1,
                 size: 'One Size',
                 price: 1500,
@@ -184,6 +194,7 @@ export const MOCK_ORDERS: Order[] = [
         items: [
             {
                 name: 'Sadaf Inlaid Peak Tuxedo',
+                productId: 'f-2',
                 quantity: 1,
                 size: 'M',
                 price: 1400,

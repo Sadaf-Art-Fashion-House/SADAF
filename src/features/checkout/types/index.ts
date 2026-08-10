@@ -45,6 +45,9 @@ export interface OrderPayload {
     paymentInfo: PaymentInfo;
     items: {
         name: string;
+        /** Catalog id (fashionDatabase / artDatabase) so saved orders can
+         * resolve the live localized name later. */
+        productId?: string;
         quantity: number;
         totalPrice: number;
         type: string;

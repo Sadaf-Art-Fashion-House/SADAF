@@ -292,7 +292,7 @@ function ExportDropdown({
             {open && (
                 <>
                     <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-                    <div className="absolute right-0 top-full mt-1 z-20 w-56 bg-[#0A0F2C]/98 border border-[#C9A84C]/20 rounded-xl shadow-xl shadow-[#C9A84C]/10 backdrop-blur-xl overflow-hidden">
+                    <div className="absolute end-0 top-full mt-1 z-20 w-56 bg-[#0A0F2C]/98 border border-[#C9A84C]/20 rounded-xl shadow-xl shadow-[#C9A84C]/10 backdrop-blur-xl overflow-hidden">
                         <button onClick={() => runExport('png')}
                             disabled={isExporting}
                             className="w-full flex items-center gap-2 px-3 py-2 text-[10px] font-mono text-[#E8E0D5]/70 hover:text-white hover:bg-white/5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-wait">

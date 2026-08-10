@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import { Bell, BellRing, BellOff, CheckCheck, ChevronRight, Globe, Wifi, WifiOff } from 'lucide-react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 import { useRealtimeNotifications } from '../hooks/useRealtimeNotifications';
 import { TYPE_ICONS, TYPE_COLORS } from '../constants/notificationStyles';
 import { formatRelativeTime } from '../utils/formatRelativeTime';
@@ -22,6 +23,7 @@ import type { Notification } from '../types';
  */
 export default function NotificationBell() {
     const { user } = useAuth();
+    const { language, t } = useLanguage();
     const userId = user?.id ?? null;
 
     const {
@@ -54,8 +56,8 @@ export default function NotificationBell() {
             <button
                 onClick={() => setIsOpen((prev) => !prev)}
                 className="p-2 text-slate-300 hover:text-[#C9A84C] relative transition-colors duration-300 cursor-pointer"
-                title={unreadCount > 0 ? `${unreadCount} unread notifications` : 'Notifications'}
-                aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
+                title={unreadCount > 0 ? t('notifications.bell.unread', { count: unreadCount }) : t('notifications.title')}
+                aria-label={`${t('notifications.title')}${unreadCount > 0 ? ` (${unreadCount})` : ''}`}
                 aria-expanded={isOpen}
             >
                 <Bell size={16} />
@@ -74,30 +76,30 @@ export default function NotificationBell() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -8, scale: 0.96 }}
                         transition={{ duration: 0.15, ease: 'easeOut' }}
-                        className="absolute top-full right-0 mt-2 w-80 bg-[#0A0F2C]/98 border border-[#C9A84C]/15 rounded-xl shadow-2xl shadow-black/60 backdrop-blur-xl overflow-hidden z-50"
+                        className="absolute top-full end-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-[#0A0F2C]/98 border border-[#C9A84C]/15 rounded-xl shadow-2xl shadow-black/60 backdrop-blur-xl overflow-hidden z-50"
                     >
                         {/* Panel header */}
                         <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
                             <div className="flex items-center gap-2">
                                 <span className="text-xs font-semibold uppercase tracking-wider text-white">
-                                    Notifications
+                                    {t('notifications.title')}
                                 </span>
                                 {/* Live indicator — only meaningful for signed-in users */}
                                 {userId ? (
                                     wsLive ? (
                                         <span className="flex items-center gap-1 text-[8px] font-mono uppercase tracking-wider text-green-400">
                                             <Wifi size={9} />
-                                            Live
+                                            {t('notifications.live')}
                                         </span>
                                     ) : (
                                         <span className="flex items-center gap-1 text-[8px] font-mono uppercase tracking-wider text-amber-400/80">
                                             <WifiOff size={9} />
-                                            Polling
+                                            {t('notifications.polling')}
                                         </span>
                                     )
                                 ) : (
                                     <span className="text-[8px] font-mono uppercase tracking-wider text-slate-500">
-                                        Sign in to get alerts
+                                        {t('notifications.signInAlerts')}
                                     </span>
                                 )}
                             </div>
@@ -107,7 +109,7 @@ export default function NotificationBell() {
                                     className="flex items-center gap-1 text-[9px] text-[#4FC3F7]/70 hover:text-[#4FC3F7] transition-colors font-mono uppercase tracking-wider cursor-pointer"
                                 >
                                     <CheckCheck size={10} />
-                                    Mark All Read
+                                    {t('notifications.markAllRead')}
                                 </button>
                             )}
                         </div>
@@ -118,15 +120,15 @@ export default function NotificationBell() {
                         <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/5">
                             <span className="flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-wider text-[#E8E0D5]/50">
                                 <Globe size={10} className="text-[#C9A84C]/60" />
-                                Global alerts
+                                {t('notifications.globalAlerts')}
                             </span>
                             <button
                                 onClick={toggleGlobalMuted}
                                 aria-pressed={!globalMuted}
-                                aria-label={globalMuted ? 'Enable global alerts' : 'Mute global alerts'}
+                                aria-label={globalMuted ? t('notifications.enableGlobal') : t('notifications.muteGlobal')}
                                 title={globalMuted
-                                    ? 'Global alerts are muted — click to enable new-order & announcement pushes'
-                                    : 'Global alerts are on — click to mute new-order & announcement pushes'}
+                                    ? t('notifications.globalMutedHint')
+                                    : t('notifications.globalOnHint')}
                                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[8px] font-mono uppercase tracking-wider border transition-all cursor-pointer ${
                                     globalMuted
                                         ? 'text-[#E8E0D5]/40 border-white/10 hover:text-white hover:border-white/25'
@@ -134,7 +136,7 @@ export default function NotificationBell() {
                                 }`}
                             >
                                 {globalMuted ? <BellOff size={9} /> : <BellRing size={9} />}
-                                {globalMuted ? 'Muted' : 'On'}
+                                {globalMuted ? t('notifications.muted') : t('notifications.on')}
                             </button>
                         </div>
 
@@ -145,8 +147,8 @@ export default function NotificationBell() {
                                     <Bell size={18} className="mx-auto text-slate-600 mb-2" />
                                     <p className="text-[11px] text-slate-500">
                                         {userId
-                                            ? 'No notifications yet. New order, review, or offer alerts will appear here.'
-                                            : 'Sign in to receive real-time order, review, and offer alerts.'}
+                                            ? t('notifications.empty')
+                                            : t('notifications.emptyGuest')}
                                     </p>
                                 </div>
                             ) : (
@@ -168,7 +170,7 @@ export default function NotificationBell() {
                             onClick={() => setIsOpen(false)}
                             className="flex items-center justify-center gap-1.5 px-4 py-3 border-t border-white/5 text-[10px] font-mono uppercase tracking-wider text-[#C9A84C]/80 hover:text-[#C9A84C] hover:bg-white/5 transition-all"
                         >
-                            View All Notifications <ChevronRight size={10} />
+                            {t('notifications.viewAll')} <ChevronRight size={10} />
                         </Link>
                     </motion.div>
                 )}
@@ -186,8 +188,14 @@ function BellItem({
     notification: Notification;
     onMarkRead: (id: string) => void;
 }) {
+    const { language } = useLanguage();
     const IconComponent = TYPE_ICONS[notification.type] || Bell;
     const colorClass = TYPE_COLORS[notification.type] || TYPE_COLORS.system;
+
+    // Localized copy — Arabic template when available, embedded names/IDs stay
+    // in their original language (Facebook-style).
+    const title = language === 'ar' && notification.titleAr ? notification.titleAr : notification.title;
+    const message = language === 'ar' && notification.messageAr ? notification.messageAr : notification.message;
 
     // Rendered as a div (not a button) so it can safely wrap inside a Link —
     // a <button> nested in an <a> is invalid HTML and breaks hydration.
@@ -204,14 +212,14 @@ function BellItem({
             <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
                     <h5 className={`text-[11px] font-semibold ${notification.read ? 'text-slate-500' : 'text-white'}`}>
-                        {notification.title}
+                        {title}
                     </h5>
                     <span className="text-[8px] text-slate-600 font-mono shrink-0 whitespace-nowrap">
-                        {formatRelativeTime(notification.createdAt)}
+                        {formatRelativeTime(notification.createdAt, language)}
                     </span>
                 </div>
                 <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed line-clamp-2">
-                    {notification.message}
+                    {message}
                 </p>
             </div>
             {!notification.read && (

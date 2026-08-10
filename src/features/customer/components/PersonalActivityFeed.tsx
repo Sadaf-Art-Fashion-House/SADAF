@@ -20,6 +20,7 @@ import {
 import type { PersonalActivityEvent } from '../types';
 import { formatEventTime } from '@/utils/formatEventTime';
 import { useActivityAlerts } from '../hooks/useActivityAlerts';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 
 interface PersonalActivityFeedProps {
     /** Personal activity events for the logged-in user (most recent first). */
@@ -57,6 +58,8 @@ export default function PersonalActivityFeed({ events, isLive, loading = false }
     const [isAutoScroll, setIsAutoScroll] = useState(true);
     const seenIdsRef = useRef<Set<string>>(new Set());
     const listRef = useRef<HTMLDivElement>(null);
+
+    const { t, tc, language } = useLanguage();
 
     const {
         preferences: alerts,
@@ -102,13 +105,13 @@ export default function PersonalActivityFeed({ events, isLive, loading = false }
                 <div className="flex items-center gap-2">
                     <div className="p-1.5 rounded-lg bg-[#C9A84C]/10 text-[#C9A84C]"><Activity size={12} /></div>
                     <h3 className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold">
-                        My Activity
+                        {t('activity.title')}
                     </h3>
                     <span className={`inline-flex items-center gap-1 text-[8px] font-mono uppercase tracking-widest ${
                         isLive ? 'text-green-400' : 'text-amber-400/80'
                     }`}>
                         {isLive ? <Wifi size={9} /> : <WifiOff size={9} />}
-                        {isLive ? 'Live' : 'Polling'}
+                        {isLive ? t('lb.live') : t('lb.polling')}
                     </span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -118,13 +121,13 @@ export default function PersonalActivityFeed({ events, isLive, loading = false }
                             onClick={toggleBrowserAlerts}
                             title={
                                 permissionDenied
-                                    ? 'Notifications are blocked in this browser — allow them in site settings to re-enable'
+                                    ? t('activity.browserBlocked')
                                     : alerts.browser
-                                        ? 'Browser alerts ON — click to mute'
-                                        : 'Browser alerts OFF — click to enable'
+                                        ? t('activity.browserOn')
+                                        : t('activity.browserOff')
                             }
                             aria-label={
-                                alerts.browser ? 'Disable browser alerts for new activity' : 'Enable browser alerts for new activity'
+                                alerts.browser ? t('activity.disableBrowser') : t('activity.enableBrowser')
                             }
                             aria-pressed={alerts.browser}
                             className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[8px] font-mono uppercase tracking-wider border transition-all cursor-pointer ${
@@ -134,7 +137,7 @@ export default function PersonalActivityFeed({ events, isLive, loading = false }
                             }`}
                         >
                             {alerts.browser ? <BellRing size={9} /> : <BellOff size={9} />}
-                            {alerts.browser ? 'Notify' : 'Silent'}
+                            {alerts.browser ? t('activity.notify') : t('activity.silent')}
                         </button>
                     )}
 
@@ -143,11 +146,11 @@ export default function PersonalActivityFeed({ events, isLive, loading = false }
                         onClick={toggleSoundAlerts}
                         title={
                             alerts.sound
-                                ? 'Sound alerts ON — click to mute'
-                                : 'Sound alerts OFF — click to enable (plays a soft chime)'
+                                ? t('activity.soundOnTitle')
+                                : t('activity.soundOffTitle')
                         }
                         aria-label={
-                            alerts.sound ? 'Disable sound alert for new activity' : 'Enable sound alert for new activity'
+                            alerts.sound ? t('activity.disableSound') : t('activity.enableSound')
                         }
                         aria-pressed={alerts.sound}
                         className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[8px] font-mono uppercase tracking-wider border transition-all cursor-pointer ${
@@ -157,19 +160,19 @@ export default function PersonalActivityFeed({ events, isLive, loading = false }
                         }`}
                     >
                         {alerts.sound ? <Volume2 size={9} /> : <VolumeX size={9} />}
-                        {alerts.sound ? 'Sound' : 'Muted'}
+                        {alerts.sound ? t('lb.soundOn') : t('lb.soundOff')}
                     </button>
 
                     {feed.length > 0 && (
                         <button
                             onClick={handleClear}
                             className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-mono text-[#E8E0D5]/40 hover:text-red-400 border border-white/10 hover:border-red-500/30 transition-all cursor-pointer"
-                            title="Clear activity feed"
+                            title={t('activity.clearTitle')}
                         >
-                            <Trash2 size={9} /> Clear
+                            <Trash2 size={9} /> {t('activity.clear')}
                         </button>
                     )}
-                    <span className="text-[9px] font-mono text-[#E8E0D5]/30">{feed.length} events</span>
+                    <span className="text-[9px] font-mono text-[#E8E0D5]/30">{t('activity.events', { count: feed.length })}</span>
                 </div>
             </div>
 
@@ -180,10 +183,10 @@ export default function PersonalActivityFeed({ events, isLive, loading = false }
                     className={`flex items-center gap-1 mb-2 text-[8px] font-mono uppercase tracking-wider transition-all cursor-pointer ${
                         isAutoScroll ? 'text-[#4FC3F7]/70 hover:text-[#4FC3F7]' : 'text-[#E8E0D5]/40 hover:text-white'
                     }`}
-                    title={isAutoScroll ? 'Auto-scroll to newest events is ON' : 'Auto-scroll is OFF'}
+                    title={isAutoScroll ? t('activity.autoScrollOnTitle') : t('activity.autoScrollOffTitle')}
                 >
                     <ArrowDown size={9} className={isAutoScroll ? 'animate-bounce' : ''} />
-                    {isAutoScroll ? 'Auto-scroll on' : 'Auto-scroll off'}
+                    {isAutoScroll ? t('activity.autoScrollOn') : t('activity.autoScrollOff')}
                 </button>
             )}
 
@@ -199,11 +202,11 @@ export default function PersonalActivityFeed({ events, isLive, loading = false }
                 {feed.length === 0 && loading ? (
                     <p className="text-[9px] font-mono text-[#E8E0D5]/40 italic px-2 py-1.5 flex items-center gap-2">
                         <span className="w-3 h-3 rounded-full border-2 border-[#C9A84C] border-t-transparent animate-spin" />
-                        Connecting to your live activity…
+                        {t('activity.connecting')}
                     </p>
                 ) : feed.length === 0 ? (
                     <p className="text-[9px] font-mono text-[#E8E0D5]/30 italic px-2 py-1.5">
-                        No activity yet — your orders, saved designs, and offers will stream here in real time.
+                        {t('activity.empty')}
                     </p>
                 ) : (
                     <AnimatePresence initial={false}>
@@ -231,7 +234,7 @@ export default function PersonalActivityFeed({ events, isLive, loading = false }
                                                 {event.title}
                                             </span>
                                             <span className="text-[8px] font-mono text-[#E8E0D5]/40 shrink-0 whitespace-nowrap">
-                                                {formatEventTime(event.timestamp)}
+                                                {formatEventTime(event.timestamp, language)}
                                             </span>
                                         </div>
                                         <p className="text-[9px] text-[#E8E0D5]/50 leading-relaxed truncate">
@@ -239,7 +242,7 @@ export default function PersonalActivityFeed({ events, isLive, loading = false }
                                         </p>
                                     </div>
                                     <span className="text-[7px] font-mono uppercase tracking-wider text-[#E8E0D5]/25 shrink-0 mt-0.5">
-                                        {style.label}
+                                        {tc(`activity.type.${event.type}`, style.label)}
                                     </span>
                                 </motion.div>
                             );

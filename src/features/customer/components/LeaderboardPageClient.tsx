@@ -65,6 +65,7 @@ export default function LeaderboardPageClient({
             error={error}
             memberName={memberName}
             currentUserAvatar={user.avatarUrl}
+            currentUserRole={user.role}
             kind={activeKind}
             kinds={kinds}
             activeKind={activeKind}

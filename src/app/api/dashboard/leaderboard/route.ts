@@ -78,6 +78,7 @@ export async function GET(request: Request) {
             name: member.name,
             points: jitterMetric(member.points),
             city: member.city,
+            role: member.role,
         }));
         const { entries, myRank } = buildLeaderboard(pool, currentUserMetricFor(kind));
 

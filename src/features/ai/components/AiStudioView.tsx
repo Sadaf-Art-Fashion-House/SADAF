@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import type { AIClothingDesign, MaqasaqRecommendation } from '@/shared/types';
 import { fabricsList, printingMethods } from '@/features/ai/data';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
+import { localizedDesignName } from '@/features/i18n/productNames';
 
 
 interface AiStudioViewProps {
@@ -82,6 +84,7 @@ export default function AiStudioView({
     onViewSavedDesigns,
     savedDraftsCount,
 }: AiStudioViewProps) {
+    const { t, language } = useLanguage();
     return (
         <div className="relative w-full overflow-hidden min-h-screen pb-20">
             {/* Saved drafts badge — top right */}
@@ -91,7 +94,7 @@ export default function AiStudioView({
                     className="fixed top-28 right-4 z-50 px-3 py-2 bg-[#1B2A6B]/90 border border-[#C9A84C]/30 rounded-xl text-[10px] font-mono text-[#C9A84C] hover:bg-[#1B2A6B] transition-all duration-300 cursor-pointer flex items-center gap-2 shadow-lg"
                 >
                     <Bookmark size={12} />
-                    <span>Saved Designs ({savedDraftsCount})</span>
+                    <span>{t('ai.savedDesigns', { count: savedDraftsCount })}</span>
                 </button>
             )}
             {/* AI Hero Banner */}
@@ -102,19 +105,18 @@ export default function AiStudioView({
                     SADAF COUTURE LABORATORY &bull; المعمل الرقمي
                 </span>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-white uppercase tracking-tight mb-2">
-                    AI STUDIO: <span className="text-gold-gradient italic font-serif">Curation of the Infinite</span>
+                    {t('ai.title1')} <span className="text-gold-gradient italic font-serif">{t('ai.title2')}</span>
                 </h1>
                 <p className="text-xs md:text-sm text-slate-400 max-w-2xl mx-auto font-sans leading-relaxed">
-                    Blend ancient Arabic art, complex Islamic geometry, and digital patterns using high-fidelity
-                    generative models. Tailor a piece, configure fit variables on Maqasaq AI, and add to your collection.
+                    {t('ai.heroBody')}
                 </p>
 
                 {/* Steps navigation dots */}
                 <div className="flex items-center justify-center gap-4 mt-10 max-w-lg mx-auto">
                     {[
-                        { num: 1, label: '1. Pattern Studio' },
-                        { num: 2, label: '2. Atelier Customizer' },
-                        { num: 3, label: '3. Maqasaq AI Fit' },
+                        { num: 1, label: t('ai.step1') },
+                        { num: 2, label: t('ai.step2') },
+                        { num: 3, label: t('ai.step3') },
                     ].map((st) => (
                         <button
                             key={st.num}
@@ -146,7 +148,7 @@ export default function AiStudioView({
                             >
                                 <div>
                                     <h3 className="font-serif text-xl text-white flex items-center gap-2">
-                                        <Sparkles className="text-[#C9A84C]" size={20} /> Base Silhouette Type
+                                        <Sparkles className="text-[#C9A84C]" size={20} /> {t('ai.baseSilhouette')}
                                     </h3>
                                     <div className="grid grid-cols-3 gap-2 mt-3">
                                         {clothingTypes.map((t) => (
@@ -168,7 +170,7 @@ export default function AiStudioView({
                                 {/* Aesthetic Theme presets */}
                                 <div>
                                     <h4 className="text-xs uppercase text-[#C9A84C] tracking-widest font-mono mb-2">
-                                        Select Creative Filter Preset
+                                        {t('ai.filterPreset')}
                                     </h4>
                                     <div className="grid grid-cols-2 gap-2">
                                         {presets.map((pr) => (
@@ -191,7 +193,7 @@ export default function AiStudioView({
                                 {/* Prompt input */}
                                 <div>
                                     <h4 className="text-xs uppercase text-[#C9A84C] tracking-widest font-mono mb-2">
-                                        Dynamic Prompt Guidance
+                                        {t('ai.promptGuidance')}
                                     </h4>
                                     <div className="relative">
                                         <textarea
@@ -202,7 +204,7 @@ export default function AiStudioView({
                                             placeholder="e.g. Damascus geometric floral meshes in Gilded wire embroidery..."
                                         />
                                         <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1.5 text-[9px] font-mono text-gray-500">
-                                            <span>Enhance prompt powered by Gemini</span>
+                                            <span>{t('ai.promptEnhance')}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -210,23 +212,23 @@ export default function AiStudioView({
                                 {/* Drag Drop Image area */}
                                 <div>
                                     <h4 className="text-xs uppercase text-[#C9A84C] tracking-widest font-mono mb-2">
-                                        Optional Fabric Structure Upload
+                                        {t('ai.fabricUpload')}
                                     </h4>
                                     <label className="flex flex-col items-center justify-center h-28 bg-[#E8E0D5]/5 border border-dashed border-[#C9A84C]/20 rounded-xl hover:bg-[#E8E0D5]/10 hover:border-[#C9A84C]/45 transition-all duration-300 cursor-pointer">
                                         <input type="file" onChange={handleImageUpload} accept="image/*" className="hidden" />
                                         {uploadedBase64 ? (
                                             <div className="flex items-center gap-2">
                                                 <Check size={16} className="text-[#C9A84C]" />
-                                                <span className="text-xs text-[#E8E0D5] font-semibold">Image Loaded successfully</span>
+                                                <span className="text-xs text-[#E8E0D5] font-semibold">{t('ai.imageLoaded')}</span>
                                             </div>
                                         ) : (
                                             <div className="text-center flex flex-col items-center">
                                                 <Upload size={20} className="text-[#C9A84C] mb-2" />
                                                 <span className="text-[10px] text-slate-400 tracking-wider">
-                                                    Drag & drop canvas photo or browse folder
+                                                    {t('ai.dragDrop')}
                                                 </span>
                                                 <span className="text-[9px] text-[#C9A84C] mt-0.5 uppercase tracking-widest">
-                                                    Maqasaq AI Fitting Scan enabled
+                                                    {t('ai.maqasaqScan')}
                                                 </span>
                                             </div>
                                         )}
@@ -246,11 +248,11 @@ export default function AiStudioView({
                                 >
                                     {isGeneratingPattern ? (
                                         <>
-                                            <RefreshCw size={14} className="animate-spin" /> Tailor Generation in Progress...
+                                            <RefreshCw size={14} className="animate-spin" /> {t('ai.generating')}
                                         </>
                                     ) : (
                                         <>
-                                            <Sparkles size={14} /> Generate Bespoke Print Pattern
+                                            <Sparkles size={14} /> {t('ai.generate')}
                                         </>
                                     )}
                                 </button>
@@ -267,10 +269,10 @@ export default function AiStudioView({
                             >
                                 <div>
                                     <span className="text-[10px] font-mono text-[#C9A84C] uppercase tracking-wider block">
-                                        Generated pattern designation
+                                        {t('ai.patternDesignation')}
                                     </span>
                                     <h3 className="font-serif text-2xl text-white mt-1 uppercase tracking-wide">
-                                        {activeDesign.patternName}
+                                        {localizedDesignName(activeDesign, language)}
                                     </h3>
                                     <p className="text-xs text-slate-400 mt-2 leading-relaxed">{activeDesign.description}</p>
                                 </div>
@@ -286,7 +288,7 @@ export default function AiStudioView({
                                 {/* Configure colors */}
                                 <div>
                                     <h4 className="text-xs font-mono uppercase text-[#C9A84C] tracking-wider mb-2">
-                                        Configured Garment Fabric Tone
+                                        {t('ai.fabricTone')}
                                     </h4>
                                     <div className="flex gap-2">
                                         {COLOR_OPTIONS.map((c) => (
@@ -305,7 +307,7 @@ export default function AiStudioView({
                                 {/* Fabric selection */}
                                 <div>
                                     <h4 className="text-xs font-mono uppercase text-[#C9A84C] tracking-wider mb-2">
-                                        Luxury Weave Selection
+                                        {t('ai.weaveSelection')}
                                     </h4>
                                     <div className="flex flex-col gap-2">
                                         {fabricsList.map((fb) => (
@@ -333,7 +335,7 @@ export default function AiStudioView({
                                 {/* Printing selection */}
                                 <div>
                                     <h4 className="text-xs font-mono uppercase text-[#C9A84C] tracking-wider mb-2">
-                                        Crafting Mechanism
+                                        {t('ai.crafting')}
                                     </h4>
                                     <div className="grid grid-cols-2 gap-2">
                                         {printingMethods.map((pr) => (
@@ -358,20 +360,20 @@ export default function AiStudioView({
                                         onClick={() => setActiveStep(1)}
                                         className="flex-1 py-3.5 bg-white/5 border border-white/10 hover:bg-white/10 text-xs text-white uppercase tracking-wider font-semibold rounded transition cursor-pointer"
                                     >
-                                        Go Back
+                                        {t('ai.goBack')}
                                     </button>
                                     <button
                                         onClick={onSaveDesign}
                                         className="py-3.5 px-4 bg-[#1B2A6B]/80 border border-[#4FC3F7]/30 hover:bg-[#1B2A6B] text-xs text-white uppercase tracking-wider font-semibold rounded transition cursor-pointer flex items-center gap-1.5"
-                                        title="Save design for later review"
+                                        title={t('ai.saveTitle')}
                                     >
-                                        <Save size={12} /> Save
+                                        <Save size={12} /> {t('ai.save')}
                                     </button>
                                     <button
                                         onClick={() => setActiveStep(3)}
                                         className="flex-1 py-3.5 bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/90 text-[#0A0F2C] text-xs uppercase tracking-wider font-bold rounded hover:scale-102 transition shadow-lg shadow-black/35 cursor-pointer"
                                     >
-                                        Enter Fitting Room
+                                        {t('ai.enterFitting')}
                                     </button>
                                 </div>
                             </motion.div>
@@ -392,16 +394,16 @@ export default function AiStudioView({
                                             Maqasaq Fit Advisor &bull; مقاسك
                                         </span>
                                     </div>
-                                    <h3 className="font-serif text-2xl text-white mt-1">THE PERFECT ANTHROPOMETRIC DRAPE</h3>
+                                    <h3 className="font-serif text-2xl text-white mt-1">{t('ai.fitTitle')}</h3>
                                     <p className="text-xs text-slate-400 mt-1">
-                                        Maqasaq estimates custom fabric stretch and coordinates shoulders instantly using standard physics metrics.
+                                        {t('ai.fitBody')}
                                     </p>
                                 </div>
 
                                 {/* Sizing inputs */}
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="text-[10px] uppercase text-gray-400 block mb-1">Your Height (cm)</label>
+                                        <label className="text-[10px] uppercase text-gray-400 block mb-1">{t('ai.height')}</label>
                                         <input
                                             type="number"
                                             value={height}
@@ -410,7 +412,7 @@ export default function AiStudioView({
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-[10px] uppercase text-gray-400 block mb-1">Your Weight (kg)</label>
+                                        <label className="text-[10px] uppercase text-gray-400 block mb-1">{t('ai.weight')}</label>
                                         <input
                                             type="number"
                                             value={weight}
@@ -422,27 +424,27 @@ export default function AiStudioView({
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="text-[10px] uppercase text-gray-400 block mb-1">Gender Silhouette</label>
+                                        <label className="text-[10px] uppercase text-gray-400 block mb-1">{t('ai.gender')}</label>
                                         <select
                                             value={gender}
                                             onChange={(e) => setGender(e.target.value)}
                                             className="w-full bg-[#0A0F2C] border border-white/10 rounded-lg p-2.5 text-xs text-white outline-none focus:border-[#4FC3F7] transition"
                                         >
-                                            <option value="Women">Women Lines</option>
-                                            <option value="Men">Men Lines</option>
-                                            <option value="Unisex">Unisex Silhouette</option>
+                                            <option value="Women">{t('ai.gender.women')}</option>
+                                            <option value="Men">{t('ai.gender.men')}</option>
+                                            <option value="Unisex">{t('ai.gender.unisex')}</option>
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="text-[10px] uppercase text-gray-400 block mb-1">Fit Preference</label>
+                                        <label className="text-[10px] uppercase text-gray-400 block mb-1">{t('ai.fitPreference')}</label>
                                         <select
                                             value={posture}
                                             onChange={(e) => setPosture(e.target.value)}
                                             className="w-full bg-[#0A0F2C] border border-white/10 rounded-lg p-2.5 text-xs text-white outline-none focus:border-[#4FC3F7] transition"
                                         >
-                                            <option value="Oversized Slouch">Oversized / Slouch Drape</option>
-                                            <option value="Regular Tailored">Regular Tailored Fit</option>
-                                            <option value="Slim Custom">Slim Silhouette Fit</option>
+                                            <option value="Oversized Slouch">{t('ai.fit.oversized')}</option>
+                                            <option value="Regular Tailored">{t('ai.fit.regular')}</option>
+                                            <option value="Slim Custom">{t('ai.fit.slim')}</option>
                                         </select>
                                     </div>
                                 </div>
@@ -451,7 +453,7 @@ export default function AiStudioView({
                                     onClick={handleCalculateSize}
                                     className="py-3 bg-[#1B2A6B] text-white hover:bg-[#4FC3F7] hover:text-[#0A0F2C] text-xs font-mono uppercase tracking-widest rounded transition-all duration-350 cursor-pointer"
                                 >
-                                    {isCalculatingSize ? 'Measuring skeletal metrics...' : 'Calculate Perfect Maqasaq Fit'}
+                                    {isCalculatingSize ? t('ai.measuring') : t('ai.calculate')}
                                 </button>
 
                                 {/* Size outcome block */}
@@ -459,30 +461,30 @@ export default function AiStudioView({
                                     <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex flex-col gap-3">
                                         <div className="flex justify-between items-center">
                                             <div>
-                                                <span className="text-[9px] font-mono text-[#C9A84C] block uppercase">Recommended Sizing</span>
+                                                <span className="text-[9px] font-mono text-[#C9A84C] block uppercase">{t('ai.recommendedSize')}</span>
                                                 <span className="text-3xl font-serif text-white font-bold">{sizeRecommendation.size}</span>
                                             </div>
                                             <div className="text-right">
-                                                <span className="text-[9px] font-mono text-[#4FC3F7] block uppercase">Advisor Confidence</span>
+                                                <span className="text-[9px] font-mono text-[#4FC3F7] block uppercase">{t('ai.confidence')}</span>
                                                 <span className="text-xl font-mono text-[#4FC3F7] font-semibold">{sizeRecommendation.confidence}%</span>
                                             </div>
                                         </div>
 
                                         <div className="grid grid-cols-4 gap-2 text-center text-[10px] font-mono bg-black/30 p-2.5 rounded border border-white/5 text-gray-400">
                                             <div>
-                                                <span className="block text-slate-500 uppercase text-[8px]">Chest Circum</span>
+                                                <span className="block text-slate-500 uppercase text-[8px]">{t('ai.chest')}</span>
                                                 <strong className="text-white">{sizeRecommendation.measurements.chest} cm</strong>
                                             </div>
                                             <div>
-                                                <span className="block text-slate-500 uppercase text-[8px]">Shoulder span</span>
+                                                <span className="block text-slate-500 uppercase text-[8px]">{t('ai.shoulder')}</span>
                                                 <strong className="text-white">{sizeRecommendation.measurements.shoulder} cm</strong>
                                             </div>
                                             <div>
-                                                <span className="block text-slate-500 uppercase text-[8px]">Garment len</span>
+                                                <span className="block text-slate-500 uppercase text-[8px]">{t('ai.length')}</span>
                                                 <strong className="text-white">{sizeRecommendation.measurements.length} cm</strong>
                                             </div>
                                             <div>
-                                                <span className="block text-slate-500 uppercase text-[8px]">Waist contour</span>
+                                                <span className="block text-slate-500 uppercase text-[8px]">{t('ai.waist')}</span>
                                                 <strong className="text-white">{sizeRecommendation.measurements.waist} cm</strong>
                                             </div>
                                         </div>
@@ -496,20 +498,20 @@ export default function AiStudioView({
                                         onClick={() => setActiveStep(2)}
                                         className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-xs text-white uppercase tracking-wider font-semibold rounded cursor-pointer"
                                     >
-                                        Garment Styling
+                                        {t('ai.garmentStyling')}
                                     </button>
                                     <button
                                         onClick={onSaveDesign}
                                         className="py-3 px-4 bg-[#1B2A6B]/80 border border-[#4FC3F7]/30 hover:bg-[#1B2A6B] text-xs text-white uppercase tracking-wider font-semibold rounded transition cursor-pointer flex items-center gap-1.5"
-                                        title="Save design for later review"
+                                        title={t('ai.saveTitle')}
                                     >
-                                        <Save size={12} /> Save
+                                        <Save size={12} /> {t('ai.save')}
                                     </button>
                                     <button
                                         onClick={dispatchToCoutureAtelier}
                                         className="flex-1 py-3 bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/90 text-[#0A0F2C] text-xs uppercase tracking-wider font-bold rounded hover:scale-102 transition cursor-pointer flex items-center justify-center gap-1.5 shadow-lg shadow-[#C9A84C]/10"
                                     >
-                                        <ShoppingBag size={12} /> Bag Bespoke Piece
+                                        <ShoppingBag size={12} /> {t('ai.bagPiece')}
                                     </button>
                                 </div>
                             </motion.div>
@@ -528,7 +530,7 @@ export default function AiStudioView({
                                     mockupAngle === 'front' ? 'bg-[#C9A84C] text-[#0A0F2C]' : 'bg-white/5 text-gray-400'
                                 }`}
                             >
-                                Front View
+                                {t('ai.frontView')}
                             </button>
                             <button
                                 onClick={() => setMockupAngle('back')}
@@ -536,12 +538,12 @@ export default function AiStudioView({
                                     mockupAngle === 'back' ? 'bg-[#C9A84C] text-[#0A0F2C]' : 'bg-white/5 text-gray-400'
                                 }`}
                             >
-                                Back View
+                                {t('ai.backView')}
                             </button>
                         </div>
 
                         <div className="absolute top-4 right-4 bg-white/5 text-[9px] text-[#C9A84C] px-2 py-1 rounded border border-white/5 font-mono tracking-wider">
-                            {clothingType.toUpperCase()} MOCKUP
+                            {clothingType.toUpperCase()} {t('ai.mockup')}
                         </div>
 
                         {/* Simulated 3D Garment Canvas */}
@@ -597,11 +599,11 @@ export default function AiStudioView({
                         {/* Mockup parameters */}
                         <div className="w-full flex justify-between items-center text-[10px] font-mono text-gray-400 border-t border-white/5 pt-4">
                             <div>
-                                <span className="block text-slate-500 uppercase text-[8px] text-left">Selected Weave</span>
+                                <span className="block text-slate-500 uppercase text-[8px] text-left">{t('ai.selectedWeave')}</span>
                                 <span className="text-[#E8E0D5] font-semibold">{selectedFabric}</span>
                             </div>
                             <div>
-                                <span className="block text-slate-500 uppercase text-[8px] text-right">Selected Printing</span>
+                                <span className="block text-slate-500 uppercase text-[8px] text-right">{t('ai.selectedPrinting')}</span>
                                 <span className="text-[#C9A84C] font-semibold">{selectedPrinting}</span>
                             </div>
                         </div>

@@ -19,6 +19,8 @@ import {
 import type { ArtPiece } from '@/shared/types';
 import type { ExhibitionRoom } from '../types';
 import { useTextToSpeech, type TtsLang } from '../hooks/useTextToSpeech';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
+import { localizedArtTitle } from '@/features/i18n/productNames';
 
 interface ExhibitionViewProps {
     artworks: ArtPiece[];
@@ -157,6 +159,7 @@ const LANGUAGE_STATUS: Record<TtsLang, { name: string; tooltip: string; noVoiceN
 // ─────────────────────── Component ───────────────────────
 
 export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionViewProps) {
+    const { t, language } = useLanguage();
     const [activeRoomIndex, setActiveRoomIndex] = useState<number>(0);
     const activeRoom = ROOMS[activeRoomIndex];
     const [activeWall, setActiveWall] = useState<WallView>('center');
@@ -222,10 +225,9 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
             <div className="w-full min-h-[400px] bg-gradient-to-b from-[#0E0B16] via-[#1A1126] to-[#0A0512] rounded-3xl border border-[#C9A84C]/25 p-8 shadow-2xl flex items-center justify-center">
                 <div className="text-center max-w-md">
                     <AlertTriangle size={40} className="text-amber-400 mx-auto mb-4" />
-                    <h3 className="text-xl font-serif text-white font-bold mb-2">Speech Not Supported</h3>
+                    <h3 className="text-xl font-serif text-white font-bold mb-2">{t('exh.speechUnsupported.title')}</h3>
                     <p className="text-sm text-slate-400 leading-relaxed">
-                        Your browser does not support the Web Speech API, which is required for
-                        the audio guide. Please try using Chrome, Edge, Firefox, or Safari.
+                        {t('exh.speechUnsupported.body')}
                     </p>
                 </div>
             </div>
@@ -275,7 +277,7 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                             }`}
                         >
-                            Room {idx + 1}
+                            {t('exh.room', { n: idx + 1 })}
                         </button>
                     ))}
                 </div>
@@ -312,9 +314,9 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                             : 'border-transparent text-slate-500 hover:text-white'
                                     }`}
                                 >
-                                    {wall === 'left' && '‹ Left'}
-                                    {wall === 'center' && 'Center'}
-                                    {wall === 'right' && 'Right ›'}
+                                    {wall === 'left' && t('exh.wallLeft')}
+                                    {wall === 'center' && t('exh.wallCenter')}
+                                    {wall === 'right' && t('exh.wallRight')}
                                 </button>
                             ))}
                         </div>
@@ -350,7 +352,7 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                             >
                                                 <img
                                                     src={currentWallArt.image}
-                                                    alt={currentWallArt.title}
+                                                    alt={localizedArtTitle(currentWallArt, language)}
                                                     className="w-full h-full object-cover transition-all duration-[1500ms] group-hover/art:scale-105 group-hover/art:brightness-[1.1]"
                                                     referrerPolicy="no-referrer"
                                                 />
@@ -358,7 +360,7 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                                     <span className="p-1.5 sm:p-2 rounded-full bg-[#C9A84C] text-[#0A0F2C]">
                                                         <Maximize2 size={14} />
                                                     </span>
-                                                    <span className="text-[8px] sm:text-[10px] font-mono tracking-widest text-[#E8E0D5] uppercase font-bold">Click to Inspect</span>
+                                                    <span className="text-[8px] sm:text-[10px] font-mono tracking-widest text-[#E8E0D5] uppercase font-bold">{t('exh.clickInspect')}</span>
                                                 </div>
                                             </div>
 
@@ -368,7 +370,7 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                                     {currentWallArt.category} Label
                                                 </span>
                                                 <h4 className="font-serif text-[#E8E0D5] text-sm sm:text-base group-hover/art:text-[#C9A84C] transition duration-300 mt-1.5 leading-tight">
-                                                    {currentWallArt.title}
+                                                    {localizedArtTitle(currentWallArt, language)}
                                                 </h4>
                                                 <div className="text-[9px] sm:text-[10px] text-gray-400 mt-1 font-mono">
                                                     {currentWallArt.artist} &bull; {currentWallArt.year}
@@ -377,7 +379,7 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                         </div>
                                     ) : (
                                         <div className="text-center text-slate-500 font-serif text-xs sm:text-sm">
-                                            Exhibition curation undergoing alignment swap. Change wall.
+                                            {t('exh.emptyWall')}
                                         </div>
                                     )}
                                 </motion.div>
@@ -388,7 +390,7 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                         <div className="w-full flex flex-wrap justify-between items-center mt-3 sm:mt-4 gap-2">
                             <div className="flex gap-1 items-center bg-black/40 border border-white/5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[8px] sm:text-[10px] font-mono text-gray-400">
                                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shrink-0" />
-                                <span className="truncate max-w-[120px] sm:max-w-none">Ambient Audio: {activeRoom.ambiance}</span>
+                                <span className="truncate max-w-[120px] sm:max-w-none">{t('exh.ambientAudio', { ambiance: activeRoom.ambiance })}</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <button
@@ -397,12 +399,12 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                         handleRoomSwitch(idx);
                                     }}
                                     className="p-2 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition cursor-pointer"
-                                    title="Previous Room"
+                                    title={t('exh.prevRoom')}
                                 >
                                     <ArrowLeft size={14} />
                                 </button>
                                 <span className="text-[9px] sm:text-[10px] font-mono text-white tracking-widest uppercase font-bold">
-                                    ROOM {activeRoomIndex + 1}/{ROOMS.length}
+                                    {t('exh.roomCount', { current: activeRoomIndex + 1, total: ROOMS.length })}
                                 </span>
                                 <button
                                     onClick={() => {
@@ -410,7 +412,7 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                         handleRoomSwitch(idx);
                                     }}
                                     className="p-2 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition cursor-pointer"
-                                    title="Next Room"
+                                    title={t('exh.nextRoom')}
                                 >
                                     <ArrowRight size={14} />
                                 </button>
@@ -425,12 +427,12 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                         </div>
                         <div>
                             <span className="text-[8px] sm:text-[9px] font-mono text-[#C9A84C] uppercase tracking-widest block font-bold">
-                                Museum Curatorial Commentary
+                                {t('exh.curatorial')}
                             </span>
                             <p className="text-[11px] sm:text-xs text-slate-300 mt-1 leading-relaxed font-sans">{activeRoom.description}</p>
                             <div className="mt-3 flex flex-wrap gap-4 text-[9px] sm:text-[10px] text-gray-400 font-mono">
                                 <div>
-                                    <strong className="text-white">Active Materials:</strong> {activeRoom.materials}
+                                    <strong className="text-white">{t('exh.activeMaterials')}</strong> {activeRoom.materials}
                                 </div>
                             </div>
                         </div>
@@ -445,7 +447,7 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                             <span className="text-[8px] sm:text-[9px] tracking-widest font-mono text-[#C9A84C] block font-bold uppercase">
                                 Metaverse Floor Plan &bull; خريطة المعرض
                             </span>
-                            <h3 className="font-serif text-white text-sm sm:text-base font-semibold mt-0.5 mb-3 uppercase">Gallery Map Position</h3>
+                            <h3 className="font-serif text-white text-sm sm:text-base font-semibold mt-0.5 mb-3 uppercase">{t('exh.galleryMap')}</h3>
                         </div>
                         <div className="w-full h-28 sm:h-36 bg-[#040612] rounded-xl border border-white/10 relative p-3 flex flex-col justify-between overflow-hidden">
                             {ROOMS.map((rm, idx) => (
@@ -472,9 +474,9 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                             </div>
                             <div className="w-full text-center border-t border-white/5 pt-1.5 text-[7px] sm:text-[8px] font-mono text-gray-500 flex justify-between uppercase mt-auto">
                                 <span>
-                                    Coordinates: {currentCoords.x}&deg;N, {currentCoords.y}&deg;E
+                                    {t('exh.coordinates', { x: currentCoords.x, y: currentCoords.y })}
                                 </span>
-                                <span className="text-red-400 tracking-wider">Dynamic Stance</span>
+                                <span className="text-red-400 tracking-wider">{t('exh.dynamicStance')}</span>
                             </div>
                         </div>
                     </div>
@@ -493,7 +495,7 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                     <div>
                                         <div className="flex justify-between items-center mb-4">
                                             <span className="text-[9px] sm:text-[10px] font-mono uppercase bg-[#C9A84C] text-[#0A0F2C] px-2 py-0.5 rounded font-bold tracking-wider">
-                                                Inspected Piece
+                                                {t('exh.inspectedPiece')}
                                             </span>
                                             <button
                                                 onClick={() => {
@@ -502,23 +504,23 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                                 }}
                                                 className="text-[10px] sm:text-xs text-slate-400 hover:text-white font-mono uppercase tracking-wider cursor-pointer font-bold"
                                             >
-                                                [ Zoom Out ]
+                                                {t('exh.zoomOut')}
                                             </button>
                                         </div>
-                                        <h4 className="font-serif text-white text-base sm:text-lg font-bold leading-tight uppercase mb-1">{zoomedArt.title}</h4>
-                                        <p className="text-xs text-[#C9A84C] font-mono italic mb-4">Artist: {zoomedArt.artist}</p>
+                                        <h4 className="font-serif text-white text-base sm:text-lg font-bold leading-tight uppercase mb-1">{localizedArtTitle(zoomedArt, language)}</h4>
+                                        <p className="text-xs text-[#C9A84C] font-mono italic mb-4">{t('exh.artist', { name: zoomedArt.artist })}</p>
                                         <p className="text-[11px] sm:text-xs text-slate-300 leading-relaxed mb-4 font-sans">{zoomedArt.description}</p>
                                         <div className="space-y-1.5 text-[9px] sm:text-[10px] font-mono text-gray-400 border-t border-b border-white/10 py-3 mb-4">
                                             <div className="flex justify-between">
-                                                <span>Heritage Age</span>
+                                                <span>{t('exh.heritageAge')}</span>
                                                 <span className="text-white">{zoomedArt.year}</span>
                                             </div>
                                             <div className="flex justify-between">
-                                                <span>Original Medium</span>
+                                                <span>{t('exh.medium')}</span>
                                                 <span className="text-white">{zoomedArt.medium}</span>
                                             </div>
                                             <div className="flex justify-between">
-                                                <span>Dimensions Scale</span>
+                                                <span>{t('exh.dimensions')}</span>
                                                 <span className="text-[#C9A84C]">{zoomedArt.dimensions}</span>
                                             </div>
                                         </div>
@@ -540,7 +542,7 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                                 }`}
                                             >
                                                 {isAudioGuideActive ? (
-                                                    <><VolumeX size={13} /> Stop Narration</>
+                                                    <><VolumeX size={13} /> {t('exh.stopNarration')}</>
                                                 ) : (
                                                     <><Volume2 size={13} /> {currentLangCode === 'ar' ? 'استمع للجولة' : currentLangCode === 'fr' ? 'Écouter la visite' : currentLangCode === 'de' ? 'Tour anhören' : 'Listen to Curatorial Tour'}</>
                                                 )}
@@ -596,7 +598,7 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                             {/* ─── Voice Tuning Panel ─── */}
                                             <div className="mt-3 p-3 bg-[#090D2A]/70 border border-white/5 rounded-lg">
                                                 <div className="flex items-center gap-1.5 text-[8px] font-mono uppercase text-[#C9A84C] tracking-widest mb-2">
-                                                    <Mic size={10} /> Voice Tuning — {LANGUAGE_STATUS[currentLangCode].name}
+                                                    <Mic size={10} /> {t('exh.voiceTuning', { name: LANGUAGE_STATUS[currentLangCode].name })}
                                                     {tts.voiceSource === 'google-tts' && (
                                                         <span
                                                             className="ml-auto text-[7px] px-1.5 py-0.5 rounded-full bg-green-900/50 text-green-400 border border-green-500/30 font-mono"
@@ -665,10 +667,10 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                                         >
                                                             <option value="">
                                                                 {tts.voices.length === 0
-                                                                    ? '⏳ Loading voices…'
+                                                                    ? t('exh.loadingVoices')
                                                                     : currentLangCode === 'ar'
                                                                         ? '🎤 الصوت الافتراضي'
-                                                                        : '🎤 Auto (default voice)'}
+                                                                        : t('exh.autoVoice')}
                                                             </option>
                                                             {tts.voices.map((v) => (
                                                                 <option key={v.voiceURI} value={v.voiceURI}>
@@ -681,7 +683,7 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                                             <button
                                                                 onClick={() => tts.previewVoice(tts.selectedVoice!.voiceURI)}
                                                                 className="shrink-0 p-1.5 rounded-lg bg-[#1B2A6B]/50 hover:bg-[#1B2A6B] text-white border border-white/10 transition cursor-pointer"
-                                                                title="Preview this voice"
+                                                                title={t('exh.previewVoice')}
                                                             >
                                                                 <Play size={14} />
                                                             </button>
@@ -691,7 +693,7 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                                         <span>
                                                             {tts.isArabicWithoutVoice && tts.googleTtsConfigured
                                                                 ? '☁️ Google Cloud TTS · Arabic'
-                                                                : `${tts.voices.length} voice${tts.voices.length !== 1 ? 's' : ''} available`}
+                                                                : t('exh.voicesAvailable', { count: tts.voices.length, s: tts.voices.length !== 1 ? 's' : '' })}
                                                             {tts.hasArabicVoices ? ' · 🇸🇦 AR' : ''}
                                                             {tts.hasFrenchVoices ? ' · 🇫🇷 FR' : ''}
                                                             {tts.hasGermanVoices ? ' · 🇩🇪 DE' : ''}
@@ -707,7 +709,7 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                                 {/* Speed Slider */}
                                                 <div className="mb-2">
                                                     <div className="flex justify-between text-[8px] font-mono text-slate-500 uppercase mb-1">
-                                                        <span>Speed</span>
+                                                        <span>{t('exh.speed')}</span>
                                                         <span className="text-[#C9A84C]">{tts.options.rate.toFixed(1)}x</span>
                                                     </div>
                                                     <input
@@ -720,15 +722,15 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                                         className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-[#C9A84C]"
                                                     />
                                                     <div className="flex justify-between text-[7px] font-mono text-slate-600 mt-0.5">
-                                                        <span>Slow</span>
-                                                        <span>Fast</span>
+                                                        <span>{t('exh.slow')}</span>
+                                                        <span>{t('exh.fast')}</span>
                                                     </div>
                                                 </div>
 
                                                 {/* Pitch Slider */}
                                                 <div>
                                                     <div className="flex justify-between text-[8px] font-mono text-slate-500 uppercase mb-1">
-                                                        <span>Pitch</span>
+                                                        <span>{t('exh.pitch')}</span>
                                                         <span className="text-[#C9A84C]">{tts.options.pitch.toFixed(1)}</span>
                                                     </div>
                                                     <input
@@ -741,8 +743,8 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                                         className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-[#C9A84C]"
                                                     />
                                                     <div className="flex justify-between text-[7px] font-mono text-slate-600 mt-0.5">
-                                                        <span>Low</span>
-                                                        <span>High</span>
+                                                        <span>{t('exh.low')}</span>
+                                                        <span>{t('exh.high')}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -750,14 +752,14 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                     </div>
                                     <div className="pt-4 border-t border-white/10 mt-auto flex flex-col gap-2">
                                         <div className="flex justify-between items-center text-[11px] sm:text-xs font-mono mb-2">
-                                            <span className="text-gray-500">Curatorial Valuation:</span>
+                                            <span className="text-gray-500">{t('exh.valuation')}</span>
                                             <span className="text-white font-extrabold text-sm sm:text-base">${zoomedArt.price.toLocaleString()}</span>
                                         </div>
                                         <button
                                             onClick={() => onAddToCart(zoomedArt)}
                                             className="w-full py-3 bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/80 hover:text-[#0A0F2C] text-[#0A0F2C] text-[11px] sm:text-xs font-bold uppercase tracking-widest rounded transition-all duration-350 cursor-pointer flex items-center justify-center gap-1.5"
                                         >
-                                            <ShoppingCart size={13} /> Purchase Curation Piece
+                                            <ShoppingCart size={13} /> {t('exh.purchase')}
                                         </button>
                                     </div>
                                 </motion.div>
@@ -771,16 +773,16 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                     <button
                                         onClick={() => currentWallArt && setZoomedArt(currentWallArt)}
                                         className="flex flex-col items-center gap-1 group cursor-pointer"
-                                        title="Click to inspect the current artwork"
+                                        title={t('exh.inspectTitle')}
                                     >
                                         <Eye className="text-[#C9A84C] mb-1 animate-pulse group-hover:scale-110 transition-transform" size={24} />
                                         <span className="text-[9px] sm:text-[10px] font-mono text-[#C9A84C] underline group-hover:text-white transition-colors">
-                                            Click to Inspect
+                                            {t('exh.clickInspect')}
                                         </span>
                                     </button>
-                                    <h4 className="font-serif text-[#E8E0D5] text-xs sm:text-sm uppercase font-semibold mb-1 mt-3">Interactive Wall Inspect</h4>
+                                    <h4 className="font-serif text-[#E8E0D5] text-xs sm:text-sm uppercase font-semibold mb-1 mt-3">{t('exh.inspectHint')}</h4>
                                     <p className="text-[9px] sm:text-[10px] text-gray-500 leading-relaxed max-w-[170px] sm:max-w-[190px]">
-                                        Click the artwork above or tap the <strong>eye icon</strong> to zoom, play live voice narratives, and acquire pieces.
+                                        {t('exh.inspectBody')}
                                     </p>
                                 </motion.div>
                             )}

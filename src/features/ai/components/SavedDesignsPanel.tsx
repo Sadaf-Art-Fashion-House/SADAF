@@ -6,12 +6,15 @@ import Link from 'next/link';
 import { useDesignDraftStore } from '@/features/ai/store/useDesignDraftStore';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { isAdminRole } from '@/shared/types';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
+import { localizedDesignName } from '@/features/i18n/productNames';
 
 interface SavedDesignsPanelProps {
     onClose: () => void;
 }
 
 export default function SavedDesignsPanel({ onClose }: SavedDesignsPanelProps) {
+    const { language } = useLanguage();
     const { drafts, deleteDraft } = useDesignDraftStore();
     const { user } = useAuth();
     const isAdmin = user ? isAdminRole(user.role) : false;
@@ -75,7 +78,7 @@ export default function SavedDesignsPanel({ onClose }: SavedDesignsPanelProps) {
                                     />
                                     <div className="min-w-0">
                                         <h4 className="text-xs font-serif text-white font-semibold truncate">
-                                            {draft.design.patternName}
+                                            {localizedDesignName(draft.design, language)}
                                         </h4>
                                         <p className="text-[9px] font-mono text-slate-500">
                                             {draft.design.clothingType} • {new Date(draft.savedAt).toLocaleDateString()}

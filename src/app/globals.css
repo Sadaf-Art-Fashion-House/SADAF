@@ -84,3 +84,169 @@ body {
   background-size: 40px 40px;
   background-position: 0 0, 20px 20px;
 }
+
+/* ── Preferences-driven UX (settings hub) ──────────────────────────────── */
+
+/* Reduced motion: strip animations/transitions for users who opt out. */
+.pref-reduced-motion *,
+.pref-reduced-motion *::before,
+.pref-reduced-motion *::after {
+  animation-duration: 0.001s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001s !important;
+  scroll-behavior: auto !important;
+}
+
+/* High contrast: brighter borders and text for readability. */
+.pref-high-contrast body {
+  filter: contrast(1.12) saturate(1.08);
+}
+.pref-high-contrast {
+  --pref-border-strong: rgba(232, 224, 213, 0.22);
+}
+.pref-high-contrast body {
+  color: #F5F1E8;
+}
+
+/* RTL refinements — flip icon arrows/chevrons that should mirror in Arabic. */
+[dir="rtl"] .rtl\:rotate-180 {
+  transform: rotate(180deg);
+}
+
+/* ── Light theme ──────────────────────────────────────────────────────────
+ * The app was built with hardcoded dark colors (navy backgrounds, cream
+ * text). The `pref-light-theme` class (applied to <html> by the
+ * LanguageProvider from the settings preferences store) remaps the most
+ * common color classes to a light palette via overrides, so every surface
+ * flips without touching 75+ component files. Colors that work on both
+ * themes (gold #C9A84C, crystal #4FC3F7) are intentionally left alone.
+ * ──────────────────────────────────────────────────────────────────────── */
+.pref-light-theme {
+  --background: #F5F2EB;
+  --foreground: #1A1A2E;
+  background-color: #F5F2EB;
+  color: #1A1A2E;
+  color-scheme: light;
+}
+
+.pref-light-theme body {
+  background-color: #F5F2EB;
+  color: #1A1A2E;
+}
+
+.pref-light-theme ::-webkit-scrollbar-track {
+  background: #EAE4D9;
+}
+
+/* Page + card backgrounds (navy → light parchment / white cards). */
+.pref-light-theme .bg-\[\#0A0F2C\] { background-color: #F5F2EB; }
+.pref-light-theme .bg-\[\#05081A\] { background-color: #EAE4D9; }
+.pref-light-theme .bg-\[\#090D2A\] { background-color: #EAE4D9; }
+.pref-light-theme .bg-\[\#0F1535\] { background-color: #FFFFFF; }
+.pref-light-theme .bg-\[\#12193E\] { background-color: #FFFFFF; }
+.pref-light-theme .bg-\[\#141B4D\] { background-color: #FFFFFF; }
+.pref-light-theme .bg-\[\#0F1435\] { background-color: #FFFFFF; }
+.pref-light-theme .bg-\[\#111A45\] { background-color: #FFFFFF; }
+.pref-light-theme .bg-\[\#070A20\] { background-color: #FFFFFF; }
+.pref-light-theme .bg-\[\#1B2A6B\] { background-color: #D8E0F5; }
+
+/* Translucent navy surfaces — keep the same opacity, light hue. */
+.pref-light-theme .bg-\[\#0A0F2C\]\/30 { background-color: rgba(245, 242, 235, 0.3); }
+.pref-light-theme .bg-\[\#0A0F2C\]\/40 { background-color: rgba(245, 242, 235, 0.4); }
+.pref-light-theme .bg-\[\#0A0F2C\]\/50 { background-color: rgba(245, 242, 235, 0.5); }
+.pref-light-theme .bg-\[\#0A0F2C\]\/60 { background-color: rgba(245, 242, 235, 0.6); }
+.pref-light-theme .bg-\[\#0A0F2C\]\/70 { background-color: rgba(245, 242, 235, 0.7); }
+.pref-light-theme .bg-\[\#0A0F2C\]\/80 { background-color: rgba(245, 242, 235, 0.8); }
+.pref-light-theme .bg-\[\#0A0F2C\]\/90 { background-color: rgba(245, 242, 235, 0.9); }
+.pref-light-theme .bg-\[\#0A0F2C\]\/95 { background-color: rgba(245, 242, 235, 0.95); }
+.pref-light-theme .bg-\[\#0A0F2C\]\/98 { background-color: rgba(245, 242, 235, 0.98); }
+.pref-light-theme .bg-\[\#05081A\]\/60 { background-color: rgba(234, 228, 217, 0.6); }
+.pref-light-theme .bg-\[\#05081A\]\/70 { background-color: rgba(234, 228, 217, 0.7); }
+.pref-light-theme .bg-\[\#05081A\]\/80 { background-color: rgba(234, 228, 217, 0.8); }
+.pref-light-theme .bg-\[\#05081A\]\/90 { background-color: rgba(234, 228, 217, 0.9); }
+.pref-light-theme .bg-\[\#05081A\]\/95 { background-color: rgba(234, 228, 217, 0.95); }
+.pref-light-theme .bg-\[\#05081A\]\/98 { background-color: rgba(234, 228, 217, 0.98); }
+
+/* Primary text (white / cream → dark ink). */
+.pref-light-theme .text-white { color: #1A1A2E; }
+.pref-light-theme .text-white\/90 { color: rgba(26, 26, 46, 0.9); }
+.pref-light-theme .text-\[\#E8E0D5\] { color: #2B2B3D; }
+.pref-light-theme .text-\[\#E8E0D5\]\/15 { color: rgba(43, 43, 61, 0.15); }
+.pref-light-theme .text-\[\#E8E0D5\]\/20 { color: rgba(43, 43, 61, 0.2); }
+.pref-light-theme .text-\[\#E8E0D5\]\/25 { color: rgba(43, 43, 61, 0.25); }
+.pref-light-theme .text-\[\#E8E0D5\]\/30 { color: rgba(43, 43, 61, 0.3); }
+.pref-light-theme .text-\[\#E8E0D5\]\/35 { color: rgba(43, 43, 61, 0.35); }
+.pref-light-theme .text-\[\#E8E0D5\]\/40 { color: rgba(43, 43, 61, 0.4); }
+.pref-light-theme .text-\[\#E8E0D5\]\/45 { color: rgba(43, 43, 61, 0.45); }
+.pref-light-theme .text-\[\#E8E0D5\]\/50 { color: rgba(43, 43, 61, 0.5); }
+.pref-light-theme .text-\[\#E8E0D5\]\/60 { color: rgba(43, 43, 61, 0.6); }
+.pref-light-theme .text-\[\#E8E0D5\]\/65 { color: rgba(43, 43, 61, 0.65); }
+.pref-light-theme .text-\[\#E8E0D5\]\/70 { color: rgba(43, 43, 61, 0.7); }
+.pref-light-theme .text-\[\#E8E0D5\]\/75 { color: rgba(43, 43, 61, 0.75); }
+.pref-light-theme .text-\[\#E8E0D5\]\/80 { color: rgba(43, 43, 61, 0.8); }
+.pref-light-theme .text-\[\#E8E0D5\]\/85 { color: rgba(43, 43, 61, 0.85); }
+.pref-light-theme .text-\[\#E8E0D5\]\/90 { color: rgba(43, 43, 61, 0.9); }
+
+/* Light-gold / purple accents — darken for contrast on light surfaces. */
+.pref-light-theme .text-\[\#F0D080\] { color: #8B6914; }
+.pref-light-theme .text-\[\#ebd083\] { color: #8B6914; }
+.pref-light-theme .text-\[\#FFD700\] { color: #B8860B; }
+.pref-light-theme .text-\[\#A78BFA\] { color: #6D3FD6; }
+
+/* Subtle white borders → dark tints. */
+.pref-light-theme .border-white\/5 { border-color: rgba(0, 0, 0, 0.06); }
+.pref-light-theme .border-white\/10 { border-color: rgba(0, 0, 0, 0.1); }
+.pref-light-theme .border-white\/15 { border-color: rgba(0, 0, 0, 0.12); }
+.pref-light-theme .border-white\/20 { border-color: rgba(0, 0, 0, 0.16); }
+.pref-light-theme .border-white\/25 { border-color: rgba(0, 0, 0, 0.2); }
+.pref-light-theme .border-white\/30 { border-color: rgba(0, 0, 0, 0.24); }
+.pref-light-theme .border-white\/50 { border-color: rgba(0, 0, 0, 0.4); }
+.pref-light-theme .hover\:border-white\/10:hover { border-color: rgba(0, 0, 0, 0.12); }
+.pref-light-theme .hover\:border-white\/20:hover { border-color: rgba(0, 0, 0, 0.18); }
+.pref-light-theme .hover\:border-white\/25:hover { border-color: rgba(0, 0, 0, 0.25); }
+.pref-light-theme .hover\:border-white\/30:hover { border-color: rgba(0, 0, 0, 0.3); }
+.pref-light-theme .hover\:border-white\/50:hover { border-color: rgba(0, 0, 0, 0.5); }
+.pref-light-theme .border-\[\#E8E0D5\] { border-color: #C9C4B8; }
+.pref-light-theme .border-\[\#E8E0D5\]\/5 { border-color: rgba(0, 0, 0, 0.06); }
+.pref-light-theme .border-\[\#E8E0D5\]\/10 { border-color: rgba(0, 0, 0, 0.1); }
+.pref-light-theme .border-\[\#E8E0D5\]\/15 { border-color: rgba(0, 0, 0, 0.12); }
+.pref-light-theme .border-\[\#E8E0D5\]\/20 { border-color: rgba(0, 0, 0, 0.16); }
+.pref-light-theme .border-\[\#0A0F2C\] { border-color: #B9B4A8; }
+.pref-light-theme .border-\[\#0A0F2C\]\/5 { border-color: rgba(0, 0, 0, 0.06); }
+
+/* Subtle white surfaces (chips, hovers) → dark tints. */
+.pref-light-theme .bg-white\/5 { background-color: rgba(0, 0, 0, 0.04); }
+.pref-light-theme .bg-white\/10 { background-color: rgba(0, 0, 0, 0.06); }
+.pref-light-theme .bg-white\/20 { background-color: rgba(0, 0, 0, 0.1); }
+.pref-light-theme .bg-white\/80 { background-color: #FFFFFF; }
+.pref-light-theme .hover\:bg-white\/5:hover { background-color: rgba(0, 0, 0, 0.05); }
+.pref-light-theme .hover\:bg-white\/10:hover { background-color: rgba(0, 0, 0, 0.08); }
+
+/* Dark form inputs / subtle scrims → light fields (drawer scrims bg-black/60+ stay). */
+.pref-light-theme .bg-black\/40 { background-color: rgba(0, 0, 0, 0.05); }
+
+/* Navy page-header gradients → light parchment. */
+.pref-light-theme .from-\[\#0A0F2C\] { --tw-gradient-from: #F5F2EB; }
+.pref-light-theme .to-\[\#0A0F2C\] { --tw-gradient-to: #F5F2EB; }
+.pref-light-theme .via-\[\#0A0F2C\] { --tw-gradient-via: #F5F2EB; }
+.pref-light-theme .from-\[\#05081A\] { --tw-gradient-from: #EAE4D9; }
+.pref-light-theme .to-\[\#05081E\] { --tw-gradient-to: #EAE4D9; }
+.pref-light-theme .from-\[\#141B4D\] { --tw-gradient-from: #FFFFFF; }
+.pref-light-theme .to-\[\#12193E\] { --tw-gradient-to: #FFFFFF; }
+.pref-light-theme .to-\[\#12103A\] { --tw-gradient-to: #FFFFFF; }
+.pref-light-theme .to-\[\#0A0512\] { --tw-gradient-to: #FFFFFF; }
+.pref-light-theme .from-\[\#0E0B16\] { --tw-gradient-from: #FFFFFF; }
+.pref-light-theme .via-\[\#1A1126\] { --tw-gradient-via: #FFFFFF; }
+.pref-light-theme .from-\[\#1B2A6B\] { --tw-gradient-from: #D8E0F5; }
+.pref-light-theme .via-\[\#1B2A6B\] { --tw-gradient-via: #D8E0F5; }
+.pref-light-theme .to-\[\#1B2A6B\] { --tw-gradient-to: #D8E0F5; }
+
+/* Glass panels → light frosted glass. */
+.pref-light-theme .glass-panel {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+.pref-light-theme .glass-panel-gold {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(201, 168, 76, 0.3);
+}

@@ -1,20 +1,55 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import SignedInToast from '@/shared/components/SignedInToast';
 import DashboardView from './DashboardView';
+import type { CustomerSpendingPoint } from '@/features/customer/types';
 
 export default function DashboardPageClient() {
     const router = useRouter();
     const { user, logout, updateProfile } = useAuth();
+
+    // Monthly performance data for the dashboard-home chart (12-month
+    // spending series from the customer-analysis API — same source of truth
+    // as the Analysis page).
+    const [monthlyPerformance, setMonthlyPerformance] = useState<CustomerSpendingPoint[] | null>(null);
+    const [monthlyLoading, setMonthlyLoading] = useState(true);
+    const [monthlyError, setMonthlyError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!user) {
+            setMonthlyLoading(false);
+            return;
+        }
+        const controller = new AbortController();
+        const query = user.id ? `?userId=${encodeURIComponent(user.id)}` : '';
+        fetch(`/api/dashboard/customer-analysis${query}`, { signal: controller.signal })
+            .then((res) => {
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return res.json();
+            })
+            .then((json: { monthlySpending?: CustomerSpendingPoint[] }) => {
+                setMonthlyPerformance(json.monthlySpending ?? []);
+                setMonthlyError(null);
+            })
+            .catch((err: unknown) => {
+                if (err instanceof DOMException && err.name === 'AbortError') return;
+                setMonthlyError(err instanceof Error ? err.message : 'Failed to load monthly performance');
+            })
+            .finally(() => setMonthlyLoading(false));
+        return () => controller.abort();
+    }, [user]);
 
     const handleLogout = () => {
         logout();
         router.push('/auth');
     };
 
-    // User is not logged in — redirect to login
+    // Hooks rules: all hooks before any early return.
+
     if (!user) {
         // We use a timeout to avoid the "Cannot update during render" error
         // that would happen if we called router.push() directly in render.
@@ -36,5 +71,19 @@ export default function DashboardPageClient() {
         );
     }
 
-    return <DashboardView user={user} onLogout={handleLogout} onUpdateProfile={updateProfile} />;
+    return (
+        <>
+            {/* Welcome-back confirmation toast after a successful login
+                (reads ?signedIn=1 set by the auth page). */}
+            <SignedInToast />
+            <DashboardView
+                user={user}
+                onLogout={handleLogout}
+                onUpdateProfile={updateProfile}
+                monthlyPerformance={monthlyPerformance}
+                monthlyPerformanceLoading={monthlyLoading}
+                monthlyPerformanceError={monthlyError}
+            />
+        </>
+    );
 }
