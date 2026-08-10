@@ -23,10 +23,13 @@ import {
 import Link from 'next/link';
 import type { FashionProduct, ArtPiece } from '@/shared/types';
 import { fashionDatabase, artDatabase, collections } from '@/data';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
+import { localizedArtTitle, localizedDesignName, localizedProductFabric, localizedProductName } from '@/features/i18n/productNames';
 import { useDesignDraftStore } from '@/features/ai/store/useDesignDraftStore';
 import { designPublisher } from '@/features/ai/services/designPublisher';
 import { useWSAdminDashboardData } from '@/features/dashboard/hooks/useDashboardData';
 import { ErrorBanner } from '@/shared/ui/ErrorGuidance';
+import { ErrorBoundary } from '@/shared/ui/ErrorBoundary';
 import AtelierRequestsTab from '@/features/admin/components/AtelierRequestsTab';
 
 // ─── Dynamic icon resolver for API-driven KPIs ────────────────────────────
@@ -56,6 +59,7 @@ interface AdminDashboardViewProps {
 }
 
 export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps) {
+    const { language } = useLanguage();
     const [mainTab, setMainTab] = useState<'analytics' | 'products' | 'arts' | 'ai-logs' | 'orders' | 'customers' | 'designs' | 'atelier'>('analytics');
 
     // Product management
@@ -289,6 +293,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                             exit={{ opacity: 0, y: -10 }}
                             className="space-y-8"
                         >
+                            <ErrorBoundary label="admin:analytics">
                             {/* KPI Grid — WebSocket real-time with hardcoded fallback */}
                             <div className="space-y-1.5">
                                 <div className="flex items-center justify-between">
@@ -392,6 +397,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                     Sync Credits
                                 </button>
                             </div>
+                            </ErrorBoundary>
                         </motion.div>
                     )}
 
@@ -404,6 +410,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                             exit={{ opacity: 0, y: -10 }}
                             className="grid grid-cols-1 lg:grid-cols-12 gap-8"
                         >
+                            <ErrorBoundary label="admin:products">
                             {/* Create Product Form */}
                             <div className="lg:col-span-4 bg-[#090D2A]/80 border border-white/5 rounded-xl p-6">
                                 <h3 className="font-serif text-lg text-white mb-4 flex items-center gap-2">
@@ -524,9 +531,9 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                                     className="w-12 h-12 object-cover rounded-lg border border-white/10"
                                                 />
                                                 <div>
-                                                    <h4 className="text-xs font-serif text-white font-semibold uppercase leading-tight">{prod.name}</h4>
+                                                    <h4 className="text-xs font-serif text-white font-semibold uppercase leading-tight">{localizedProductName(prod, language)}</h4>
                                                     <p className="text-[9px] text-[#C9A84C] font-mono mt-0.5">
-                                                        ${prod.price.toLocaleString()} &bull; <span className="text-slate-500 font-sans">{prod.fabric}</span>
+                                                        ${prod.price.toLocaleString()} &bull; <span className="text-slate-500 font-sans">{localizedProductFabric(prod, language)}</span>
                                                     </p>
                                                 </div>
                                             </div>
@@ -541,6 +548,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                     ))}
                                 </div>
                             </div>
+                            </ErrorBoundary>
                         </motion.div>
                     )}
 
@@ -553,6 +561,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                             exit={{ opacity: 0, y: -10 }}
                             className="grid grid-cols-1 lg:grid-cols-12 gap-8"
                         >
+                            <ErrorBoundary label="admin:arts">
                             <div className="lg:col-span-4 bg-[#090D2A]/80 border border-white/5 rounded-xl p-6">
                                 <h3 className="font-serif text-lg text-white mb-4 flex items-center gap-2">
                                     <Image size={16} className="text-[#C9A84C]" /> Curate Fine Art Piece
@@ -635,7 +644,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                             {artDatabase.map((art) => (
                                                 <tr key={art.id} className="h-12 hover:text-white transition">
                                                     <td className="py-2 leading-tight">
-                                                        <span className="font-semibold block text-[#E8E0D5]">{art.title}</span>
+                                                        <span className="font-semibold block text-[#E8E0D5]">{localizedArtTitle(art, language)}</span>
                                                         <span className="text-[10px] text-gray-600 block">{art.medium}</span>
                                                     </td>
                                                     <td>{art.category}</td>
@@ -647,6 +656,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                     </table>
                                 </div>
                             </div>
+                            </ErrorBoundary>
                         </motion.div>
                     )}
 
@@ -659,6 +669,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                             exit={{ opacity: 0, y: -10 }}
                             className="space-y-6"
                         >
+                            <ErrorBoundary label="admin:orders">
                             <div className="flex justify-between items-center">
                                 <div>
                                     <h3 className="font-serif text-[#C9A84C] text-lg font-semibold uppercase tracking-wider">Stitch Logistics Orders</h3>
@@ -701,6 +712,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                     </div>
                                 ))}
                             </div>
+                            </ErrorBoundary>
                         </motion.div>
                     )}
 
@@ -713,6 +725,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                             exit={{ opacity: 0, y: -10 }}
                             className="space-y-6"
                         >
+                            <ErrorBoundary label="admin:customers">
                             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                                 <div>
                                     <h3 className="font-serif text-[#C9A84C] text-lg font-semibold uppercase tracking-wider">Registered Curator Roster</h3>
@@ -751,6 +764,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                     </div>
                                 ))}
                             </div>
+                            </ErrorBoundary>
                         </motion.div>
                     )}
 
@@ -763,6 +777,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                             exit={{ opacity: 0, y: -10 }}
                             className="space-y-6"
                         >
+                            <ErrorBoundary label="admin:designs">
                             <div className="flex justify-between items-center">
                                 <div>
                                     <h3 className="font-serif text-[#C9A84C] text-lg font-semibold uppercase tracking-wider">
@@ -918,7 +933,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                                         }}
                                                     />
                                                     <div className="min-w-0">
-                                                        <h4 className="text-xs font-serif text-white font-semibold truncate">{draft.design.patternName}</h4>
+                                                        <h4 className="text-xs font-serif text-white font-semibold truncate">{localizedDesignName(draft.design, language)}</h4>
                                                         <p className="text-[9px] font-mono text-slate-500">
                                                             {draft.design.clothingType} • {new Date(draft.savedAt).toLocaleDateString()}
                                                         </p>
@@ -978,6 +993,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                     ))
                                 )}
                             </div>
+                            </ErrorBoundary>
                         </motion.div>
                     )}
 
@@ -990,6 +1006,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                             exit={{ opacity: 0, y: -10 }}
                             className="space-y-6"
                         >
+                            <ErrorBoundary label="admin:ai-logs">
                             <h3 className="font-serif text-xl text-white mb-2 flex items-center gap-1.5">
                                 <Cpu className="text-[#C9A84C]" size={20} /> REAL-TIME AI STUDIO TELEMETRY
                             </h3>
@@ -1010,6 +1027,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                     </div>
                                 ))}
                             </div>
+                            </ErrorBoundary>
                         </motion.div>
                     )}
 
@@ -1022,7 +1040,9 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                             exit={{ opacity: 0, y: -10 }}
                             className="space-y-6"
                         >
+                            <ErrorBoundary label="admin:atelier">
                             <AtelierRequestsTab />
+                            </ErrorBoundary>
                         </motion.div>
                     )}
                 </AnimatePresence>

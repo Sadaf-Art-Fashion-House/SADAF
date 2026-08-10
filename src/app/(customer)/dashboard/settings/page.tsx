@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
-import WatermarkSettingsPageClient from './WatermarkSettingsPageClient';
+import SettingsPageClient from './SettingsPageClient';
 
 export const metadata: Metadata = {
     title: 'Settings | SADAF Atelier',
-    description: 'Customise your dashboard experience — watermark, export, and display preferences.',
+    description: 'Customise your SADAF experience — language, appearance, accessibility, notifications, privacy and data.',
 };
 
 export default function SettingsPage() {
-    return <WatermarkSettingsPageClient />;
+    return <SettingsPageClient />;
 }

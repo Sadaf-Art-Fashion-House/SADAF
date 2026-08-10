@@ -19,6 +19,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PersonalActivityEvent } from '../types';
 import { playSoftChime } from '@/shared/utils/playSoftChime';
+import { isBrowserNotificationSupported } from '@/features/notifications/hooks/useBrowserNotificationPermission';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
@@ -49,10 +50,6 @@ function readStoredPreferences(): AlertPreferences {
     }
 }
 
-function isNotificationSupported(): boolean {
-    return typeof window !== 'undefined' && 'Notification' in window;
-}
-
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
 export function useActivityAlerts(events: PersonalActivityEvent[]) {
@@ -81,7 +78,7 @@ export function useActivityAlerts(events: PersonalActivityEvent[]) {
     // Load persisted prefs + feature detection after mount (client-only,
     // avoids SSR hydration mismatch).
     useEffect(() => {
-        setIsSupported(isNotificationSupported());
+        setIsSupported(isBrowserNotificationSupported());
         setPreferences(readStoredPreferences());
     }, []);
 
@@ -101,7 +98,7 @@ export function useActivityAlerts(events: PersonalActivityEvent[]) {
 
     const notifyBrowser = useCallback((event: PersonalActivityEvent) => {
         try {
-            if (!isNotificationSupported() || Notification.permission !== 'granted') return;
+            if (!isBrowserNotificationSupported() || Notification.permission !== 'granted') return;
             const notification = new Notification('SADAF — My Activity', {
                 body: `${event.title} — ${event.message}`,
                 tag: event.id, // Replaces any older notification with the same id.

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ROUTES } from '@/config/routes';
 import { Handshake, Building2, ArrowRight } from 'lucide-react';
+import CompanyHomePageClient from './CompanyHomePageClient';
 
 export const metadata: Metadata = {
     title: 'Company Workspace | SADAF',
@@ -16,6 +17,9 @@ export const metadata: Metadata = {
 export default function CompanyHomePage() {
     return (
         <div className="relative w-full min-h-screen pb-20">
+            {/* Welcome-back confirmation toast after a successful login
+                (reads ?signedIn=1 set by the auth page). */}
+            <CompanyHomePageClient />
             <section className="px-6 md:px-10 py-10 border-b border-rose-500/10 bg-gradient-to-b from-[#0A0F2C] to-[#2A1020]">
                 <div className="flex items-center gap-2 mb-3">
                     <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-rose-400">

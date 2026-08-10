@@ -1,15 +1,23 @@
 export interface FashionProduct {
     id: string;
     name: string;
+    /** Arabic display name for the bilingual catalog — falls back to `name` when absent. */
+    nameAr?: string;
     category: string;
     price: number;
     image: string;
     hoverImage: string;
     description: string;
+    /** Arabic product description — falls back to `description` when absent. */
+    descriptionAr?: string;
     fabric: string;
+    /** Arabic fabric label — falls back to `fabric` when absent. */
+    fabricAr?: string;
     sizes: string[];
     colors: { name: string; hex: string }[];
     details: string[];
+    /** Arabic bullet-point details — falls back to `details` when absent. */
+    detailsAr?: string[];
     rating: number;
 }
 

@@ -46,6 +46,7 @@ function designToFashionProduct(design: AIClothingDesign, selectedFabric: string
     return {
         id: generateId('f'),
         name: design.patternName || 'AI-Designed Creation',
+        nameAr: design.patternNameAr,
         category: CLOTHING_TO_CATEGORY[design.clothingType] || 'Limited Edition',
         price: 680,
         image: '',
@@ -71,6 +72,7 @@ function designToArtPiece(design: AIClothingDesign): ArtPiece {
     return {
         id: generateId('art'),
         title: design.patternName || 'AI-Generated Art Composition',
+        titleAr: design.patternNameAr,
         category: 'Digital Art',
         artist: 'SADAF AI Studio / Gemini Neural Pipeline',
         price: 1200,

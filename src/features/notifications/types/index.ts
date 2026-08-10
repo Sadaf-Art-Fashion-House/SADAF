@@ -9,6 +9,10 @@ export interface Notification {
     type: NotificationType;
     title: string;
     message: string;
+    /** Arabic title — rendered when the app language is Arabic (falls back to `title`). */
+    titleAr?: string;
+    /** Arabic message — same fallback semantics as `titleAr`. */
+    messageAr?: string;
     href?: string;
     createdAt: string;
     read: boolean;

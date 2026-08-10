@@ -22,12 +22,18 @@ import { isCustomerRole, isAdminRole, getRoleCategory } from '@/shared/types';
 import { ROLE_BADGES, ROLE_BADGE_COLORS } from '@/features/auth/types';
 import { ROUTES } from '@/config/routes';
 import { fileToResizedDataUrl } from '@/shared/utils/fileToResizedDataUrl';
+import type { CustomerSpendingPoint } from '@/features/customer/types';
+import MonthlyPerformanceChart from './MonthlyPerformanceChart';
 
 interface DashboardViewProps {
     user: UserProfile;
     onLogout: () => void;
     /** Persist a profile change (avatar) — updates context + storage. */
     onUpdateProfile: (patch: Partial<UserProfile>) => void;
+    /** Monthly spending series for the performance chart on the home. */
+    monthlyPerformance: CustomerSpendingPoint[] | null;
+    monthlyPerformanceLoading: boolean;
+    monthlyPerformanceError: string | null;
 }
 
 const quickLinks = [
@@ -95,7 +101,14 @@ function getRoleSpecificSections(role: UserProfile['role']) {
     return sections;
 }
 
-export default function DashboardView({ user, onLogout, onUpdateProfile }: DashboardViewProps) {
+export default function DashboardView({
+    user,
+    onLogout,
+    onUpdateProfile,
+    monthlyPerformance,
+    monthlyPerformanceLoading,
+    monthlyPerformanceError,
+}: DashboardViewProps) {
     const availableSections = getRoleSpecificSections(user.role);
     const badgeText = ROLE_BADGES[user.role] || user.role;
     const badgeColor = ROLE_BADGE_COLORS[user.role] || 'bg-slate-500/10 text-slate-400 border-slate-500/30';
@@ -203,6 +216,15 @@ export default function DashboardView({ user, onLogout, onUpdateProfile }: Dashb
                         </div>
                     </motion.div>
                 </div>
+            </section>
+
+            {/* Monthly Performance — 12-month spending chart */}
+            <section className="py-8 px-4 md:px-8 max-w-5xl mx-auto">
+                <MonthlyPerformanceChart
+                    data={monthlyPerformance}
+                    loading={monthlyPerformanceLoading}
+                    error={monthlyPerformanceError}
+                />
             </section>
 
             {/* Quick Links */}

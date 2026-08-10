@@ -4,8 +4,10 @@ import { motion } from 'motion/react';
 import Link from 'next/link';
 import { Sparkles, Feather, Palette, Scissors, ArrowRight, Star, Shirt, Brush, Gem, Compass } from 'lucide-react';
 import { fabricsList, printingMethods } from '@/data';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 
 export default function AtelierView() {
+    const { t } = useLanguage();
     return (
         <div className="relative w-full overflow-hidden">
             {/* Hero */}
@@ -33,7 +35,7 @@ export default function AtelierView() {
                         transition={{ duration: 1.2, delay: 0.2 }}
                         className="text-xs md:text-sm font-semibold text-[#4FC3F7] uppercase tracking-[0.4em] mb-4"
                     >
-                        SADAF ATELIER &bull; CAIRO &bull; ALEXANDRIA
+                        {t('atelier.kicker')}
                     </motion.span>
 
                     <motion.h1
@@ -42,8 +44,8 @@ export default function AtelierView() {
                         transition={{ duration: 1, delay: 0.3 }}
                         className="text-4xl md:text-7xl lg:text-8xl font-serif text-white uppercase tracking-tight leading-none mb-6"
                     >
-                        THE DESIGN<br />
-                        <span className="text-gold-gradient font-serif italic text-3xl md:text-6xl lg:text-7xl block mt-2">Workshop</span>
+                        {t('atelier.title1')}<br />
+                        <span className="text-gold-gradient font-serif italic text-3xl md:text-6xl lg:text-7xl block mt-2">{t('atelier.title2')}</span>
                     </motion.h1>
 
                     <motion.p
@@ -52,9 +54,7 @@ export default function AtelierView() {
                         transition={{ duration: 1, delay: 0.6 }}
                         className="text-sm md:text-lg text-[#E8E0D5]/80 max-w-2xl font-sans tracking-wide leading-relaxed mb-10 [text-wrap:balance]"
                     >
-                        Where ancient craftsmanship meets cutting-edge AI. Our atelier in Old Cairo and Alexandria
-                        fuses hand-carved mother-of-pearl, gold-thread embroidery, and smart digital tailoring into
-                        one seamless creative experience.
+                        {t('atelier.heroBody')}
                     </motion.p>
 
                     <motion.div
@@ -69,7 +69,7 @@ export default function AtelierView() {
                         >
                             <div className="absolute inset-0 w-3 bg-white/20 transition-all duration-[600ms] ease-out group-hover:w-full" />
                             <span className="relative z-10 flex items-center justify-center gap-2">
-                                Design with AI <Sparkles size={16} className="text-[#0A0F2C] group-hover:text-white" />
+                                {t('atelier.designWithAi')} <Sparkles size={16} className="text-[#0A0F2C] group-hover:text-white" />
                             </span>
                         </Link>
 
@@ -77,13 +77,13 @@ export default function AtelierView() {
                             href="/store"
                             className="px-8 py-4 rounded-full border border-[#E8E0D5]/20 bg-transparent hover:bg-white/5 text-white hover:border-[#4FC3F7] font-medium text-sm tracking-[0.14em] uppercase transition-all duration-300 active:scale-95 flex items-center gap-2"
                         >
-                            Browse Collection <Compass size={16} className="text-[#C9A84C]" />
+                            {t('atelier.browseCollection')} <Compass size={16} className="text-[#C9A84C]" />
                         </Link>
                     </motion.div>
                 </motion.div>
 
                 <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-[9px] text-[#4FC3F7] uppercase tracking-[0.3em] flex flex-col items-center gap-2 select-none animate-pulse">
-                    <span>Explore the atelier</span>
+                    <span>{t('atelier.explore')}</span>
                     <span className="w-[1px] h-10 bg-gradient-to-b from-[#4FC3F7] to-transparent" />
                 </div>
             </section>
@@ -91,17 +91,17 @@ export default function AtelierView() {
             {/* How It Works */}
             <section className="py-24 px-4 md:px-8 max-w-7xl mx-auto">
                 <div className="text-center mb-16">
-                    <span className="text-[#C9A84C] text-xs font-semibold tracking-[0.35em] uppercase block mb-3">&bull; The Creative Flow &bull;</span>
-                    <h2 className="text-3xl md:text-5xl font-serif text-white">FROM VISION TO GARMENT</h2>
+                    <span className="text-[#C9A84C] text-xs font-semibold tracking-[0.35em] uppercase block mb-3">{t('atelier.flow.kicker')}</span>
+                    <h2 className="text-3xl md:text-5xl font-serif text-white">{t('atelier.flow.title')}</h2>
                     <div className="w-12 h-[1px] bg-[#C9A84C] mx-auto mt-4" />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {[
-                        { step: '01', icon: Sparkles, title: 'Dream & Design', desc: 'Describe your vision or generate a design using our AI Studio powered by custom-trained models.', color: '#4FC3F7' },
-                        { step: '02', icon: Shirt, title: 'Choose Fabrics', desc: 'Select from premium Italian velvet, Egyptian silk, Giza cotton, or super-140s wool canvases.', color: '#C9A84C' },
-                        { step: '03', icon: Brush, title: 'Select Printing', desc: 'Gold-thread embroidery, puff multi-texture print, DTG micro-spray, or artisanal screen printing.', color: '#4FC3F7' },
-                        { step: '04', icon: Gem, title: 'Tailor & Deliver', desc: 'Our master artisans in Old Cairo hand-craft your piece with precision and heritage techniques.', color: '#C9A84C' },
+                        { step: '01', icon: Sparkles, title: t('atelier.step1.title'), desc: t('atelier.step1.desc'), color: '#4FC3F7' },
+                        { step: '02', icon: Shirt, title: t('atelier.step2.title'), desc: t('atelier.step2.desc'), color: '#C9A84C' },
+                        { step: '03', icon: Brush, title: t('atelier.step3.title'), desc: t('atelier.step3.desc'), color: '#4FC3F7' },
+                        { step: '04', icon: Gem, title: t('atelier.step4.title'), desc: t('atelier.step4.desc'), color: '#C9A84C' },
                     ].map((item, idx) => (
                         <motion.div
                             key={item.step}
@@ -129,8 +129,8 @@ export default function AtelierView() {
             <section className="py-20 bg-gradient-to-b from-[#0A0F2C] via-[#1B2A6B]/15 to-[#0A0F2C] border-y border-[#E8E0D5]/5">
                 <div className="max-w-7xl mx-auto px-4 md:px-8">
                     <div className="text-center mb-14">
-                        <span className="text-[#C9A84C] text-xs font-semibold tracking-[0.35em] uppercase block mb-3">&bull; Material Library &bull;</span>
-                        <h2 className="text-3xl md:text-5xl font-serif text-white">PREMIUM FABRICS</h2>
+                        <span className="text-[#C9A84C] text-xs font-semibold tracking-[0.35em] uppercase block mb-3">{t('atelier.materials.kicker')}</span>
+                        <h2 className="text-3xl md:text-5xl font-serif text-white">{t('atelier.materials.title')}</h2>
                         <div className="w-12 h-[1px] bg-[#C9A84C] mx-auto mt-4" />
                     </div>
 
@@ -159,8 +159,8 @@ export default function AtelierView() {
             {/* Printing Methods */}
             <section className="py-20 max-w-7xl mx-auto px-4 md:px-8">
                 <div className="text-center mb-14">
-                    <span className="text-[#C9A84C] text-xs font-semibold tracking-[0.35em] uppercase block mb-3">&bull; Decoration Techniques &bull;</span>
-                    <h2 className="text-3xl md:text-5xl font-serif text-white">PRINTING & EMBELLISHMENT</h2>
+                    <span className="text-[#C9A84C] text-xs font-semibold tracking-[0.35em] uppercase block mb-3">{t('atelier.methods.kicker')}</span>
+                    <h2 className="text-3xl md:text-5xl font-serif text-white">{t('atelier.methods.title')}</h2>
                     <div className="w-12 h-[1px] bg-[#C9A84C] mx-auto mt-4" />
                 </div>
 
@@ -189,18 +189,16 @@ export default function AtelierView() {
             <section className="py-24 bg-gradient-to-b from-[#0A0F2C] via-[#0A0F2C] to-[#0E153D]/60 border-t border-[#C9A84C]/10 overflow-hidden">
                 <div className="max-w-7xl mx-auto px-4 md:px-8 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
                     <div className="lg:col-span-5 flex flex-col items-start text-left">
-                        <span className="text-[#C9A84C] text-xs font-semibold tracking-[0.35em] uppercase mb-3">OUR HERITAGE</span>
-                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-serif text-white leading-tight mb-6">MASTERS OF OLD CAIRO</h2>
+                        <span className="text-[#C9A84C] text-xs font-semibold tracking-[0.35em] uppercase mb-3">{t('atelier.heritage.kicker')}</span>
+                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-serif text-white leading-tight mb-6">{t('atelier.heritage.title')}</h2>
                         <p className="text-[#E8E0D5]/80 text-sm md:text-base mb-8 leading-relaxed">
-                            Our atelier is nestled in the heart of Old Cairo, where generation after generation of master
-                            craftsmen have perfected the arts of mother-of-pearl inlay, gold-thread calligraphic embroidery,
-                            and hand-carved copper work. Every piece carries the soul of this ancient city.
+                            {t('atelier.heritage.body')}
                         </p>
                         <div className="flex flex-wrap gap-6 mb-8">
                             {[
-                                { label: 'Years of Heritage', value: '120+' },
-                                { label: 'Master Artisans', value: '24' },
-                                { label: 'Collections Made', value: '48' },
+                                { label: t('atelier.stat.years'), value: '120+' },
+                                { label: t('atelier.stat.artisans'), value: '24' },
+                                { label: t('atelier.stat.collections'), value: '48' },
                             ].map((stat) => (
                                 <div key={stat.label}>
                                     <p className="text-2xl font-serif text-[#C9A84C] font-bold">{stat.value}</p>
@@ -212,16 +210,16 @@ export default function AtelierView() {
                             href="/exhibition"
                             className="px-6 py-3 rounded-md border border-[#C9A84C] hover:bg-[#C9A84C] text-white hover:text-[#0A0F2C] text-xs tracking-[0.15em] uppercase transition-all duration-300 active:scale-95 flex items-center gap-2 group"
                         >
-                            Visit Virtual Exhibition <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                            {t('atelier.visitExhibition')} <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                         </Link>
                     </div>
 
                     <div className="lg:col-span-7 grid grid-cols-2 gap-4">
                         {[
-                            { title: 'Gold Calligraphy Embroidery', desc: '18k gold compound threads hand-stitched by master calligraphers.', icon: Brush },
-                            { title: 'Mother-of-Pearl Inlay', desc: 'Custom-carved saltwater Sadaf shell set into copper and silver.', icon: Gem },
-                            { title: 'Hand-Loomed Jacquards', desc: 'Traditional looms weaving complex geometric Islamic patterns.', icon: Shirt },
-                            { title: 'Natural Dye Atelier', desc: 'Plant-based indigos, crushed cochineal, and iron oxide pigments.', icon: Feather },
+                            { title: t('atelier.craft1.title'), desc: t('atelier.craft1.desc'), icon: Brush },
+                            { title: t('atelier.craft2.title'), desc: t('atelier.craft2.desc'), icon: Gem },
+                            { title: t('atelier.craft3.title'), desc: t('atelier.craft3.desc'), icon: Shirt },
+                            { title: t('atelier.craft4.title'), desc: t('atelier.craft4.desc'), icon: Feather },
                         ].map((craft) => (
                             <motion.div
                                 key={craft.title}
@@ -256,12 +254,10 @@ export default function AtelierView() {
                         <Scissors className="text-[#C9A84C]" size={28} />
                     </motion.div>
 
-                    <span className="text-[#C9A84C] text-[10px] tracking-[0.4em] font-medium uppercase mb-2">YOUR MASTERPIECE AWAITS</span>
-                    <h2 className="text-3xl md:text-5xl font-serif text-white mb-6 tracking-tight">VISIT THE ATELIER</h2>
+                    <span className="text-[#C9A84C] text-[10px] tracking-[0.4em] font-medium uppercase mb-2">{t('atelier.cta.kicker')}</span>
+                    <h2 className="text-3xl md:text-5xl font-serif text-white mb-6 tracking-tight">{t('atelier.cta.title')}</h2>
                     <p className="text-[#E8E0D5]/80 text-sm md:text-base max-w-2xl mb-10 leading-relaxed">
-                        Whether online through our AI Studio or in person at our Old Cairo workshop,
-                        your custom luxury piece begins here. Choose your materials, design, and fit — 
-                        we handle the rest with generations of mastery.
+                        {t('atelier.cta.body')}
                     </p>
 
                     <div className="flex flex-col sm:flex-row gap-4">
@@ -269,13 +265,13 @@ export default function AtelierView() {
                             href="/ai"
                             className="px-8 py-4 rounded-full bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/90 text-[#0A0F2C] hover:scale-105 active:scale-95 transition-all duration-300 font-medium text-xs tracking-[0.15em] uppercase flex items-center gap-2 shadow-lg shadow-black/40"
                         >
-                            Start Designing <Sparkles size={14} />
+                            {t('atelier.startDesigning')} <Sparkles size={14} />
                         </Link>
                         <Link
                             href="/store"
                             className="px-8 py-4 rounded-full border border-[#E8E0D5]/20 bg-transparent hover:bg-white/5 text-white hover:border-[#4FC3F7] font-medium text-xs tracking-[0.15em] uppercase transition-all duration-300 active:scale-95 flex items-center gap-2"
                         >
-                            Shop Ready-to-Wear <Star size={14} />
+                            {t('atelier.shopReadyToWear')} <Star size={14} />
                         </Link>
                     </div>
                 </div>
@@ -285,10 +281,10 @@ export default function AtelierView() {
             <section className="py-16 text-center bg-[#070A20] border-t border-[#E8E0D5]/5">
                 <div className="max-w-6xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-8">
                     {[
-                        { tag: 'Old Cairo Workshop', title: 'EST. 1898' },
-                        { tag: 'Gold & Shell Inlay', title: 'AUTHENTIC MATERIALS' },
-                        { tag: 'AI-Powered Design', title: 'INNOVATIVE PROCESS' },
-                        { tag: 'Worldwide Shipping', title: 'GLOBAL DELIVERY' },
+                        { tag: t('atelier.footer.workshop'), title: t('atelier.footer.est') },
+                        { tag: t('atelier.footer.inlay'), title: t('atelier.footer.materials') },
+                        { tag: t('atelier.footer.ai'), title: t('atelier.footer.process') },
+                        { tag: t('atelier.footer.shipping'), title: t('atelier.footer.delivery') },
                     ].map((itm, i) => (
                         <div key={i} className="flex flex-col items-center">
                             <span className="text-[10px] text-[#C9A84C] font-mono tracking-widest uppercase mb-1.5">{itm.tag}</span>

@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Heart, ShoppingBag, Trash2, ArrowLeft, Sparkles } from 'lucide-react';
 import type { FashionProduct } from '@/shared/types';
 import { ROUTES } from '@/config/routes';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
+import { localizedProductName } from '@/features/i18n/productNames';
 
 interface WishlistViewProps {
     items: FashionProduct[];
@@ -20,6 +22,7 @@ export default function WishlistView({
     onToggleWishlist,
     onAddToCart,
 }: WishlistViewProps) {
+    const { language } = useLanguage();
     const isEmpty = items.length === 0;
 
     return (
@@ -110,7 +113,7 @@ export default function WishlistView({
                                     <div className="relative aspect-[3/4] overflow-hidden bg-black/40">
                                         <Image
                                             src={product.image}
-                                            alt={product.name}
+                                            alt={localizedProductName(product, language)}
                                             fill
                                             className="object-cover transition-all duration-[800ms] group-hover:scale-105"
                                         />
@@ -119,7 +122,7 @@ export default function WishlistView({
                                         {product.hoverImage && (
                                             <Image
                                                 src={product.hoverImage}
-                                                alt={`${product.name} alternative`}
+                                                alt={`${localizedProductName(product, language)} alternative`}
                                                 fill
                                                 className="object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
                                             />
@@ -152,7 +155,7 @@ export default function WishlistView({
                                                 href={`${ROUTES.STORE}/${product.id}`}
                                                 className="font-serif text-[#E8E0D5] text-sm group-hover:text-[#F0D080] transition-colors duration-300 mb-1 leading-tight truncate hover:underline underline-offset-4"
                                             >
-                                                {product.name}
+                                                {localizedProductName(product, language)}
                                             </Link>
                                             <p className="text-[10px] text-[#E8E0D5]/60 line-clamp-2 leading-relaxed mb-1">
                                                 {product.fabric}

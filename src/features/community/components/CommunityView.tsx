@@ -29,6 +29,8 @@ import type {
     ConnectionType,
 } from '../types';
 import { ROUTES } from '@/config/routes';
+import RoleBadge from '@/shared/components/RoleBadge';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 
 interface CommunityViewProps {
     connections: Connection[];
@@ -74,6 +76,7 @@ export default function CommunityView({
     sendInvite,
     copyReferralCode,
 }: CommunityViewProps) {
+    const { t, language } = useLanguage();
     const [inviteEmail, setInviteEmail] = useState('');
     const [inviteName, setInviteName] = useState('');
     const [inviteType, setInviteType] = useState<ConnectionType>('friend');
@@ -85,6 +88,10 @@ export default function CommunityView({
 
     const receivedRequests = pendingRequests.filter((r) => r.direction === 'received');
     const sentRequests = pendingRequests.filter((r) => r.direction === 'sent');
+
+    /** Format a date in the active site language (ar-EG vs en-US). */
+    const formatDate = (dateStr: string): string =>
+        new Date(dateStr).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US');
 
     const handleCopyCode = useCallback(async () => {
         const success = await copyReferralCode();
@@ -128,10 +135,10 @@ export default function CommunityView({
                                 </div>
                                 <div>
                                     <h1 className="text-xl md:text-2xl font-serif text-white font-bold tracking-tight">
-                                        My Network
+                                        {t('community.title')}
                                     </h1>
                                     <p className="text-xs text-[#E8E0D5]/60 mt-0.5">
-                                        Family, friends & connections in the SADAF community
+                                        {t('community.subtitle')}
                                     </p>
                                 </div>
                             </div>
@@ -140,13 +147,13 @@ export default function CommunityView({
                                     onClick={() => setIsInviteModalOpen(true)}
                                     className="px-4 py-2 bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/80 text-[#0A0F2C] text-[10px] font-mono font-bold uppercase tracking-wider rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer"
                                 >
-                                    <UserPlus size={13} /> Invite
+                                    <UserPlus size={13} /> {t('community.invite')}
                                 </button>
                                 <Link
                                     href={ROUTES.DASHBOARD}
                                     className="px-4 py-2 border border-[#C9A84C]/30 text-[#C9A84C] text-[10px] font-mono uppercase tracking-wider rounded-xl hover:bg-[#C9A84C]/10 transition-all duration-300"
                                 >
-                                    Back to Dashboard
+                                    {t('community.backToDashboard')}
                                 </Link>
                             </div>
                         </div>
@@ -158,11 +165,11 @@ export default function CommunityView({
             <section className="py-6 px-4 md:px-8 max-w-7xl mx-auto">
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                     {[
-                        { label: 'Connections', value: String(stats.totalConnections), icon: Users, color: 'text-[#4FC3F7] bg-[#4FC3F7]/10' },
-                        { label: 'Family', value: String(stats.familyCount), icon: Heart, color: 'text-emerald-400 bg-emerald-500/10' },
-                        { label: 'Friends', value: String(stats.friendCount), icon: Users, color: 'text-amber-400 bg-amber-500/10' },
-                        { label: 'Pending', value: String(stats.pendingReceived), icon: Clock, color: 'text-orange-400 bg-orange-500/10' },
-                        { label: 'Network Spent', value: `$${stats.totalSpentByNetwork.toLocaleString()}`, icon: DollarSign, color: 'text-[#C9A84C] bg-[#C9A84C]/10' },
+                        { label: t('community.stat.connections'), value: String(stats.totalConnections), icon: Users, color: 'text-[#4FC3F7] bg-[#4FC3F7]/10' },
+                        { label: t('community.stat.family'), value: String(stats.familyCount), icon: Heart, color: 'text-emerald-400 bg-emerald-500/10' },
+                        { label: t('community.stat.friends'), value: String(stats.friendCount), icon: Users, color: 'text-amber-400 bg-amber-500/10' },
+                        { label: t('community.stat.pending'), value: String(stats.pendingReceived), icon: Clock, color: 'text-orange-400 bg-orange-500/10' },
+                        { label: t('community.stat.networkSpent'), value: `$${stats.totalSpentByNetwork.toLocaleString()}`, icon: DollarSign, color: 'text-[#C9A84C] bg-[#C9A84C]/10' },
                     ].map((stat) => (
                         <div
                             key={stat.label}
@@ -190,20 +197,20 @@ export default function CommunityView({
                         <div className="p-5 bg-[#05081A]/90 border border-[#C9A84C]/10 rounded-2xl">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold flex items-center gap-2">
-                                    <RefreshCw size={12} /> Network Graph
+                                    <RefreshCw size={12} /> {t('community.networkGraph')}
                                 </h3>
                                 <div className="flex items-center gap-1">
                                     <button
                                         onClick={() => setGraphScale((s) => Math.max(0.5, s - 0.1))}
                                         className="p-1 rounded-md text-[#E8E0D5]/40 hover:text-white hover:bg-white/5 transition-all text-xs cursor-pointer"
-                                        title="Zoom out"
+                                        title={t('community.zoomOut')}
                                     >
                                         −
                                     </button>
                                     <button
                                         onClick={() => setGraphScale((s) => Math.min(2, s + 0.1))}
                                         className="p-1 rounded-md text-[#E8E0D5]/40 hover:text-white hover:bg-white/5 transition-all text-xs cursor-pointer"
-                                        title="Zoom in"
+                                        title={t('community.zoomIn')}
                                     >
                                         +
                                     </button>
@@ -307,10 +314,14 @@ export default function CommunityView({
                                             <div className="flex items-center justify-between">
                                                 <div>
                                                     <p className="text-xs font-serif text-white font-semibold">
-                                                        {selectedNode.id === 'self' ? 'You' : selectedNode.name}
+                                                        {selectedNode.id === 'self' ? t('community.you') : selectedNode.name}
                                                     </p>
                                                     <p className="text-[9px] font-mono text-[#E8E0D5]/50 mt-0.5">
-                                                        {selectedNode.id === 'self' ? 'Current User' : `${selectedNode.group === 'family' ? 'Family' : 'Friend'} Connection`}
+                                                        {selectedNode.id === 'self'
+                                                            ? t('community.currentUser')
+                                                            : t('community.connection', {
+                                                                type: selectedNode.group === 'family' ? t('community.family') : t('community.friend'),
+                                                            })}
                                                     </p>
                                                 </div>
                                                 <button
@@ -321,8 +332,8 @@ export default function CommunityView({
                                                 </button>
                                             </div>
                                             <div className="flex items-center gap-3 mt-2 text-[9px] font-mono text-[#E8E0D5]/60">
-                                                <span>Purchases: {selectedNode.purchaseCount ?? 0}</span>
-                                                <span>Role: {selectedNode.group}</span>
+                                                <span>{t('community.purchases', { count: selectedNode.purchaseCount ?? 0 })}</span>
+                                                <span>{t('community.role', { group: selectedNode.group })}</span>
                                             </div>
                                         </motion.div>
                                     )}
@@ -332,11 +343,11 @@ export default function CommunityView({
                                 <div className="absolute top-2 right-2 flex items-center gap-3">
                                     <div className="flex items-center gap-1">
                                         <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                                        <span className="text-[7px] font-mono text-[#E8E0D5]/50">Family</span>
+                                        <span className="text-[7px] font-mono text-[#E8E0D5]/50">{t('community.family')}</span>
                                     </div>
                                     <div className="flex items-center gap-1">
                                         <span className="w-2 h-2 rounded-full bg-amber-500" />
-                                        <span className="text-[7px] font-mono text-[#E8E0D5]/50">Friend</span>
+                                        <span className="text-[7px] font-mono text-[#E8E0D5]/50">{t('community.friend')}</span>
                                     </div>
                                 </div>
                             </div>
@@ -345,14 +356,14 @@ export default function CommunityView({
                         {/* Referral Section */}
                         <div className="p-5 bg-[#05081A]/90 border border-[#C9A84C]/10 rounded-2xl">
                             <h3 className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold flex items-center gap-2 mb-4">
-                                <Gift size={12} /> My Referral
+                                <Gift size={12} /> {t('community.myReferral')}
                             </h3>
 
                             <div className="space-y-3">
                                 {/* Copy referral code */}
                                 <div className="p-3 bg-[#0A0F2C]/60 border border-[#C9A84C]/20 rounded-xl">
                                     <p className="text-[9px] font-mono uppercase tracking-wider text-[#E8E0D5]/40 mb-1.5">
-                                        Your Referral Code
+                                        {t('community.yourReferralCode')}
                                     </p>
                                     <div className="flex items-center gap-2">
                                         <code className="flex-1 px-3 py-2 bg-black/40 border border-white/10 rounded-lg text-xs font-mono text-[#C9A84C]">
@@ -361,7 +372,7 @@ export default function CommunityView({
                                         <button
                                             onClick={handleCopyCode}
                                             className="p-2 rounded-lg bg-[#C9A84C]/10 text-[#C9A84C] hover:bg-[#C9A84C]/20 transition-all cursor-pointer"
-                                            title="Copy code"
+                                            title={t('community.copyCode')}
                                         >
                                             {copied ? <CheckCheck size={14} /> : <Copy size={14} />}
                                         </button>
@@ -373,7 +384,7 @@ export default function CommunityView({
                                     <div className="p-3 bg-[#0A0F2C]/40 border border-white/[0.05] rounded-xl text-center">
                                         <p className="text-lg font-serif text-white font-bold">{referralInfo.totalReferred}</p>
                                         <p className="text-[8px] font-mono uppercase tracking-wider text-[#E8E0D5]/40">
-                                            People Referred
+                                            {t('community.peopleReferred')}
                                         </p>
                                     </div>
                                     <div className="p-3 bg-[#0A0F2C]/40 border border-white/[0.05] rounded-xl text-center">
@@ -381,7 +392,7 @@ export default function CommunityView({
                                             ${referralInfo.totalRewardsEarned}
                                         </p>
                                         <p className="text-[8px] font-mono uppercase tracking-wider text-[#E8E0D5]/40">
-                                            Rewards Earned
+                                            {t('community.rewardsEarned')}
                                         </p>
                                     </div>
                                 </div>
@@ -390,7 +401,7 @@ export default function CommunityView({
                                 {referralInfo.referredUsers.length > 0 && (
                                     <div className="pt-2">
                                         <p className="text-[9px] font-mono uppercase tracking-wider text-[#E8E0D5]/40 mb-2">
-                                            People You&apos;ve Referred
+                                            {t('community.peopleYouReferred')}
                                         </p>
                                         <div className="space-y-1.5 max-h-[180px] overflow-y-auto">
                                             {referralInfo.referredUsers.map((user) => (
@@ -409,17 +420,20 @@ export default function CommunityView({
                                                         <p className="text-xs text-[#E8E0D5]/80 font-medium truncate">
                                                             {user.name}
                                                         </p>
-                                                        <p className="text-[9px] font-mono text-[#E8E0D5]/40 truncate">
-                                                            {user.role.replace('customer_', '')} · {new Date(user.joinedAt).toLocaleDateString()}
-                                                        </p>
+                                                        <div className="flex items-center gap-1.5 min-w-0">
+                                                            <RoleBadge role={user.role} />
+                                                            <span className="text-[9px] font-mono text-[#E8E0D5]/40 truncate">
+                                                                {formatDate(user.joinedAt)}
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                     {user.hasFirstPurchase ? (
                                                         <span className="shrink-0 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[8px] font-mono">
-                                                            Active
+                                                            {t('community.active')}
                                                         </span>
                                                     ) : (
                                                         <span className="shrink-0 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[8px] font-mono">
-                                                            New
+                                                            {t('community.new')}
                                                         </span>
                                                     )}
                                                 </div>
@@ -437,7 +451,7 @@ export default function CommunityView({
                         {receivedRequests.length > 0 && (
                             <div className="p-5 bg-[#05081A]/90 border border-orange-500/20 rounded-2xl">
                                 <h3 className="text-[10px] font-mono uppercase tracking-widest text-orange-400 font-bold flex items-center gap-2 mb-3">
-                                    <Clock size={12} /> Pending Requests ({receivedRequests.length})
+                                    <Clock size={12} /> {t('community.pendingRequests', { count: receivedRequests.length })}
                                 </h3>
                                 <div className="space-y-2">
                                     {receivedRequests.map((req) => (
@@ -459,7 +473,7 @@ export default function CommunityView({
                                                     <p className="text-[10px] text-[#E8E0D5]/60 mt-0.5 italic">&ldquo;{req.message}&rdquo;</p>
                                                 )}
                                                 <p className="text-[8px] font-mono text-[#E8E0D5]/30 mt-0.5">
-                                                    {new Date(req.createdAt).toLocaleDateString()} · {req.type === 'family' ? 'Family' : 'Friend'}
+                                                    {formatDate(req.createdAt)} · {req.type === 'family' ? t('community.family') : t('community.friend')}
                                                 </p>
                                             </div>
                                             <div className="flex items-center gap-1.5 shrink-0">
@@ -467,13 +481,13 @@ export default function CommunityView({
                                                     onClick={() => acceptRequest(req.id)}
                                                     className="px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[9px] font-mono uppercase tracking-wider rounded-lg hover:bg-emerald-500/20 transition-all cursor-pointer flex items-center gap-1"
                                                 >
-                                                    <Check size={10} /> Accept
+                                                    <Check size={10} /> {t('community.accept')}
                                                 </button>
                                                 <button
                                                     onClick={() => declineRequest(req.id)}
                                                     className="px-3 py-1.5 bg-red-500/10 border border-red-500/30 text-red-400 text-[9px] font-mono uppercase tracking-wider rounded-lg hover:bg-red-500/20 transition-all cursor-pointer flex items-center gap-1"
                                                 >
-                                                    <X size={10} /> Decline
+                                                    <X size={10} /> {t('community.decline')}
                                                 </button>
                                             </div>
                                         </div>
@@ -490,7 +504,7 @@ export default function CommunityView({
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    placeholder="Search connections..."
+                                    placeholder={t('community.searchPlaceholder')}
                                     className="w-full bg-[#0A0F2C]/60 border border-white/[0.08] text-xs text-white rounded-xl pl-9 pr-3 py-2.5 outline-none focus:border-[#C9A84C]/50 transition placeholder:text-[#E8E0D5]/20"
                                 />
                             </div>
@@ -506,7 +520,7 @@ export default function CommunityView({
                                                 : 'text-[#E8E0D5]/40 hover:text-white border border-transparent'
                                         }`}
                                     >
-                                        {type === 'all' ? 'All' : type === 'family' ? 'Family' : 'Friends'}
+                                        {type === 'all' ? t('community.filter.all') : type === 'family' ? t('community.family') : t('community.friends')}
                                     </button>
                                 ))}
                             </div>
@@ -517,9 +531,9 @@ export default function CommunityView({
                             {connections.length === 0 ? (
                                 <div className="text-center py-12">
                                     <Users size={32} className="mx-auto text-[#E8E0D5]/20 mb-3" />
-                                    <p className="text-sm text-[#E8E0D5]/60">No connections found</p>
+                                    <p className="text-sm text-[#E8E0D5]/60">{t('community.noConnections')}</p>
                                     <p className="text-[10px] text-[#E8E0D5]/40 mt-1">
-                                        {searchQuery ? 'Try a different search term' : 'Start inviting people to grow your network'}
+                                        {searchQuery ? t('community.noConnectionsHintSearch') : t('community.noConnectionsHintInvite')}
                                     </p>
                                 </div>
                             ) : (
@@ -556,12 +570,10 @@ export default function CommunityView({
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-2 mt-0.5">
-                                                <span className="text-[9px] text-[#E8E0D5]/50">
-                                                    {conn.role.replace('customer_', '')}
-                                                </span>
+                                                <RoleBadge role={conn.role} />
                                                 <span className="text-[#E8E0D5]/20">·</span>
                                                 <span className="text-[9px] text-[#E8E0D5]/40">
-                                                    {conn.purchaseCount ?? 0} purchases
+                                                    {t('community.purchaseCount', { count: conn.purchaseCount ?? 0 })}
                                                 </span>
                                                 {conn.totalSpent && (
                                                     <>
@@ -573,8 +585,8 @@ export default function CommunityView({
                                                 )}
                                             </div>
                                             <p className="text-[8px] font-mono text-[#E8E0D5]/30 mt-0.5">
-                                                Connected {new Date(conn.connectedSince).toLocaleDateString()}
-                                                {conn.referredVia ? ` · via ${conn.referredVia}` : ''}
+                                                {t('community.connected', { date: formatDate(conn.connectedSince) })}
+                                                {conn.referredVia ? ` · ${t('community.via', { ref: conn.referredVia })}` : ''}
                                             </p>
                                         </div>
 
@@ -582,7 +594,7 @@ export default function CommunityView({
                                         <button
                                             onClick={() => removeConnection(conn.userId)}
                                             className="p-2 rounded-lg text-red-400/30 hover:text-red-400 hover:bg-red-950/20 transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
-                                            title="Remove connection"
+                                            title={t('community.removeConnection')}
                                         >
                                             <UserMinus size={13} />
                                         </button>
@@ -595,7 +607,7 @@ export default function CommunityView({
                         {sentRequests.length > 0 && (
                             <div className="pt-4 border-t border-white/[0.05]">
                                 <p className="text-[9px] font-mono uppercase tracking-wider text-[#E8E0D5]/40 mb-2">
-                                    Sent Invitations ({sentRequests.length})
+                                    {t('community.sentInvitations', { count: sentRequests.length })}
                                 </p>
                                 <div className="space-y-1.5">
                                     {sentRequests.map((req) => (
@@ -613,11 +625,11 @@ export default function CommunityView({
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-xs text-[#E8E0D5]/70">{req.name}</p>
                                                 <p className="text-[8px] font-mono text-[#E8E0D5]/40">
-                                                    Sent {new Date(req.createdAt).toLocaleDateString()}
+                                                    {t('community.sent', { date: formatDate(req.createdAt) })}
                                                 </p>
                                             </div>
                                             <span className="shrink-0 text-[8px] font-mono text-[#E8E0D5]/30 uppercase tracking-wider">
-                                                Pending
+                                                {t('community.pending')}
                                             </span>
                                         </div>
                                     ))}
@@ -652,8 +664,8 @@ export default function CommunityView({
                                         <UserPlus size={16} />
                                     </div>
                                     <div>
-                                        <h2 className="text-sm font-serif text-white font-semibold">Invite to Network</h2>
-                                        <p className="text-[10px] text-[#E8E0D5]/50">Add family or friends to your SADAF network</p>
+                                        <h2 className="text-sm font-serif text-white font-semibold">{t('community.inviteToNetwork')}</h2>
+                                        <p className="text-[10px] text-[#E8E0D5]/50">{t('community.inviteSubtitle')}</p>
                                     </div>
                                 </div>
                                 <button
@@ -667,7 +679,7 @@ export default function CommunityView({
                             <form onSubmit={handleSendInvite} className="space-y-4">
                                 <div>
                                     <label className="block text-[9px] font-mono uppercase tracking-widest text-[#E8E0D5]/50 mb-1.5">
-                                        Full Name *
+                                        {t('community.fullName')}
                                     </label>
                                     <input
                                         type="text"
@@ -680,7 +692,7 @@ export default function CommunityView({
                                 </div>
                                 <div>
                                     <label className="block text-[9px] font-mono uppercase tracking-widest text-[#E8E0D5]/50 mb-1.5">
-                                        Email Address *
+                                        {t('community.emailAddress')}
                                     </label>
                                     <input
                                         type="email"
@@ -693,7 +705,7 @@ export default function CommunityView({
                                 </div>
                                 <div>
                                     <label className="block text-[9px] font-mono uppercase tracking-widest text-[#E8E0D5]/50 mb-1.5">
-                                        Connection Type
+                                        {t('community.connectionType')}
                                     </label>
                                     <div className="flex gap-2">
                                         {(['family', 'friend'] as const).map((type) => (
@@ -707,14 +719,14 @@ export default function CommunityView({
                                                         : 'bg-black/20 text-[#E8E0D5]/40 border border-white/5 hover:border-white/20'
                                                 }`}
                                             >
-                                                {type === 'family' ? '👨‍👩‍👧‍👧 Family' : '🤝 Friend'}
+                                                {type === 'family' ? `👨‍👩‍👧‍👧 ${t('community.family')}` : `🤝 ${t('community.friend')}`}
                                             </button>
                                         ))}
                                     </div>
                                 </div>
                                 <div>
                                     <label className="block text-[9px] font-mono uppercase tracking-widest text-[#E8E0D5]/50 mb-1.5">
-                                        Personal Message (optional)
+                                        {t('community.personalMessage')}
                                     </label>
                                     <textarea
                                         value={inviteMessage}
@@ -728,7 +740,7 @@ export default function CommunityView({
                                     type="submit"
                                     className="w-full py-3 bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/80 text-[#0A0F2C] text-[10px] font-mono font-bold uppercase tracking-wider rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
                                 >
-                                    <Send size={13} /> Send Invitation
+                                    <Send size={13} /> {t('community.sendInvitation')}
                                 </button>
                             </form>
                         </motion.div>

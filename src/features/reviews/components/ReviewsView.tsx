@@ -197,7 +197,7 @@ export default function ReviewsView({ reviews }: ReviewsViewProps) {
                                         initial={{ opacity: 0, y: -5 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: -5 }}
-                                        className="absolute top-full left-0 mt-2 w-48 bg-[#0A0F2C] border border-[#C9A84C]/15 rounded-xl shadow-2xl z-20 overflow-hidden"
+                                        className="absolute top-full start-0 mt-2 w-48 bg-[#0A0F2C] border border-[#C9A84C]/15 rounded-xl shadow-2xl z-20 overflow-hidden"
                                     >
                                         {(Object.keys(sortLabels) as ReviewSortOption[]).map((key) => (
                                             <button

@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import SignedInToast from '@/shared/components/SignedInToast';
 import FounderDashboardView from '@/features/dashboard/components/FounderDashboardView';
 
 export default function FounderDashboardPageClient() {
@@ -31,5 +32,12 @@ export default function FounderDashboardPageClient() {
         );
     }
 
-    return <FounderDashboardView user={user} onLogout={handleLogout} />;
+    return (
+        <>
+            {/* Welcome-back confirmation toast after a successful login
+                (reads ?signedIn=1 set by the auth page). */}
+            <SignedInToast />
+            <FounderDashboardView user={user} onLogout={handleLogout} />
+        </>
+    );
 }

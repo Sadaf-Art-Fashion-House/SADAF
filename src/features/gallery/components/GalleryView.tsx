@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import type { GalleryItem } from "../types";
+import { useLanguage } from "@/features/i18n/LanguageProvider";
 
 interface GalleryViewProps {
   galleryItems: GalleryItem[];
@@ -28,15 +29,18 @@ export default function GalleryView({
   onCopyTokens,
   copied,
 }: GalleryViewProps) {
+  const { t, tc } = useLanguage();
   const [selectedImage, setSelectedImage] = useState<GalleryItem | null>(null);
   const [filter, setFilter] = useState<string>("All");
 
+  // Category labels translate; the internal filter value stays the raw
+  // English category so the data-driven comparison keeps working.
   const galleryCategories = [
-    "All",
-    "Couture Campaigns",
-    "Artisan Studies",
-    "Architecture Shadows",
-    "Figma UX Mockups",
+    { value: "All", label: t("gallery.cat.all") },
+    { value: "Couture Campaigns", label: t("gallery.cat.couture") },
+    { value: "Artisan Studies", label: t("gallery.cat.artisan") },
+    { value: "Architecture Shadows", label: t("gallery.cat.architecture") },
+    { value: "Figma UX Mockups", label: t("gallery.cat.figma") },
   ];
 
   const filteredItems =
@@ -51,33 +55,31 @@ export default function GalleryView({
         <div className="absolute top-0 left-1/4 w-80 h-80 rounded-full bg-[#1B2A6B]/20 blur-[120px] pointer-events-none" />
 
         <span className="text-xs font-semibold text-[#C9A84C] tracking-[0.45em] uppercase mb-2 block">
-          SADAF VISUAL ARCHIVE
+          {t("gallery.kicker")}
         </span>
         <h1 className="text-4xl md:text-5xl font-serif text-white uppercase tracking-tight leading-none mb-3">
-          MUSEUM{" "}
+          {t("gallery.title")}{" "}
           <span className="text-gold-gradient italic font-serif">
-            Aesthetics
+            {t("gallery.titleAccent")}
           </span>
         </h1>
         <p className="text-xs md:text-sm text-slate-400 max-w-xl mx-auto font-sans leading-relaxed">
-          Stroll across our cinematic campaign lookbooks, architecture studies,
-          and calligraphy captures, immortalized through the eye of high-end
-          Egyptian curators.
+          {t("gallery.subtitle")}
         </p>
 
         {/* Gallery category tab row */}
         <div className="flex flex-wrap items-center justify-center gap-2 mt-10 max-w-3xl mx-auto px-4">
           {galleryCategories.map((cat) => (
             <button
-              key={cat}
-              onClick={() => setFilter(cat)}
+              key={cat.value}
+              onClick={() => setFilter(cat.value)}
               className={`px-4 py-2 text-xs uppercase tracking-wider transition-all duration-300 cursor-pointer ${
-                filter === cat
+                filter === cat.value
                   ? "text-[#C9A84C] border-b-2 border-[#C9A84C] font-semibold"
                   : "text-slate-500 hover:text-white"
               }`}
             >
-              {cat}
+              {cat.label}
             </button>
           ))}
         </div>
@@ -120,13 +122,13 @@ export default function GalleryView({
                 {/* Iridescent blue hover overlay details */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-5 text-left font-sans">
                   <span className="text-[#C9A84C] font-mono text-[9px] uppercase tracking-widest">
-                    {item.category}
+                    {tc(`gallery.cat.${item.category}`, item.category)}
                   </span>
                   <h3 className="font-serif text-white text-base mt-2 mb-1">
                     {item.title}
                   </h3>
                   <div className="flex justify-between items-center text-[10px] text-gray-400 mt-2 border-t border-white/10 pt-2 font-mono">
-                    <span>By {item.photographer}</span>
+                    <span>{t("gallery.by")} {item.photographer}</span>
                     <ZoomIn size={12} className="text-[#4FC3F7]" />
                   </div>
                 </div>
@@ -185,23 +187,21 @@ export default function GalleryView({
                       </h3>
 
                       <p className="text-xs text-slate-400 font-sans leading-relaxed mb-4">
-                        Authentic CAD scale specs of SADAF&apos;s digital screens.
-                        These screens are built directly using high-fidelity
-                        vector layouts before tailoring front-end interfaces.
+                        {t("gallery.tokens.kicker")}
                       </p>
 
                       {/* Design Tokens list */}
                       <div className="space-y-3 font-mono text-[10px] text-gray-400 border-t border-b border-white/10 py-4 mb-4">
                         <div className="flex justify-between items-center text-slate-500 uppercase font-bold">
-                          <span>SADAF Colors</span>
+                          <span>{t("gallery.tokens.colors")}</span>
                           <span className="text-white text-[8px] border border-white/10 px-1 rounded">
-                            HEX Code
+                            {t("gallery.tokens.hex")}
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="flex items-center gap-1.5">
                             <span className="w-2.5 h-2.5 rounded-full bg-[#C9A84C]" />{" "}
-                            Lustrous Gold
+                            {t("gallery.tokens.gold")}
                           </span>
                           <span className="text-[#C9A84C] font-bold">
                             #C9A84C
@@ -210,32 +210,32 @@ export default function GalleryView({
                         <div className="flex justify-between items-center">
                           <span className="flex items-center gap-1.5">
                             <span className="w-2.5 h-2.5 rounded-full bg-[#0A0F2C]" />{" "}
-                            Prussian Velvet
+                            {t("gallery.tokens.velvet")}
                           </span>
                           <span className="text-white">#0A0F2C</span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="flex items-center gap-1.5">
                             <span className="w-2.5 h-2.5 rounded-full bg-[#4FC3F7]" />{" "}
-                            Coastal Blue
+                            {t("gallery.tokens.blue")}
                           </span>
                           <span className="text-[#4FC3F7]">#4FC3F7</span>
                         </div>
 
                         <div className="border-t border-white/5 pt-3 flex justify-between">
                           <span className="text-slate-500 uppercase">
-                            Grid Layout
+                            {t("gallery.tokens.grid")}
                           </span>
                           <span className="text-white text-right">
-                            12-Col Desktop Dynamic
+                            {t("gallery.tokens.gridValue")}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-slate-500 uppercase">
-                            Fonts Setup
+                            {t("gallery.tokens.fonts")}
                           </span>
                           <span className="text-white text-right">
-                            Inter & Space Grotesk
+                            {t("gallery.tokens.fontsValue")}
                           </span>
                         </div>
                       </div>
@@ -251,11 +251,11 @@ export default function GalleryView({
                       >
                         {copied ? (
                           <>
-                            <Check size={12} /> Copied Design Variables
+                            <Check size={12} /> {t("gallery.copied")}
                           </>
                         ) : (
                           <>
-                            <Copy size={12} /> Copy Design Tokens
+                            <Copy size={12} /> {t("gallery.copyTokens")}
                           </>
                         )}
                       </button>
@@ -263,11 +263,11 @@ export default function GalleryView({
 
                     <div className="flex gap-2 text-[10px] text-gray-500 font-mono mt-6 border-t border-white/5 pt-4">
                       <div className="flex items-center gap-1">
-                        <Layers size={10} /> <span>Vector Native Assets</span>
+                        <Layers size={10} /> <span>{t("gallery.tokens.vector")}</span>
                       </div>
                       <span>&bull;</span>
                       <div className="flex items-center gap-1">
-                        <Globe size={10} /> <span>SADAF Design Lab</span>
+                        <Globe size={10} /> <span>{t("gallery.tokens.lab")}</span>
                       </div>
                     </div>
                   </div>
@@ -286,7 +286,7 @@ export default function GalleryView({
                       <div className="space-y-3 font-mono text-[11px] text-gray-400 border-t border-b border-white/10 py-4 mb-4">
                         <div className="flex justify-between">
                           <span className="text-gray-500 uppercase">
-                            Auteur Photographer
+                            {t("gallery.auteur")}
                           </span>
                           <span className="text-white">
                             {selectedImage.photographer}
@@ -294,7 +294,7 @@ export default function GalleryView({
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500 uppercase">
-                            Heritage Scene
+                            {t("gallery.scene")}
                           </span>
                           <span className="text-white">
                             {selectedImage.location}
@@ -302,10 +302,10 @@ export default function GalleryView({
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500 uppercase">
-                            Visual Chapter
+                            {t("gallery.chapter")}
                           </span>
                           <span className="text-white font-serif italic text-xs text-[#ebd083]">
-                            {selectedImage.category}
+                            {tc(`gallery.cat.${selectedImage.category}`, selectedImage.category)}
                           </span>
                         </div>
                       </div>
@@ -316,21 +316,18 @@ export default function GalleryView({
                           className="text-[#4FC3F7] shrink-0 mt-0.5"
                         />
                         <span>
-                          This photographic exposure captures our design
-                          narrative directly in historic Egypt places. These
-                          visual shadows inspired the tailored cuts inside the
-                          active collections.
+                          {t("gallery.caption")}
                         </span>
                       </div>
                     </div>
 
                     <div className="flex gap-2 text-[10px] text-gray-500 font-mono mt-8 border-t border-white/5 pt-4">
                       <div className="flex items-center gap-1">
-                        <Calendar size={10} /> <span>Captured 2026</span>
+                        <Calendar size={10} /> <span>{t("gallery.captured")} 2026</span>
                       </div>
                       <span>&bull;</span>
                       <div className="flex items-center gap-1">
-                        <Globe size={10} /> <span>Heritage Preserved</span>
+                        <Globe size={10} /> <span>{t("gallery.preserved")}</span>
                       </div>
                     </div>
                   </div>

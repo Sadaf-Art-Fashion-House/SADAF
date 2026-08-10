@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import SignedInToast from '@/shared/components/SignedInToast';
 import AdminDashboardView from '@/features/dashboard/components/AdminDashboardView';
 
 export default function AdminDashboardPageClient() {
@@ -31,5 +32,12 @@ export default function AdminDashboardPageClient() {
         );
     }
 
-    return <AdminDashboardView onLogout={handleLogout} />;
+    return (
+        <>
+            {/* Welcome-back confirmation toast after a successful login
+                (reads ?signedIn=1 set by the auth page). */}
+            <SignedInToast />
+            <AdminDashboardView onLogout={handleLogout} />
+        </>
+    );
 }

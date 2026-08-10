@@ -17,6 +17,8 @@
 
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useNotifications } from './useNotifications';
+import { useUnreadCountStore } from '../store/useUnreadCountStore';
+import { usePreferencesStore, isGlobalAlertsMuted, syncLegacyGlobalMute } from '@/features/settings/store/usePreferencesStore';
 import type { Notification } from '../types';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
@@ -24,18 +26,6 @@ import type { Notification } from '../types';
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3001';
 const POLL_INTERVAL_MS = 15_000;
 const RECONNECT_DELAY_MS = 3_000;
-
-/** Persisted opt-out for global event pushes (new orders / announcements). */
-const GLOBAL_MUTE_STORAGE_KEY = 'sadaf_global_notifications_muted';
-
-function readStoredGlobalMuted(): boolean {
-    try {
-        return window.localStorage.getItem(GLOBAL_MUTE_STORAGE_KEY) === 'true';
-    } catch {
-        // Storage may be unavailable (private mode) — default to unmuted.
-        return false;
-    }
-}
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
@@ -60,43 +50,53 @@ export function useRealtimeNotifications(
     const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const [wsLive, setWsLive] = useState(false);
 
-    // Global alerts mute — opt-out, persisted in localStorage (same pattern as
-    // useActivityAlerts). When muted, global pushes (new order / announcement)
-    // are dropped before they reach the list or the browser Notification.
-    const [globalMuted, setGlobalMuted] = useState(false);
-    const globalMutedRef = useRef(false);
-    // Skips the sync effect's first run (the mount commit): the stored
-    // preference is applied by the load effect below, and persisting the
-    // default `false` over a stored `true` in that same commit would clobber
-    // the user's mute.
-    const mutedSyncedRef = useRef(false);
-
-    // Load persisted preference after mount (client-only, avoids SSR mismatch).
-    // The ref is seeded here too so no global push slips through before the
-    // loaded value reaches state.
+    // Publish the live unread count to the shared store so other surfaces
+    // (sidebar menu badge) mirror the bell without a second WS connection.
+    const setUnreadCount = useUnreadCountStore((state) => state.setUnreadCount);
     useEffect(() => {
-        const stored = readStoredGlobalMuted();
-        setGlobalMuted(stored);
-        globalMutedRef.current = stored;
+        setUnreadCount(unreadCount);
+    }, [unreadCount, setUnreadCount]);
+
+    // Global alerts mute — SINGLE SOURCE OF TRUTH is the preferences store
+    // (set from the Settings hub). The bell toggle mirrors into the store;
+    // the legacy localStorage key is honored once at mount for users who
+    // muted before the settings hub existed. When muted, global pushes (new
+    // order / announcement) are dropped before they reach the list.
+    const globalAlertsPref = usePreferencesStore((state) => state.preferences.globalAlerts);
+    const setPreference = usePreferencesStore((state) => state.setPreference);
+
+    const [globalMuted, setGlobalMuted] = useState(() => !globalAlertsPref);
+    const globalMutedRef = useRef(globalMuted);
+
+    // Hydrate once: preferences store first, legacy bell key as fallback.
+    useEffect(() => {
+        const muted = isGlobalAlertsMuted();
+        setGlobalMuted(muted);
+        globalMutedRef.current = muted;
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only hydration
     }, []);
 
-    // Keep the ref in sync and persist every change after hydration.
+    // React to settings-hub changes (same tab + other tabs via the store).
     useEffect(() => {
-        if (!mutedSyncedRef.current) {
-            mutedSyncedRef.current = true;
-            return;
-        }
+        setGlobalMuted(!globalAlertsPref);
+        globalMutedRef.current = !globalAlertsPref;
+    }, [globalAlertsPref]);
+
+    // Keep the ref in sync and mirror to the legacy key so any external
+    // reader (older code) sees the same state.
+    useEffect(() => {
         globalMutedRef.current = globalMuted;
-        try {
-            window.localStorage.setItem(GLOBAL_MUTE_STORAGE_KEY, String(globalMuted));
-        } catch {
-            // Storage unavailable — the toggle still works for this session.
-        }
+        syncLegacyGlobalMute(globalMuted);
     }, [globalMuted]);
 
     const toggleGlobalMuted = useCallback(() => {
-        setGlobalMuted((prev) => !prev);
-    }, []);
+        setGlobalMuted((prev) => {
+            const next = !prev;
+            // Mirror the toggle into the preferences store (source of truth).
+            setPreference('globalAlerts', !next);
+            return next;
+        });
+    }, [setPreference]);
 
     // ─── WebSocket connection ────────────────────────────────────────────────
 
@@ -146,16 +146,11 @@ export function useRealtimeNotifications(
                     // event in two places.
                     if (incoming.type === 'friend_request') return;
 
-                    // Add to notification list
+                    // Add to notification list. OS-level browser notifications
+                    // are raised by the global BrowserNotificationsBridge (the
+                    // single sink, mounted on every page) — not here, so a
+                    // push is never shown twice.
                     addNotification(incoming);
-
-                    // Browser Notification API (optional push notification)
-                    if ('Notification' in window && Notification.permission === 'granted') {
-                        new Notification(`SADAF: ${incoming.title}`, {
-                            body: incoming.message,
-                            icon: '/favicon.ico',
-                        });
-                    }
                 } catch {
                     // Ignore malformed messages
                 }
@@ -208,11 +203,6 @@ export function useRealtimeNotifications(
 
     useEffect(() => {
         if (!userId) return;
-
-        // Request browser notification permission
-        if ('Notification' in window && Notification.permission === 'default') {
-            Notification.requestPermission().catch(() => {});
-        }
 
         connectWS();
 

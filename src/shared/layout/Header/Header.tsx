@@ -8,11 +8,23 @@ import { Heart, ShoppingCart, User, ChevronDown, Search, MessageSquare } from "l
 import SadafLogo from "@/components/common/SadafLogo";
 import NotificationBell from "@/features/notifications/components/NotificationBell";
 import FriendRequestsBadge from "@/features/community/components/FriendRequestsBadge";
+import LanguageSwitcher from "@/features/i18n/LanguageSwitcher";
+import { useLanguage } from "@/features/i18n/LanguageProvider";
 import { useCartStore } from "@/features/cart/store/useCartStore";
 import { useWishlistStore } from "@/features/wishlist/store/useWishlistStore";
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { ROLE_BADGES } from "@/features/auth/types";
+import { ROLE_BADGES, ROLE_BADGE_COLORS } from "@/features/auth/types";
 import { NAV_LINKS, DROPDOWN_LINKS } from "@/config/routes";
+
+/** The translation key for each top-level nav label (falls back to the raw label). */
+const NAV_LABEL_KEYS: Record<string, string> = {
+    Home: "nav.home",
+    Arts: "nav.arts",
+    Fashion: "nav.fashion",
+    Store: "nav.store",
+    Gallery: "nav.gallery",
+    "AI Studio": "nav.aiStudio",
+};
 
 export default function Header() {
     const pathname = usePathname();
@@ -21,6 +33,7 @@ export default function Header() {
     const cartItemCount = useCartStore((state) => state.getTotalItems());
     const wishlistCount = useWishlistStore((state) => state.items.length);
     const { user } = useAuth();
+    const { t } = useLanguage();
 
     // Close dropdown on click outside
     useEffect(() => {
@@ -54,7 +67,7 @@ export default function Header() {
                                     isActive ? "text-[#C9A84C] font-semibold" : "text-[#E8E0D5]/70 hover:text-white"
                                 }`}
                             >
-                                {link.label}
+                                {t((NAV_LABEL_KEYS[link.label] ?? link.label) as never)}
                                 {isActive && (
                                     <span className="absolute bottom-0 inset-x-0 h-[1.5px] bg-[#C9A84C]" />
                                 )}
@@ -72,7 +85,7 @@ export default function Header() {
                                     : "text-[#E8E0D5]/70 hover:text-white"
                             }`}
                         >
-                            More
+                            {t("nav.more")}
                             <ChevronDown
                                 size={10}
                                 className={`transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
@@ -89,7 +102,7 @@ export default function Header() {
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     exit={{ opacity: 0, y: -8, scale: 0.96 }}
                                     transition={{ duration: 0.15, ease: "easeOut" }}
-                                    className="absolute top-full right-0 mt-2 w-56 bg-[#0A0F2C]/98 border border-[#C9A84C]/15 rounded-xl shadow-2xl shadow-black/60 backdrop-blur-xl overflow-hidden z-50"
+                                    className="absolute top-full end-0 mt-2 w-56 bg-[#0A0F2C]/98 border border-[#C9A84C]/15 rounded-xl shadow-2xl shadow-black/60 backdrop-blur-xl overflow-hidden z-50"
                                 >
                                     {DROPDOWN_LINKS.map((item, idx) => {
                                         const isItemActive = pathname.startsWith(item.href);
@@ -136,7 +149,11 @@ export default function Header() {
                                 )}
                             </span>
                             <span className="hidden xl:inline">{user.fullName.split(' ')[0]}</span>
-                            <span className="hidden 2xl:inline text-[8px] text-[#C9A84C]/70 font-mono tracking-wider">
+                            <span
+                                className={`hidden xl:inline px-1.5 py-0.5 rounded-full text-[7px] font-mono uppercase tracking-wider border font-semibold ${
+                                    ROLE_BADGE_COLORS[user.role] || 'bg-slate-500/10 text-slate-400 border-slate-500/30'
+                                }`}
+                            >
                                 {ROLE_BADGES[user.role] || ''}
                             </span>
                             {pathname.startsWith("/dashboard") && (
@@ -162,6 +179,8 @@ export default function Header() {
                 </nav>
 
                 <div className="flex items-center gap-4">
+                    <LanguageSwitcher />
+
                     <Link
                         href="/search"
                         className="p-2 text-slate-300 hover:text-[#C9A84C] relative transition-colors duration-300"

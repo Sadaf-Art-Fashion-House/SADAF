@@ -199,16 +199,16 @@ export const CURRENT_USER_CITY = 'Dubai';
 // ─── Deterministic member pool (mock) ───────────────────────────────────────
 
 /** The established top members — seeded so the top of the leaderboard looks stable. */
-const TOP_MEMBERS: { name: string; points: number; city: string }[] = [
-    { name: 'Noura Al-Saadi', points: 28_400, city: 'Dubai' },
-    { name: 'Fatima Al-Zahrani', points: 24_150, city: 'Riyadh' },
-    { name: 'Layla Haddad', points: 19_820, city: 'Beirut' },
-    { name: 'Mariam Khalil', points: 16_430, city: 'Jeddah' },
-    { name: 'Aisha Rahman', points: 12_760, city: 'Doha' },
-    { name: 'Salma Obaid', points: 9_540, city: 'Abu Dhabi' },
-    { name: 'Huda Mansour', points: 6_880, city: 'Cairo' },
-    { name: 'Rania Farid', points: 4_210, city: 'Kuwait City' },
-    { name: 'Dina Saleh', points: 2_980, city: 'Manama' },
+const TOP_MEMBERS: { name: string; points: number; city: string; role: string }[] = [
+    { name: 'Noura Al-Saadi', points: 28_400, city: 'Dubai', role: 'customer_individual' },
+    { name: 'Fatima Al-Zahrani', points: 24_150, city: 'Riyadh', role: 'customer_family' },
+    { name: 'Layla Haddad', points: 19_820, city: 'Beirut', role: 'customer_individual' },
+    { name: 'Mariam Khalil', points: 16_430, city: 'Jeddah', role: 'customer_friend' },
+    { name: 'Aisha Rahman', points: 12_760, city: 'Doha', role: 'customer_family' },
+    { name: 'Salma Obaid', points: 9_540, city: 'Abu Dhabi', role: 'customer_individual' },
+    { name: 'Huda Mansour', points: 6_880, city: 'Cairo', role: 'customer_friend' },
+    { name: 'Rania Farid', points: 4_210, city: 'Kuwait City', role: 'customer_individual' },
+    { name: 'Dina Saleh', points: 2_980, city: 'Manama', role: 'customer_family' },
 ];
 
 const EXTRA_FIRST_NAMES = [
@@ -249,12 +249,21 @@ function metricForKind(random: () => number, kind: LeaderboardKind): number {
     }
 }
 
+/**
+ * Membership sub-types for the pool — rotated deterministically so the same
+ * member always gets the same badge across requests.
+ */
+const POOL_ROLES = ['customer_individual', 'customer_family', 'customer_friend'] as const;
+
 /** Generate a full leaderboard pool of members ranked by the kind's metric (mock). */
-export function generateMemberPool(size: number, kind: LeaderboardKind = 'points'): { name: string; points: number; city: string }[] {
+export function generateMemberPool(
+    size: number,
+    kind: LeaderboardKind = 'points',
+): { name: string; points: number; city: string; role: string }[] {
     // Different seed per kind so the three leaderboards look distinct.
     const seed = kind === 'sales' ? 1337 : kind === 'designs' ? 777 : 42;
     const random = seededRandom(seed);
-    const pool = [...TOP_MEMBERS];
+    const pool: { name: string; points: number; city: string; role: string }[] = [...TOP_MEMBERS];
 
     for (let i = 0; i < Math.max(0, size - TOP_MEMBERS.length); i++) {
         const firstName = EXTRA_FIRST_NAMES[Math.floor(random() * EXTRA_FIRST_NAMES.length)];
@@ -263,6 +272,7 @@ export function generateMemberPool(size: number, kind: LeaderboardKind = 'points
             name: `${firstName} ${lastName}`,
             points: metricForKind(random, kind),
             city: CITIES[Math.floor(random() * CITIES.length)],
+            role: POOL_ROLES[i % POOL_ROLES.length],
         });
     }
 
@@ -274,13 +284,20 @@ export function generateMemberPool(size: number, kind: LeaderboardKind = 'points
  * Returns entries (1-based ranks) plus the current user's rank.
  */
 export function buildLeaderboard(
-    pool: { name: string; points: number; city: string }[],
+    pool: { name: string; points: number; city: string; role: string }[],
     currentUserMetric: number,
     currentUserCity: string = CURRENT_USER_CITY,
+    currentUserRole: string = 'customer_individual',
 ): { entries: LeaderboardEntry[]; myRank: number } {
-    const members: { name: string; points: number; city: string; isCurrentUser?: boolean }[] = [
+    const members: { name: string; points: number; city: string; role: string; isCurrentUser?: boolean }[] = [
         ...pool.map((member) => ({ ...member, isCurrentUser: false })),
-        { name: 'You', points: currentUserMetric, city: currentUserCity, isCurrentUser: true },
+        {
+            name: 'You',
+            points: currentUserMetric,
+            city: currentUserCity,
+            role: currentUserRole,
+            isCurrentUser: true,
+        },
     ];
 
     const ranked = [...members].sort((a, b) => b.points - a.points);
@@ -291,6 +308,7 @@ export function buildLeaderboard(
         points: member.points,
         tier: tierForSpend(member.points),
         city: member.city,
+        role: member.role,
         isCurrentUser: member.isCurrentUser,
     }));
 

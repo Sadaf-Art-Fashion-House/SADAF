@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatCurrency';
 import type { ProductRecommendation } from '../types';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 
 interface SmartRecommendationsProps {
     /** Offers matched to the customer's top spending categories. */
@@ -32,6 +33,8 @@ const CATEGORY_ICONS: Record<string, typeof ShoppingBag> = {
  * the "why" behind each pick, and a link into the catalog.
  */
 export default function SmartRecommendations({ recommendations }: SmartRecommendationsProps) {
+    const { t } = useLanguage();
+
     if (!recommendations || recommendations.length === 0) return null;
 
     return (
@@ -43,11 +46,11 @@ export default function SmartRecommendations({ recommendations }: SmartRecommend
                         <Percent size={14} />
                     </div>
                     <h3 className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold">
-                        Smart Offers &bull; عروض ذكية
+                        {t('rec.title')}
                     </h3>
                 </div>
                 <span className="text-[9px] font-mono text-[#E8E0D5]/40">
-                    Based on your spending categories
+                    {t('rec.basedOn')}
                 </span>
             </div>
 
@@ -106,7 +109,7 @@ export default function SmartRecommendations({ recommendations }: SmartRecommend
                                 href={rec.href}
                                 className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[9px] font-mono uppercase tracking-widest font-bold text-[#C9A84C] bg-[#C9A84C]/10 hover:bg-[#C9A84C] hover:text-black border border-[#C9A84C]/25 transition-all duration-300 cursor-pointer"
                             >
-                                View Offer
+                                {t('rec.viewOffer')}
                                 <ArrowRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
                             </Link>
                         </motion.div>

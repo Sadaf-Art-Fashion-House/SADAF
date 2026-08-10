@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useSearch } from '../hooks/useSearch';
 import { SEARCH_CATEGORIES } from '../constants/searchCategories';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 import type { RatingsByProduct } from '@/features/reviews/hooks/useAggregatedRatings';
 import type { SearchResult, SearchCategory } from '../types';
 
@@ -28,6 +29,7 @@ interface SearchViewProps {
 }
 
 export default function SearchView({ allResults, ratingsByProduct = {} }: SearchViewProps) {
+    const { t, tc } = useLanguage();
     const {
         query,
         setQuery,
@@ -59,13 +61,13 @@ export default function SearchView({ allResults, ratingsByProduct = {} }: Search
                 <div className="absolute bottom-1/4 left-1/4 w-80 h-80 rounded-full bg-[#C9A84C]/5 blur-[120px] pointer-events-none" />
 
                 <span className="text-xs font-semibold text-[#C9A84C] tracking-[0.45em] uppercase mb-3 block">
-                    SADAF ATELIER DISCOVERY
+                    {t('search.kicker')}
                 </span>
                 <h1 className="text-3xl md:text-5xl font-serif text-white uppercase tracking-tight leading-none mb-4">
-                    SEARCH <span className="text-gold-gradient font-serif italic">Atelier</span>
+                    {t('search.title')} <span className="text-gold-gradient font-serif italic">{t('search.titleAccent')}</span>
                 </h1>
                 <p className="text-sm md:text-base text-[#E8E0D5]/70 max-w-2xl mx-auto font-sans tracking-wide leading-relaxed mb-10">
-                    Search across our entire collection — couture fashion, fine art, and limited-edition collections.
+                    {t('search.subtitle')}
                 </p>
 
                 {/* Search Input */}
@@ -77,7 +79,7 @@ export default function SearchView({ allResults, ratingsByProduct = {} }: Search
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             onKeyDown={handleKeyDown}
-                            placeholder="Search products, artworks, collections..."
+                            placeholder={t('search.placeholder')}
                             className="w-full bg-transparent text-white placeholder:text-[#E8E0D5]/30 text-sm md:text-base py-5 pl-14 pr-14 outline-none font-sans tracking-wide"
                             autoFocus
                         />
@@ -94,7 +96,7 @@ export default function SearchView({ allResults, ratingsByProduct = {} }: Search
                     {/* Search hint */}
                     {!query && (
                         <p className="text-[10px] text-slate-500 font-mono mt-3 tracking-wider">
-                            Press <kbd className="px-1.5 py-0.5 rounded border border-white/10 text-[#C9A84C] bg-white/5 text-[9px]">Enter</kbd> to search or select a category below
+                            {t('search.hint', { key: 'Enter' })}
                         </p>
                     )}
                 </div>
@@ -111,7 +113,7 @@ export default function SearchView({ allResults, ratingsByProduct = {} }: Search
                                     : 'bg-[#0A0F2C]/60 text-[#E8E0D5]/70 hover:text-white border border-[#E8E0D5]/10 hover:border-[#4FC3F7]/40'
                             }`}
                         >
-                            {cat}
+                            {tc(`search.cat.${cat}`, cat)}
                         </button>
                     ))}
                 </div>
@@ -124,13 +126,13 @@ export default function SearchView({ allResults, ratingsByProduct = {} }: Search
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2 text-sm text-slate-400 font-mono tracking-wider">
                                 <Clock size={14} className="text-[#C9A84C]" />
-                                <span className="uppercase text-[10px]">Recent Searches</span>
+                                <span className="uppercase text-[10px]">{t('search.recent')}</span>
                             </div>
                             <button
                                 onClick={clearRecentSearches}
                                 className="text-[10px] text-slate-500 hover:text-red-400 transition-colors cursor-pointer font-mono uppercase tracking-wider"
                             >
-                                Clear
+                                {t('search.clear')}
                             </button>
                         </div>
                         <div className="flex flex-wrap gap-2">
@@ -156,11 +158,11 @@ export default function SearchView({ allResults, ratingsByProduct = {} }: Search
                                 {isSearching ? (
                                     <span className="flex items-center gap-2">
                                         <span className="w-3 h-3 border border-[#C9A84C] border-t-transparent rounded-full animate-spin" />
-                                        Searching...
+                                        {t('search.searching')}
                                     </span>
                                 ) : (
                                     <span>
-                                        <strong className="text-white">{filteredResults.length}</strong> results for{' '}
+                                        <strong className="text-white">{filteredResults.length}</strong> {t('search.resultsFor')}{' '}
                                         <span className="text-[#C9A84C]">&ldquo;{query}&rdquo;</span>
                                     </span>
                                 )}
@@ -177,7 +179,7 @@ export default function SearchView({ allResults, ratingsByProduct = {} }: Search
                         {hasResults && (
                             <div className="flex items-center gap-1 text-[10px] text-slate-500 font-mono">
                                 <SlidersHorizontal size={12} />
-                                <span>Category: {category}</span>
+                                <span>{t('search.category')}: {tc(`search.cat.${category}`, category)}</span>
                             </div>
                         )}
                     </section>
@@ -187,7 +189,7 @@ export default function SearchView({ allResults, ratingsByProduct = {} }: Search
                 {isSearching && query && (
                     <section className="py-16 flex flex-col items-center justify-center">
                         <div className="w-12 h-12 border-2 border-[#C9A84C]/30 border-t-[#C9A84C] rounded-full animate-spin mb-4" />
-                        <p className="text-sm text-slate-400 font-mono">Searching the atelier archive...</p>
+                        <p className="text-sm text-slate-400 font-mono">{t('search.loading')}</p>
                     </section>
                 )}
 
@@ -197,15 +199,15 @@ export default function SearchView({ allResults, ratingsByProduct = {} }: Search
                         <div className="inline-flex p-4 rounded-full bg-white/5 border border-white/10 mb-4">
                             <Search size={24} className="text-slate-500" />
                         </div>
-                        <h3 className="text-lg font-serif text-white mb-2">No results found</h3>
+                        <h3 className="text-lg font-serif text-white mb-2">{t('search.noResults')}</h3>
                         <p className="text-sm text-slate-400 max-w-md mx-auto leading-relaxed mb-6">
-                            We couldn&apos;t find anything matching &ldquo;{query}&rdquo; in {category.toLowerCase()}. Try a different search term or category.
+                            {t('search.noResultsBody', { query, category: tc(`search.cat.${category}`, category) })}
                         </p>
                         <button
                             onClick={() => setQuery('')}
                             className="px-5 py-2 rounded-full border border-[#C9A84C]/30 text-[#C9A84C] text-xs uppercase tracking-wider font-semibold hover:bg-[#C9A84C] hover:text-[#0A0F2C] transition-all duration-300 cursor-pointer"
                         >
-                            Clear Search
+                            {t('search.clearSearch')}
                         </button>
                     </section>
                 )}
@@ -257,9 +259,9 @@ export default function SearchView({ allResults, ratingsByProduct = {} }: Search
                         <div className="inline-flex p-4 rounded-full bg-[#C9A84C]/5 border border-[#C9A84C]/10 mb-4">
                             <Sparkles size={24} className="text-[#C9A84C]/60" />
                         </div>
-                        <h3 className="text-lg font-serif text-white mb-2">Discover SADAF</h3>
+                        <h3 className="text-lg font-serif text-white mb-2">{t('search.discover')}</h3>
                         <p className="text-sm text-slate-400 max-w-md mx-auto leading-relaxed">
-                            Type above to search through our complete collection of fashion, artworks, and limited-edition pieces.
+                            {t('search.discoverBody')}
                         </p>
                     </section>
                 )}
@@ -271,6 +273,7 @@ export default function SearchView({ allResults, ratingsByProduct = {} }: Search
 // ─── Grid Card ────────────────────────────────────────────────────────────────
 
 function SearchCard({ result, rating }: { result: SearchResult; rating?: RatingsByProduct[string] }) {
+    const { t } = useLanguage();
     return (
         <Link
             href={result.href}
@@ -303,11 +306,11 @@ function SearchCard({ result, rating }: { result: SearchResult; rating?: Ratings
                         <div className="flex items-center gap-1.5">
                             <Star size={10} className="text-[#C9A84C]" fill="currentColor" />
                             <span className="text-[10px] font-mono text-[#E8E0D5]">
-                                {rating ? rating.average.toFixed(1) : 'New'}
+                                {rating ? rating.average.toFixed(1) : t('search.new')}
                             </span>
                             {rating && (
                                 <span className="text-[9px] text-slate-500 font-mono">
-                                    &middot; {rating.count} review{rating.count === 1 ? '' : 's'}
+                                    &middot; {rating.count} {t('store.reviews')}
                                 </span>
                             )}
                         </div>
@@ -319,7 +322,7 @@ function SearchCard({ result, rating }: { result: SearchResult; rating?: Ratings
                         ${result.price.toLocaleString()}
                     </span>
                     <span className="text-[9px] text-[#4FC3F7]/70 flex items-center gap-1 group-hover:text-[#4FC3F7] transition-colors font-mono uppercase tracking-wider">
-                        View <ChevronRight size={10} />
+                        {t('search.view')} <ChevronRight size={10} />
                     </span>
                 </div>
             </div>
@@ -330,6 +333,7 @@ function SearchCard({ result, rating }: { result: SearchResult; rating?: Ratings
 // ─── List Item ────────────────────────────────────────────────────────────────
 
 function SearchListItem({ result, rating }: { result: SearchResult; rating?: RatingsByProduct[string] }) {
+    const { t } = useLanguage();
     return (
         <Link
             href={result.href}
@@ -361,11 +365,11 @@ function SearchListItem({ result, rating }: { result: SearchResult; rating?: Rat
                     <div className="flex items-center gap-1.5 mt-1">
                         <Star size={10} className="text-[#C9A84C]" fill="currentColor" />
                         <span className="text-[10px] font-mono text-[#E8E0D5]">
-                            {rating ? rating.average.toFixed(1) : 'New'}
+                            {rating ? rating.average.toFixed(1) : t('search.new')}
                         </span>
                         {rating && (
                             <span className="text-[9px] text-slate-500 font-mono">
-                                &middot; {rating.count} review{rating.count === 1 ? '' : 's'}
+                                &middot; {rating.count} {t('store.reviews')}
                             </span>
                         )}
                     </div>
@@ -377,7 +381,7 @@ function SearchListItem({ result, rating }: { result: SearchResult; rating?: Rat
                     ${result.price.toLocaleString()}
                 </p>
                 <span className="text-[9px] text-[#4FC3F7]/60 flex items-center gap-1 justify-end mt-1 group-hover:text-[#4FC3F7] transition-colors font-mono uppercase tracking-wider">
-                    View <ChevronRight size={10} />
+                    {t('search.view')} <ChevronRight size={10} />
                 </span>
             </div>
         </Link>

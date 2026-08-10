@@ -18,10 +18,10 @@ import { setAuthRoleCookie } from '@/shared/utils/authRoleCookie';
 interface AuthContextValue {
     user: UserProfile | null;
     isLoading: boolean;
-    login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+    login: (email: string, password: string) => Promise<{ success: boolean; error?: string; role?: UserRole }>;
     signup: (data: SignUpData) => Promise<{ success: boolean; error?: string }>;
     logout: () => void;
-    signInWithGoogle: () => Promise<{ success: boolean; error?: string }>;
+    signInWithGoogle: () => Promise<{ success: boolean; error?: string; role?: UserRole }>;
     /** Merge a partial profile (e.g. avatarUrl) into the current user — updates
      * the context AND the persisted mockAuth storage in one place. */
     updateProfile: (patch: Partial<UserProfile>) => void;
@@ -96,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         async (
             email: string,
             password: string,
-        ): Promise<{ success: boolean; error?: string }> => {
+        ): Promise<{ success: boolean; error?: string; role?: UserRole }> => {
             setIsLoading(true);
 
             // Artificial delay so the loading spinner is visible
@@ -129,7 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
                             setUser(profile);
                             setAuthRoleCookie(role);
-                            return { success: true };
+                            return { success: true, role };
                         }
                         return { success: false, error: 'No user data returned.' };
                     } catch (supabaseErr) {
@@ -152,7 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     mockAuth.setCurrentUser(profile);
                     setUser(profile);
                     setAuthRoleCookie(profile.role);
-                    return { success: true };
+                    return { success: true, role: profile.role };
                 }
 
                 // Auto-create account for any email in sandbox
@@ -171,7 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 mockAuth.setCurrentUser(newProfile);
                 setUser(newProfile);
                 setAuthRoleCookie(newProfile.role);
-                return { success: true };
+                return { success: true, role: newProfile.role };
             } catch (err: any) {
                 return {
                     success: false,
@@ -379,7 +379,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // always use the local sandbox fallback.  When you enable Google OAuth in your
     // Supabase dashboard, un-comment the real flow below and remove the sandbox path.
 
-    const signInWithGoogle = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
+    const signInWithGoogle = useCallback(async (): Promise<{ success: boolean; error?: string; role?: UserRole }> => {
         setIsLoading(true);
 
         try {
@@ -397,7 +397,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             mockAuth.setCurrentUser(profile);
             setUser(profile);
             setAuthRoleCookie(profile.role);
-            return { success: true };
+            return { success: true, role: profile.role };
         } catch (err: any) {
             return {
                 success: false,
