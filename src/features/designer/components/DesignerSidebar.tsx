@@ -24,6 +24,7 @@ import {
     Cpu,
     Handshake,
     Wallet,
+    Settings,
 } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
 import SignOutButton from '@/shared/components/SignOutButton';
@@ -42,6 +43,7 @@ export default function DesignerSidebar() {
         { href: ROUTES.ATELIER, label: 'Atelier', icon: Brush },
         { href: ROUTES.STORE, label: 'Store', icon: Store },
         { href: ROUTES.ARTWORKS, label: 'Artworks', icon: Shirt },
+        { href: ROUTES.DASHBOARD_DESIGNER_SETTINGS, label: 'Settings', icon: Settings },
     ];
 
     const sidebarContent = (

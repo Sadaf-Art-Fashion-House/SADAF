@@ -56,6 +56,11 @@ export const ROUTES = {
     DASHBOARD_ADMIN_COMMUNITY: '/dashboard/admin/community',
     DASHBOARD_FOUNDER_COMMUNITY: '/dashboard/founder/community',
     DASHBOARD_SETTINGS: '/dashboard/settings',
+    DASHBOARD_ADMIN_SETTINGS: '/dashboard/admin/settings',
+    DASHBOARD_FOUNDER_SETTINGS: '/dashboard/founder/settings',
+    DASHBOARD_DESIGNER_SETTINGS: '/dashboard/designer/settings',
+    DASHBOARD_SALES_PARTNER_SETTINGS: '/dashboard/sales-partner/settings',
+    DASHBOARD_COMPANY_SETTINGS: '/dashboard/company/settings',
 } as const;
 
 // ─── Navigation (public header) ─────────────────────────────────────────────

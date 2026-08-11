@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import SettingsPageClient from './SettingsPageClient';
+import SettingsPageClient from '@/features/settings/components/SettingsPageClient';
 
 export const metadata: Metadata = {
     title: 'Settings | SADAF Atelier',

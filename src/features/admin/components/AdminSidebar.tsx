@@ -20,6 +20,7 @@ import {
     TrendingUp,
     Trophy,
     Users,
+    Settings,
 } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
 import { getUnreadErrorCount } from '@/features/error-logging';
@@ -61,6 +62,7 @@ export default function AdminSidebar() {
         { href: ROUTES.AI_STUDIO, label: 'AI Studio', icon: Cpu },
         { href: ROUTES.ATELIER, label: 'Atelier', icon: Brush },
         { href: ROUTES.ARTWORKS, label: 'Artworks', icon: Shirt },
+        { href: ROUTES.DASHBOARD_ADMIN_SETTINGS, label: 'Settings', icon: Settings },
     ];
 
     const sidebarContent = (
