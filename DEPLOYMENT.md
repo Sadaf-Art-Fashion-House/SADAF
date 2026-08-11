@@ -85,6 +85,58 @@ above is the documented, stable path.)
 4. Vercel auto-deploys `main` → `sadaf-nu.vercel.app` (once the project is
    connected).
 
+## Auth security — cookie spoofing (verified 2026-08-11)
+
+### The problem
+
+The sandbox auth flow stores the signed-in user in `localStorage`
+(`sadaf_mock_current`) and mirrors the role into a `sadaf_role` **cookie**
+that `src/middleware.ts` reads to gate the role dashboards. Because that
+cookie is a plain, client-set value, it can be forged from the DevTools
+(e.g. `document.cookie = 'sadaf_role=founder'`) — a signed-in customer with
+a forged founder cookie passed the server check and could open
+`/dashboard/founder/*` and `/dashboard/admin/*`. This was reproduced on
+`sadaf-nu.vercel.app` (customer "Family Amir" viewing founder analytics).
+
+### Current defense (2 layers, both shipped)
+
+1. **Server middleware** (`src/middleware.ts`) — validates the cookie role
+   against the requested route and `307`-redirects mismatches to the user's
+   role home. Verified live on `sadaf-nu.vercel.app`:
+   `sadaf_role=customer_family` on `/dashboard/founder/analytics` and
+   `/dashboard/admin` → `307 → /dashboard`; `founder` and `admin_super`
+   cookies on their own routes → `200`.
+2. **Client-side `RoleDashboardGuard`** (`src/shared/components/
+   RoleDashboardGuard.tsx`, merged in `8ae7abb`) — wraps all six dashboard
+   route-group layouts. After hydration it re-checks the **real** signed-in
+   user from `localStorage` (not the cookie) and bounces mismatches to their
+   own dashboard home; `useAuth` then re-syncs the cookie.
+
+### Limitations — read before trusting it
+
+Both layers still assert identity from **client-controlled storage** (cookie
++ `localStorage`), so a determined user can always edit both. This is
+defense-in-depth for the sandbox, **not** real security. Treat it as a UX
+guard (keeps honest users on their own dashboard), never as an authorization
+boundary.
+
+### Root solution — Supabase sessions (when wiring the backend)
+
+When `sadaf-backend/` (or Supabase auth) is connected, replace the
+client-asserted cookie with a server-verifiable session:
+
+1. Supabase issues a **signed JWT** session cookie — the middleware verifies
+   the signature server-side and reads `role` from the token claims (or from
+   the DB), never from a client-set value.
+2. Set the session cookie to **`httpOnly`** so page JS cannot read or forge
+   it at all.
+3. Keep the existing structure — `middleware.ts` gates + the per-role
+   layouts — but have them read from the verified session instead of
+   `sadaf_role`. The guards already exist; only the identity source changes.
+4. Delete the `sadaf_role` cookie writes in the sandbox auth once sessions
+   are live, and drop `RoleDashboardGuard` (no longer needed when the server
+   is authoritative).
+
 ## Backend strategy (when wiring `sadaf-backend/`)
 
 - `sadaf-backend/` (NestJS + Prisma) is **one codebase** that serves the
