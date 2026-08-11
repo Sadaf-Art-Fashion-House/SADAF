@@ -20,6 +20,7 @@ import {
     Store,
     Menu,
     X,
+    Settings,
 } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
 import SignOutButton from '@/shared/components/SignOutButton';
@@ -34,6 +35,7 @@ export default function CompanySidebar() {
         { href: ROUTES.DASHBOARD_COMPANY, label: 'Company Home', icon: LayoutDashboard },
         { href: ROUTES.DASHBOARD_COMPANY_CONNECTIONS, label: 'Connections', icon: Handshake },
         { href: ROUTES.STORE, label: 'Store', icon: Store },
+        { href: ROUTES.DASHBOARD_COMPANY_SETTINGS, label: 'Settings', icon: Settings },
     ];
 
     const sidebarContent = (

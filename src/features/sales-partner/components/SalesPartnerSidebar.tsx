@@ -24,6 +24,7 @@ import {
     X,
     Cpu,
     Wallet,
+    Settings,
 } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
 import SignOutButton from '@/shared/components/SignOutButton';
@@ -41,6 +42,7 @@ export default function SalesPartnerSidebar() {
         { href: ROUTES.AI_STUDIO, label: 'AI Studio', icon: Cpu },
         { href: ROUTES.ATELIER, label: 'Atelier', icon: Brush },
         { href: ROUTES.ARTWORKS, label: 'Artworks', icon: Shirt },
+        { href: ROUTES.DASHBOARD_SALES_PARTNER_SETTINGS, label: 'Settings', icon: Settings },
     ];
 
     const sidebarContent = (
