@@ -5,6 +5,7 @@
  * Used for /dashboard/admin and any future admin-only routes.
  */
 import AdminSidebar from "@/features/admin/components/AdminSidebar";
+import RoleDashboardGuard from "@/shared/components/RoleDashboardGuard";
 
 export default function AdminGroupLayout({
     children,
@@ -12,11 +13,13 @@ export default function AdminGroupLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="flex min-h-screen">
-            <AdminSidebar />
-            <main className="flex-1 transition-all duration-300">
-                {children}
-            </main>
-        </div>
+        <RoleDashboardGuard required="admin">
+            <div className="flex min-h-screen">
+                <AdminSidebar />
+                <main className="flex-1 transition-all duration-300">
+                    {children}
+                </main>
+            </div>
+        </RoleDashboardGuard>
     );
 }

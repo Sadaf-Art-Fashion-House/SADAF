@@ -5,6 +5,7 @@
  */
 import Header from "@/shared/layout/Header";
 import CustomerSidebar from "@/features/customer/components/CustomerSidebar";
+import RoleDashboardGuard from "@/shared/components/RoleDashboardGuard";
 
 export default function CustomerGroupLayout({
     children,
@@ -12,7 +13,7 @@ export default function CustomerGroupLayout({
     children: React.ReactNode;
 }) {
     return (
-        <>
+        <RoleDashboardGuard required="customer">
             <Header />
             <div className="flex min-h-[calc(100vh-5rem)]">
                 <CustomerSidebar />
@@ -20,6 +21,6 @@ export default function CustomerGroupLayout({
                     {children}
                 </main>
             </div>
-        </>
+        </RoleDashboardGuard>
     );
 }

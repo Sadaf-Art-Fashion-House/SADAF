@@ -5,6 +5,7 @@
  * Used for /dashboard/designer and any future designer-only routes.
  */
 import DesignerSidebar from "@/features/designer/components/DesignerSidebar";
+import RoleDashboardGuard from "@/shared/components/RoleDashboardGuard";
 
 export default function DesignerGroupLayout({
     children,
@@ -12,11 +13,13 @@ export default function DesignerGroupLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="flex min-h-screen">
-            <DesignerSidebar />
-            <main className="flex-1 transition-all duration-300">
-                {children}
-            </main>
-        </div>
+        <RoleDashboardGuard required="designer">
+            <div className="flex min-h-screen">
+                <DesignerSidebar />
+                <main className="flex-1 transition-all duration-300">
+                    {children}
+                </main>
+            </div>
+        </RoleDashboardGuard>
     );
 }
