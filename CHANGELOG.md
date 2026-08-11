@@ -5,6 +5,71 @@ All notable changes to **SADAF — Art & Fashion House** are documented in this 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] — 2026-08-11
+
+**Second release.** Real-time collaboration layer, role dashboards, full Arabic (RTL) support, and monetization (commissions + withdrawals).
+
+### Added
+
+#### Real-time & Live
+- Real-time notifications bell on WebSocket (`notifications:user:{id}` + `notifications:global`): unread badge, mute toggle, browser notification permission, translated toast for friend requests
+- Real-time leaderboard (customer/admin/founder) with kind switcher (points/sales/designs), live WS `leaderboard:global` + REST fallback
+- Live friend requests over WebSocket: badge, request list, quick-action toast with Accept/Decline
+- Personal activity feed + rewards panel + live order status on `personal:user:{id}`
+- Overtake alerts: toast + row flash when someone passes you on the leaderboard
+- Admin/Founder Community Overview: KPIs, top referrers with per-referrer network peek, network growth, pending-request management, live `community:admin` channel
+
+#### Roles & Dashboards
+- Designer Dashboard: portfolio, atelier submissions, expected-commission KPI with per-design breakdown
+- Sales Partner Dashboard: referral link + copy/share, commission counter, successful referrals table, live referral-converted toast
+- Company workspace with Designer–Company connections hub
+- Customer Analysis: KPIs, smart recommendations, my activity, rewards, live order status
+- Monthly performance chart (12-month spend + KPIs) on the customer dashboard
+- Commission history pages (designer + sales partner) with month filtering
+
+#### Storefront & Reviews
+- Standalone product detail page `/store/[id]` with deep-linking from store/wishlist/search, multi-image gallery, star distribution, latest reviews, write/delete your review
+- Review system: write from delivered orders, YOU badge, Edited tags, interactive star filter, aggregated ratings (catalog + user) across store/search/orders/PDP, cross-tab localStorage sync
+- Product catalog ratings + order cards show aggregate rating and review count
+
+#### Monetization
+- Commission withdrawal requests: validation, processing lifecycle, double-withdraw protection, translated toasts (designer + sales partner)
+- Referral share links: WhatsApp / Facebook / X / Telegram / Email + native Web Share API
+- Order-based loyalty points (1 pt per $1 on Delivered) with auto tier computation
+
+#### i18n & Settings
+- Full Arabic (RTL) support: language provider, bilingual dictionaries, language switcher
+- Settings pages: language / theme / UX preferences, browser notification permission, watermark
+- Bilingual catalog data (`nameAr` / `descriptionAr` / `fabricAr` / `detailsAr`) with safe English fallback; localized order item names via `productId`
+- RTL fixes for header popovers using logical `end-0`/`start-0` properties
+
+#### Platform
+- Middleware route guards: protected `/dashboard`, `/dashboard/admin`, `/dashboard/founder`; signed-in redirect for `/auth`; `?redirect=` return param
+- Profile avatar upload (local storage) + avatar display across leaderboard/community/reviews
+- Unified SuccessToast component + role badges across sidebars/profile/leaderboard/community
+- Dashboard error boundaries + shared `DashboardErrorPage`
+- CONTRIBUTING.md (git protocol) + CHANGELOG-FEATURES.md (feature → commit map)
+
+### Changed
+- Leaderboard city filter dropdown lists all cities (including 0-member ones) with a dedicated empty state; RewardsPanel shares the filter with `?city=` deep-link
+- Sign-in / sign-out / referral-conversion toasts unified into the shared SuccessToast
+- Analytics export scaling adapts to report width (dynamic scale) while keeping full capture
+
+### Fixed
+- "Maximum update depth exceeded" loop — content-signature memoization in rating/notification/city/marketplace/search hooks
+- Analytics export cut off at the bottom — capture-safe padding + deterministic clone layout
+- Analytics export slowness (~13× faster: ignore-marking + dynamic scale)
+- html2canvas `oklab()` crash on exports
+- Notification panel clipped off-screen on the left in RTL
+- "INVITE CONNECTIONS" buttons dead — now deep-link to the invite modal
+- Friend-request toast text translated while member names stay as sent
+
+### Removed
+- 40 dead/stub files and 27 unused imports (cleanup pass)
+- Orphaned `UserDashboardView` / `UserDashboardPageClient`
+
+---
+
 ## [0.1.0] — 2026-08-03
 
 **First tagged release.** Full migration from Vite + React to Next.js 15 App Router.
