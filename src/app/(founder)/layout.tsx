@@ -5,6 +5,7 @@
  * Used for /dashboard/founder.
  */
 import FounderSidebar from "@/features/admin/components/FounderSidebar";
+import RoleDashboardGuard from "@/shared/components/RoleDashboardGuard";
 
 export default function FounderGroupLayout({
     children,
@@ -12,11 +13,13 @@ export default function FounderGroupLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="flex min-h-screen">
-            <FounderSidebar />
-            <main className="flex-1 transition-all duration-300">
-                {children}
-            </main>
-        </div>
+        <RoleDashboardGuard required="founder">
+            <div className="flex min-h-screen">
+                <FounderSidebar />
+                <main className="flex-1 transition-all duration-300">
+                    {children}
+                </main>
+            </div>
+        </RoleDashboardGuard>
     );
 }

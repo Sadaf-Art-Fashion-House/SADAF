@@ -145,10 +145,10 @@ export default function Header() {
                                 {user.avatarUrl ? (
                                     <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
                                 ) : (
-                                    user.fullName.charAt(0).toUpperCase()
+                                    (user.fullName || user.email || 'S').charAt(0).toUpperCase()
                                 )}
                             </span>
-                            <span className="hidden xl:inline">{user.fullName.split(' ')[0]}</span>
+                            <span className="hidden xl:inline">{(user.fullName || user.email || 'SADAFF').split(' ')[0]}</span>
                             <span
                                 className={`hidden xl:inline px-1.5 py-0.5 rounded-full text-[7px] font-mono uppercase tracking-wider border font-semibold ${
                                     ROLE_BADGE_COLORS[user.role] || 'bg-slate-500/10 text-slate-400 border-slate-500/30'

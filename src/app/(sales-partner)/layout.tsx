@@ -5,6 +5,7 @@
  * Used for /dashboard/sales-partner and any future partner-only routes.
  */
 import SalesPartnerSidebar from "@/features/sales-partner/components/SalesPartnerSidebar";
+import RoleDashboardGuard from "@/shared/components/RoleDashboardGuard";
 
 export default function SalesPartnerGroupLayout({
     children,
@@ -12,11 +13,13 @@ export default function SalesPartnerGroupLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="flex min-h-screen">
-            <SalesPartnerSidebar />
-            <main className="flex-1 transition-all duration-300">
-                {children}
-            </main>
-        </div>
+        <RoleDashboardGuard required="sales-partner">
+            <div className="flex min-h-screen">
+                <SalesPartnerSidebar />
+                <main className="flex-1 transition-all duration-300">
+                    {children}
+                </main>
+            </div>
+        </RoleDashboardGuard>
     );
 }
