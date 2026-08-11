@@ -11,6 +11,7 @@
 import { useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import SignedInToast from '@/shared/components/SignedInToast';
 import { useDesignerData } from '../hooks/useDesignerData';
 import DesignerDashboardView from './DesignerDashboardView';
 import type { NewDesignSubmission } from '../types';
@@ -44,14 +45,19 @@ export default function DesignerDashboardPageClient() {
     }
 
     return (
-        <DesignerDashboardView
-            data={data}
-            loading={loading}
-            error={error}
-            wsLive={wsLive}
-            submitting={submitting}
-            onSubmit={handleSubmit}
-            onRetry={refetch}
-        />
+        <>
+            {/* Welcome-back confirmation toast after a successful login
+                (reads ?signedIn=1 set by the auth page). */}
+            <SignedInToast />
+            <DesignerDashboardView
+                data={data}
+                loading={loading}
+                error={error}
+                wsLive={wsLive}
+                submitting={submitting}
+                onSubmit={handleSubmit}
+                onRetry={refetch}
+            />
+        </>
     );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
@@ -20,6 +20,7 @@ import {
     Download,
     Mail,
     Settings,
+    Search,
     Send,
 } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
@@ -73,6 +74,16 @@ export default function AdminErrorLogsPage() {
     const [emailSending, setEmailSending] = useState(false);
     const [emailResult, setEmailResult] = useState<{ ok: boolean; error?: string } | null>(null);
 
+    // JSON export state — the download itself is instant, but the button
+    // shows a brief "Preparing…" spinner so the click gives visible feedback
+    // (same pattern as the PNG/PDF export buttons).
+    const [isExportingJson, setIsExportingJson] = useState(false);
+
+    // Dashboard filters + search
+    const [statusFilter, setStatusFilter] = useState<'all' | 'unread' | 'read'>('all');
+    const [sourceFilter, setSourceFilter] = useState<string>('all');
+    const [searchQuery, setSearchQuery] = useState('');
+
     // Dynamic back link: founder → founder dashboard, admin → admin dashboard
     const backHref = pathname.startsWith('/dashboard/founder')
         ? ROUTES.DASHBOARD_FOUNDER
@@ -103,7 +114,42 @@ export default function AdminErrorLogsPage() {
         refreshLogs();
     }, [refreshLogs]);
 
+    // Auto-refresh so newly logged errors appear without a manual reload.
+    useEffect(() => {
+        const interval = window.setInterval(() => refreshLogs(true), 30_000);
+        return () => window.clearInterval(interval);
+    }, [refreshLogs]);
+
     const unreadCount = logs.filter((l) => !l.read).length;
+
+    // ── Dashboard KPIs ──
+    const errorsToday = logs.filter(
+        (l) => Date.now() - new Date(l.timestamp).getTime() < 24 * 3_600_000,
+    ).length;
+
+    // Source = first segment of the digest (e.g. "boundary", "export", "ws"),
+    // with a safe fallback for legacy entries that predate digests.
+    const sourceFor = (log: ErrorLogEntry): string => log.digest?.split(':')[0] || 'general';
+
+    const sourceCounts = useMemo(() => {
+        const counts = new Map<string, number>();
+        for (const log of logs) {
+            const source = sourceFor(log);
+            counts.set(source, (counts.get(source) ?? 0) + 1);
+        }
+        return [...counts.entries()].sort((a, b) => b[1] - a[1]);
+    }, [logs]);
+    const topSource = sourceCounts[0]?.[0] ?? '—';
+
+    // ── Filtered list ──
+    const filteredLogs = logs.filter((log) => {
+        if (statusFilter === 'unread' && log.read) return false;
+        if (statusFilter === 'read' && !log.read) return false;
+        if (sourceFilter !== 'all' && sourceFor(log) !== sourceFilter) return false;
+        const query = searchQuery.trim().toLowerCase();
+        if (query && !log.message.toLowerCase().includes(query)) return false;
+        return true;
+    });
 
     const handleMarkRead = async (id: string) => {
         await markErrorAsRead(id);
@@ -126,9 +172,20 @@ export default function AdminErrorLogsPage() {
         refreshLogs(true);
     };
 
-    const handleExportJson = () => {
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-        downloadJson(logs, `sadaf-error-logs-${timestamp}.json`);
+    const handleExportJson = async () => {
+        if (isExportingJson || logs.length === 0) return;
+
+        setIsExportingJson(true);
+        try {
+            // Yield one frame so the spinner paints before the (instant)
+            // download is triggered — otherwise the state flip would be
+            // invisible to the user.
+            await new Promise((resolve) => setTimeout(resolve, 350));
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+            downloadJson(logs, `sadaf-error-logs-${timestamp}.json`);
+        } finally {
+            setIsExportingJson(false);
+        }
     };
 
     const handleSendEmail = async () => {
@@ -146,6 +203,28 @@ export default function AdminErrorLogsPage() {
         setEmailResult(result);
         setEmailSending(false);
     };
+
+    // ── Small filter chip (matches LeaderboardView's FilterChip style) ──
+    const FilterChip = ({
+        label,
+        active,
+        onClick,
+    }: {
+        label: string;
+        active: boolean;
+        onClick: () => void;
+    }) => (
+        <button
+            onClick={onClick}
+            className={`px-3 py-1.5 rounded-lg text-[9px] font-mono uppercase tracking-wider transition-all cursor-pointer ${
+                active
+                    ? 'bg-[#C9A84C]/20 text-[#C9A84C] border border-[#C9A84C]/30'
+                    : 'text-[#E8E0D5]/40 hover:text-white border border-transparent hover:border-white/10'
+            }`}
+        >
+            {label}
+        </button>
+    );
 
     const formatTimestamp = (iso: string) => {
         const date = new Date(iso);
@@ -271,11 +350,16 @@ export default function AdminErrorLogsPage() {
                         {logs.length > 0 && (
                             <button
                                 onClick={handleExportJson}
-                                className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#4FC3F7]/15 hover:bg-[#4FC3F7]/10 text-[#4FC3F7]/60 hover:text-[#4FC3F7] transition-all duration-200 text-[10px] font-mono uppercase tracking-wider cursor-pointer"
-                                title="Export all error logs as JSON"
+                                disabled={isExportingJson}
+                                className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#4FC3F7]/15 hover:bg-[#4FC3F7]/10 text-[#4FC3F7]/60 hover:text-[#4FC3F7] transition-all duration-200 text-[10px] font-mono uppercase tracking-wider cursor-pointer disabled:opacity-40 disabled:cursor-wait"
+                                title={isExportingJson ? 'Preparing export…' : 'Export all error logs as JSON'}
                             >
-                                <Download size={12} />
-                                Export JSON
+                                {isExportingJson ? (
+                                    <span className="block w-3 h-3 rounded-full border-2 border-[#4FC3F7]/40 border-t-[#4FC3F7] animate-spin" />
+                                ) : (
+                                    <Download size={12} />
+                                )}
+                                {isExportingJson ? 'Preparing…' : 'Export JSON'}
                             </button>
                         )}
 
@@ -341,6 +425,79 @@ export default function AdminErrorLogsPage() {
                     )}
                 </AnimatePresence>
 
+                {/* ── KPI summary cards ── */}
+                {!isLoading && logs.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                        <div className="p-4 rounded-xl bg-[#0A0F2C]/60 border border-white/[0.05] hover:border-[#C9A84C]/20 transition-colors">
+                            <span className="text-[7px] font-mono uppercase tracking-widest text-[#E8E0D5]/40 font-semibold">Total Errors</span>
+                            <p className="text-lg font-serif text-white font-bold tracking-tight mt-1">{logs.length}</p>
+                        </div>
+                        <div className="p-4 rounded-xl bg-[#0A0F2C]/60 border border-white/[0.05] hover:border-red-500/20 transition-colors">
+                            <span className="text-[7px] font-mono uppercase tracking-widest text-[#E8E0D5]/40 font-semibold">Unread</span>
+                            <p className={`text-lg font-serif font-bold tracking-tight mt-1 ${unreadCount > 0 ? 'text-red-400' : 'text-white'}`}>{unreadCount}</p>
+                        </div>
+                        <div className="p-4 rounded-xl bg-[#0A0F2C]/60 border border-white/[0.05] hover:border-[#4FC3F7]/20 transition-colors">
+                            <span className="text-[7px] font-mono uppercase tracking-widest text-[#E8E0D5]/40 font-semibold">Last 24h</span>
+                            <p className="text-lg font-serif text-white font-bold tracking-tight mt-1">{errorsToday}</p>
+                        </div>
+                        <div className="p-4 rounded-xl bg-[#0A0F2C]/60 border border-white/[0.05] hover:border-[#C9A84C]/20 transition-colors">
+                            <span className="text-[7px] font-mono uppercase tracking-widest text-[#E8E0D5]/40 font-semibold">Top Source</span>
+                            <p className="text-lg font-mono text-[#C9A84C] font-bold tracking-tight mt-1 truncate">{topSource}</p>
+                        </div>
+                    </div>
+                )}
+
+                {/* ── Filters + search ── */}
+                {!isLoading && logs.length > 0 && (
+                    <div className="flex flex-col lg:flex-row lg:items-center gap-3 mb-6">
+                        <div className="relative flex-1 max-w-md">
+                            <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#E8E0D5]/30" />
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Search error messages..."
+                                className="w-full bg-[#0A0F2C]/60 border border-white/10 rounded-lg pl-8 pr-3 py-2 text-[11px] text-white placeholder-slate-600 outline-none focus:border-[#4FC3F7]/40 transition"
+                            />
+                        </div>
+
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                            {(['all', 'unread', 'read'] as const).map((status) => (
+                                <FilterChip
+                                    key={status}
+                                    label={
+                                        status === 'all'
+                                            ? `All · ${logs.length}`
+                                            : status === 'unread'
+                                                ? `Unread · ${unreadCount}`
+                                                : `Read · ${logs.length - unreadCount}`
+                                    }
+                                    active={statusFilter === status}
+                                    onClick={() => setStatusFilter(status)}
+                                />
+                            ))}
+                        </div>
+
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                            <FilterChip
+                                label="General"
+                                active={sourceFilter === 'general'}
+                                onClick={() => setSourceFilter(sourceFilter === 'general' ? 'all' : 'general')}
+                            />
+                            {sourceCounts
+                                .filter(([source]) => source !== 'general')
+                                .map(([source, count]) => (
+                                    <FilterChip
+                                        key={source}
+                                        label={`${source} · ${count}`}
+                                        active={sourceFilter === source}
+                                        onClick={() => setSourceFilter(sourceFilter === source ? 'all' : source)}
+                                    />
+                                ))}
+                        </div>
+                    </div>
+                )}
+
                 {/* Loading state */}
                 {isLoading && (
                     <div className="flex items-center justify-center py-24">
@@ -369,8 +526,31 @@ export default function AdminErrorLogsPage() {
                 {/* Logs list */}
                 {!isLoading && logs.length > 0 && (
                     <div className="space-y-3">
+                        {/* No logs match the current filters */}
+                        {filteredLogs.length === 0 && (
+                            <div className="flex flex-col items-center justify-center py-16 text-center">
+                                <div className="w-12 h-12 rounded-full bg-[#4FC3F7]/5 border border-[#4FC3F7]/10 flex items-center justify-center mb-3">
+                                    <Search size={20} className="text-[#4FC3F7]/40" />
+                                </div>
+                                <h3 className="text-sm font-serif text-white mb-1">No errors match your filters</h3>
+                                <p className="text-[10px] text-[#E8E0D5]/40 font-mono max-w-sm">
+                                    Try clearing the search or switching filters to see more entries.
+                                </p>
+                                <button
+                                    onClick={() => {
+                                        setStatusFilter('all');
+                                        setSourceFilter('all');
+                                        setSearchQuery('');
+                                    }}
+                                    className="mt-4 px-3 py-1.5 rounded-lg border border-[#4FC3F7]/20 hover:bg-[#4FC3F7]/10 text-[#4FC3F7]/70 hover:text-[#4FC3F7] transition-all duration-200 text-[9px] font-mono uppercase tracking-wider cursor-pointer"
+                                >
+                                    Clear Filters
+                                </button>
+                            </div>
+                        )}
+
                         <AnimatePresence>
-                            {logs.map((log, index) => (
+                            {filteredLogs.map((log, index) => (
                                 <motion.div
                                     key={log.id}
                                     initial={{ opacity: 0, y: 10 }}
