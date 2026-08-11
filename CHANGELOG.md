@@ -5,9 +5,9 @@ All notable changes to **SADAF — Art & Fashion House** are documented in this 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.2.0] — 2026-08-11
+## [0.3.0] — 2026-08-11
 
-**Second release.** Real-time collaboration layer, role dashboards, full Arabic (RTL) support, and monetization (commissions + withdrawals).
+**Third release.** Real-time collaboration layer, role dashboards, full Arabic (RTL) support, and monetization (commissions + withdrawals).
 
 ### Added
 
@@ -70,9 +70,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.1.0] — 2026-08-03
+## [0.2.0] — 2026-08-03
 
-**First tagged release.** Full migration from Vite + React to Next.js 15 App Router.
+**Next.js migration release.** Full migration from Vite + React to Next.js 15 App Router.
 
 ### Added
 
@@ -115,11 +115,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.0] — 2026-05-28
+
+**Vite legacy app (original).** The pre-Next.js version of the site — the first
+iteration, used as the baseline for the migration.
+
+- Preserved under tag `v0.1.0` (alias `v1`) and branch `vite-original`
+- Codebase: React + Vite (`Sadaf-Frontend-Vite/` — frozen, do not touch)
+
+---
+
 ## How to tag a new release
 
+> **Note:** the GitHub Actions workflow (`release.yml`) does this automatically
+> whenever `package.json` is bumped on `main` — it creates the `vX.Y.Z` tag and
+> publishes the GitHub Release from the matching `## [X.Y.Z]` changelog section.
+
 ```bash
-git tag -a v0.2.0 -m "SADAF v0.2.0 — <short summary>"   # annotated tag (best practice)
-git push origin v0.2.0                                   # push the tag
+git tag -a v0.3.0 -m "SADAF v0.3.0 — <short summary>"   # annotated tag (best practice)
+git push origin v0.3.0                                   # push the tag
 ```
 
-Then create the release from the tag in GitHub UI (**Tags → v0.2.0 → Create release**) and paste the new section from this changelog.
+Then create the release from the tag in GitHub UI (**Tags → v0.3.0 → Create release**) and paste the new section from this changelog.
