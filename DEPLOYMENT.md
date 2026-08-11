@@ -17,18 +17,22 @@ Other refs: `nextjs-clean` (locked/archived at `0d7a585`), `archive/nextjs-clean
 
 ## Link status (verified 2026-08-11)
 
-| Link | Intended version | Status | Reality |
+| Link | Version | Status | Content |
 |---|---|---|---|
-| `https://sadaf-nu.vercel.app/` | v0.3.0 (production) | ⚠️ HTTP 200 but **wrong content** | Currently serving *"My Google AI Studio App"* — an old scaffold. The Vercel project is NOT wired to this repo's `main`. Needs re-connecting. |
-| `https://sadaf-v1.vercel.app/` | v0.1.0 (archive) | ❌ HTTP 404 | Not created yet (proposal only) |
-| `https://sadaf-v2.vercel.app/` | v0.2.0 (archive) | ❌ HTTP 404 | Not created yet (proposal only) |
+| `https://sadaf-nu.vercel.app/` | v0.3.0 (production) | ✅ HTTP 200 | SADAF Next.js app (from `main`) |
+| `https://sadaf-v1.vercel.app/` | v0.1.0 (archive) | ✅ HTTP 200 | SADAF Vite legacy app |
+| `https://sadaf-v2.vercel.app/` | v0.2.0 (archive) | ✅ HTTP 200 | SADAF Next.js migration app |
 
 ### Vercel state (verified 2026-08-11)
-- Vercel CLI **58.9.1** installed globally on this machine.
-- CLI login: **in progress** — device-code flow was started; pending the
-  owner's browser authorization.
-- Projects `sadaf-v1` / `sadaf-v2`: **not created yet**.
-- The owner must authorize once; after that the CLI can create/link projects.
+- Vercel CLI **58.9.1** installed; logged in as `muhammedayoubabdllah997`.
+- Projects: `sadaf` (production, alias sadaf-nu), `sadaf-v1`, `sadaf-v2` —
+  all with **framework = `nextjs`** (v1 deploys the Vite app via the project's
+  build config) and **deployment protection OFF**.
+- Deploys are **file-based** (from the worktrees `/tmp/deploy-v1`, `/tmp/deploy-v2`,
+  `/tmp/deploy-v3`) — Git auto-deploy is NOT connected because the repo is
+  private and the Vercel GitHub App lacks access. To redeploy a version:
+  `cd /tmp/deploy-vN && vercel deploy --prod --yes`. To enable auto-deploy,
+  grant the Vercel GitHub App access to the repo in the GitHub org settings.
 
 ## How to deploy each version
 
