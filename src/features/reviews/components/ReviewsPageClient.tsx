@@ -17,6 +17,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import RoleDashboardGuard from '@/shared/components/RoleDashboardGuard';
 import ReviewsView from './ReviewsView';
 import { getUserReviews, USER_REVIEWS_CHANGED_EVENT } from '../utils/userReviewsStorage';
 import type { Review } from '../types';
@@ -50,5 +51,9 @@ export default function ReviewsPageClient({ reviews }: ReviewsPageClientProps) {
         ...reviews,
     ];
 
-    return <ReviewsView reviews={mergedReviews} />;
+    return (
+        <RoleDashboardGuard required="any">
+            <ReviewsView reviews={mergedReviews} />
+        </RoleDashboardGuard>
+    );
 }

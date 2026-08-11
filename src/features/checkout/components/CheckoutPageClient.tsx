@@ -1,6 +1,7 @@
 'use client';
 
 import { useCartStore } from '@/features/cart/store/useCartStore';
+import RoleDashboardGuard from '@/shared/components/RoleDashboardGuard';
 import CheckoutView from './CheckoutView';
 import type { OrderPayload } from '../types';
 
@@ -20,10 +21,12 @@ export default function CheckoutPageClient() {
     };
 
     return (
-        <CheckoutView
-            items={items}
-            subtotal={subtotal}
-            onPlaceOrder={handlePlaceOrder}
-        />
+        <RoleDashboardGuard required="any">
+            <CheckoutView
+                items={items}
+                subtotal={subtotal}
+                onPlaceOrder={handlePlaceOrder}
+            />
+        </RoleDashboardGuard>
     );
 }

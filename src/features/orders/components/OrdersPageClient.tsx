@@ -12,6 +12,7 @@ import { titleForRating } from '@/features/reviews/utils/titleForRating';
 import { getMockReviews } from '@/features/reviews/data/mockReviews';
 import { useAggregatedRatings } from '@/features/reviews/hooks/useAggregatedRatings';
 import type { Review } from '@/features/reviews/types';
+import RoleDashboardGuard from '@/shared/components/RoleDashboardGuard';
 
 export default function OrdersPageClient() {
     const [orders] = useState<Order[]>(MOCK_ORDERS);
@@ -69,16 +70,18 @@ export default function OrdersPageClient() {
     );
 
     return (
-        <OrdersView
-            orders={orders}
-            liveStatuses={statuses}
-            liveEvents={events}
-            isLive={wsLive}
-            liveLoading={loading}
-            liveError={error}
-            reviewedOrderIds={reviewedOrderIds}
-            ratingsByProduct={ratingsByProduct}
-            onReviewSubmit={handleReviewSubmit}
-        />
+        <RoleDashboardGuard required="any">
+            <OrdersView
+                orders={orders}
+                liveStatuses={statuses}
+                liveEvents={events}
+                isLive={wsLive}
+                liveLoading={loading}
+                liveError={error}
+                reviewedOrderIds={reviewedOrderIds}
+                ratingsByProduct={ratingsByProduct}
+                onReviewSubmit={handleReviewSubmit}
+            />
+        </RoleDashboardGuard>
     );
 }

@@ -16,6 +16,10 @@ import { AUTH_ROLE_COOKIE } from '@/shared/utils/authRoleCookie';
  *   /dashboard/sales-partner/* → sales_partner only
  *   /dashboard/company/* → company only
  *   /dashboard/*         → customer roles only (customer_*)
+ *   /checkout, /orders,
+ *   /reviews             → any signed-in role (identity-gated content:
+ *                          placing orders, tracking personal orders, and
+ *                          user-generated reviews)
  *   /auth, /auth/signup  → blocked for logged-in users (redirect to their
  *                          dashboard home so the sign-in page is only for
  *                          guests); guests arriving from a guarded route get
@@ -75,6 +79,10 @@ export function middleware(request: NextRequest) {
         allowed = !!role && isCompanyRole(role);
     } else if (pathname.startsWith('/dashboard')) {
         allowed = !!role && isCustomerRole(role);
+    } else if (pathname === '/checkout' || pathname === '/orders' || pathname === '/reviews') {
+        // Identity-gated public pages: any signed-in role passes; guests are
+        // sent to the sign-in page (with ?redirect so login returns here).
+        allowed = !!role;
     }
 
     if (allowed) return NextResponse.next();
@@ -95,7 +103,8 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-    // Dashboard routes are role-guarded; /auth is blocked for signed-in users.
-    // Static assets, /api/* and the public routes never reach this matcher.
-    matcher: ['/dashboard/:path*', '/auth/:path*'],
+    // Dashboard routes are role-guarded; /auth is blocked for signed-in users;
+    // /checkout, /orders and /reviews require any signed-in role. Static
+    // assets, /api/* and the remaining public routes never reach this matcher.
+    matcher: ['/dashboard/:path*', '/auth/:path*', '/checkout', '/orders', '/reviews'],
 };
