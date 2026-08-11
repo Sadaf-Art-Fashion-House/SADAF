@@ -12,7 +12,14 @@ import {
     isSalesPartnerRole,
 } from '@/shared/types';
 
-type RequiredRole = 'admin' | 'founder' | 'designer' | 'sales-partner' | 'company' | 'customer';
+type RequiredRole =
+    | 'admin'
+    | 'founder'
+    | 'designer'
+    | 'sales-partner'
+    | 'company'
+    | 'customer'
+    | 'any';
 
 /** Client-side home for each role — mirrors the server middleware's roleHomeFor. */
 function roleHomeFor(role: UserRole | undefined): string {
@@ -35,6 +42,10 @@ function roleHomeFor(role: UserRole | undefined): string {
  * customer could land on a founder/admin dashboard. This guard re-checks the
  * signed-in user's real role after hydration and bounces mismatches to their
  * own dashboard home (the middleware cookie is re-synced by useAuth).
+ *
+ * With `required: 'any'` it becomes a plain signed-in gate for sensitive
+ * routes outside the dashboards (/checkout, /orders, /reviews) — any role
+ * passes, guests are sent to /auth?redirect=<current path>.
  */
 export default function RoleDashboardGuard({
     required,
@@ -51,22 +62,28 @@ export default function RoleDashboardGuard({
         if (isLoading) return;
         if (!user) {
             // No signed-in user — the middleware should have redirected; if it
-            // didn't (stale cookie), bounce to the sign-in page.
-            router.replace('/auth');
+            // didn't (stale cookie), bounce to the sign-in page and remember
+            // where the guest was headed so the auth page returns them after
+            // login (same ?redirect= contract as the middleware).
+            const url = new URL(window.location.href);
+            const redirect = url.pathname + url.search;
+            router.replace(`/auth?redirect=${encodeURIComponent(redirect)}`);
             return;
         }
         const matches =
-            required === 'admin'
-                ? isAdminRole(user.role)
-                : required === 'founder'
-                  ? user.role === 'founder'
-                  : required === 'designer'
-                    ? isDesignerRole(user.role)
-                    : required === 'sales-partner'
-                      ? isSalesPartnerRole(user.role)
-                      : required === 'company'
-                        ? isCompanyRole(user.role)
-                        : isCustomerRole(user.role);
+            required === 'any'
+                ? true
+                : required === 'admin'
+                  ? isAdminRole(user.role)
+                  : required === 'founder'
+                    ? user.role === 'founder'
+                    : required === 'designer'
+                      ? isDesignerRole(user.role)
+                      : required === 'sales-partner'
+                        ? isSalesPartnerRole(user.role)
+                        : required === 'company'
+                          ? isCompanyRole(user.role)
+                          : isCustomerRole(user.role);
         if (!matches) {
             router.replace(roleHomeFor(user.role));
             return;
