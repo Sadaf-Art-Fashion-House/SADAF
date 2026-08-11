@@ -190,6 +190,9 @@ export function useLeaderboard(userId: string | null, size = 100, kind: Leaderbo
                         points: ownMetric,
                         tier: tierForSpend(ownMetric),
                         city: userCityRef.current || CURRENT_USER_CITY,
+                        // The view overrides this with the real signed-in role
+                        // via the currentUserRole prop (the WS hook has no auth).
+                        role: 'customer_individual',
                         isCurrentUser: true,
                     };
                     const entries: LeaderboardEntry[] = [

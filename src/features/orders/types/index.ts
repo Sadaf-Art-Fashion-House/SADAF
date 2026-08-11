@@ -1,5 +1,9 @@
 export interface OrderItem {
     name: string;
+    /** Catalog id the item was ordered from (fashionDatabase / artDatabase) —
+     * lets old saved orders resolve the live localized name instead of the
+     * English name captured at order time. */
+    productId?: string;
     quantity: number;
     size: string;
     price: number;

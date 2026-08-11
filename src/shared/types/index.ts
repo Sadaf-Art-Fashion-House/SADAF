@@ -143,6 +143,8 @@ export type ArtCategory =
 export interface ArtPiece {
     id: string;
     title: string;
+    /** Arabic display title for the bilingual catalog — falls back to `title` when absent. */
+    titleAr?: string;
     category: string;
     artist: string;
     price: number;
@@ -165,16 +167,24 @@ export type FashionCategory =
 export interface FashionProduct {
     id: string;
     name: string;
+    /** Arabic display name for the bilingual catalog — falls back to `name` when absent. */
+    nameAr?: string;
     category: FashionCategory | string;
     price: number;
     image: string;
     /** Alternate image revealed on hover. Optional — not all products have one. */
     hoverImage?: string;
     description: string;
+    /** Arabic product description — falls back to `description` when absent. */
+    descriptionAr?: string;
     fabric: string;
+    /** Arabic fabric label — falls back to `fabric` when absent. */
+    fabricAr?: string;
     sizes: string[];
     colors: { name: string; hex: string }[];
     details: string[];
+    /** Arabic bullet-point details — falls back to `details` when absent. */
+    detailsAr?: string[];
     rating: number;
 }
 
@@ -209,6 +219,8 @@ export interface AIClothingDesign {
     svgPattern: string;
     accentColor: string;
     patternName: string;
+    /** Arabic display name for the bilingual catalog — falls back to `patternName` when absent. */
+    patternNameAr?: string;
     description: string;
     /** Gemini-generated narrative for the design. */
     story: string;

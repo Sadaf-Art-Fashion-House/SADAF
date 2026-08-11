@@ -4,8 +4,10 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
-import { LayoutDashboard, ShoppingBag, LogOut, Compass, Brush, Menu, X, Bell, Users, Settings, BarChart3, Trophy } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Compass, Brush, Menu, X, Bell, Users, Settings, BarChart3, Trophy } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
+import SignOutButton from '@/shared/components/SignOutButton';
+import LanguageSwitcher from '@/features/i18n/LanguageSwitcher';
 
 export default function CustomerSidebar() {
     const pathname = usePathname();
@@ -67,18 +69,7 @@ export default function CustomerSidebar() {
                 })}
             </nav>
 
-            <Link
-                href={ROUTES.AUTH}
-                className="flex items-center gap-3 py-2 w-full text-red-400/50 hover:text-red-400 hover:bg-red-950/20 transition-all duration-200"
-                title="Sign In"
-            >
-                <span className="w-16 flex justify-center shrink-0">
-                    <LogOut size={16} className="rotate-180" />
-                </span>
-                <span className="text-[10px] font-mono uppercase tracking-wider truncate opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    Sign In
-                </span>
-            </Link>
+            <SignOutButton />
         </>
     );
 
@@ -148,13 +139,8 @@ export default function CustomerSidebar() {
                                         );
                                     })}
                                 </nav>
-                                <Link
-                                    href={ROUTES.AUTH}
-                                    className="flex items-center gap-3 w-full mt-4 px-3 py-2 rounded-lg text-red-400/50 hover:text-red-400 hover:bg-red-950/20 transition-all"
-                                >
-                                    <LogOut size={16} className="shrink-0 rotate-180" />
-                                    <span className="text-[10px] font-mono uppercase tracking-wider">Sign In</span>
-                                </Link>
+                                <LanguageSwitcher variant="mobile" />
+                                <SignOutButton variant="mobile" onSignedOut={() => setMobileOpen(false)} />
                             </div>
                         </motion.aside>
                     </>

@@ -11,6 +11,8 @@ import { LEADERBOARD_KIND_LABELS, TIER_ORDER, tierMemberCounts } from '../utils/
 import { useCityFilter } from '../hooks/useCityFilter';
 import { useOvertakeAlerts } from '../hooks/useOvertakeAlerts';
 import { playSoftChime } from '@/shared/utils/playSoftChime';
+import RoleBadge from '@/shared/components/RoleBadge';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 
 interface LeaderboardViewProps {
     /** Full ranked member list (includes the current user). */
@@ -25,6 +27,8 @@ interface LeaderboardViewProps {
     memberName: string;
     /** The signed-in user's avatar — shown on their "You" row. */
     currentUserAvatar?: string;
+    /** The signed-in user's role — shown as a badge on their "You" row. */
+    currentUserRole?: string;
     /** Which metric the leaderboard is ranked by. */
     kind?: LeaderboardKind;
     /** Optional kinds to show as a switcher (admin/founder variants). */
@@ -73,6 +77,7 @@ export default function LeaderboardView({
     error,
     memberName,
     currentUserAvatar,
+    currentUserRole,
     kind = 'points',
     kinds,
     activeKind,
@@ -81,6 +86,7 @@ export default function LeaderboardView({
     overtake = null,
     initialCity = 'All',
 }: LeaderboardViewProps) {
+    const { t, tc } = useLanguage();
     const [searchQuery, setSearchQuery] = useState('');
     const [tierFilter, setTierFilter] = useState<LoyaltyTier | 'All'>('All');
     // City filter shared with the RewardsPanel — dropdown, counts and
@@ -193,16 +199,16 @@ export default function LeaderboardView({
                         </span>
                         <div className="flex-1 min-w-0">
                             <p className="text-[11px] font-semibold text-white">
-                                {activeToast.overtakenBy} overtook you
+                                {t('lb.overtook', { name: activeToast.overtakenBy })}
                             </p>
                             <p className="text-[10px] text-[#E8E0D5]/60 mt-0.5 font-mono">
-                                Your rank dropped from #{activeToast.previousRank} to #{activeToast.newRank}
+                                {t('lb.rankDropped', { from: activeToast.previousRank, to: activeToast.newRank })}
                             </p>
                         </div>
                         <button
                             onClick={() => setActiveToast(null)}
                             className="p-0.5 rounded text-[#E8E0D5]/40 hover:text-white transition-colors cursor-pointer shrink-0"
-                            aria-label="Dismiss"
+                            aria-label={t('lb.dismiss')}
                         >
                             <X size={12} />
                         </button>
@@ -229,10 +235,10 @@ export default function LeaderboardView({
                             </div>
                             <div>
                                 <h1 className="text-xl md:text-2xl font-serif text-white font-bold tracking-tight">
-                                    Leaderboard
+                                    {t('lb.title')}
                                 </h1>
                                 <p className="text-xs text-[#E8E0D5]/60 mt-0.5">
-                                    Top {poolSize.toLocaleString()} members ranked by {copy.rankBy}, plus you
+                                    {t('lb.subtitle', { count: poolSize.toLocaleString(), rankBy: tc(`lb.rankBy.${kind}`, copy.rankBy) })}
                                 </p>
                             </div>
                         </div>
@@ -244,14 +250,14 @@ export default function LeaderboardView({
                                     : 'text-amber-400/80 border-amber-400/20 bg-amber-400/5'
                             }`}>
                                 {isLive ? <Wifi size={10} /> : <WifiOff size={10} />}
-                                {isLive ? 'Live' : 'Polling'}
+                                {isLive ? t('lb.live') : t('lb.polling')}
                             </span>
                             <span className="px-3 py-1.5 rounded-full text-[10px] font-mono text-[#C9A84C] bg-[#C9A84C]/10 border border-[#C9A84C]/25">
-                                Your rank: #{myRank}
+                                {t('lb.yourRank', { rank: myRank })}
                             </span>
                             <span className="px-3 py-1.5 rounded-full text-[10px] font-mono text-[#E8E0D5]/60 bg-[#0A0F2C]/60 border border-white/10">
                                 <Users size={11} className="inline mr-1" />
-                                {totalMembers.toLocaleString()} members
+                                {t('lb.members', { count: totalMembers.toLocaleString() })}
                             </span>
 
                             {/* Overtake alert toggles — same pattern as the My Activity alerts */}
@@ -259,10 +265,10 @@ export default function LeaderboardView({
                                 <button
                                     onClick={toggleOvertakeAlerts}
                                     aria-pressed={overtakePrefs.enabled}
-                                    aria-label={overtakePrefs.enabled ? 'Disable overtake alerts' : 'Enable overtake alerts'}
+                                    aria-label={overtakePrefs.enabled ? t('lb.disableOvertakeAlerts') : t('lb.enableOvertakeAlerts')}
                                     title={overtakePrefs.enabled
-                                        ? 'Overtake alerts ON — toast + flash when someone passes you'
-                                        : 'Overtake alerts OFF — click to get toast + flash when someone passes you'}
+                                        ? t('lb.overtakeAlertsOn')
+                                        : t('lb.overtakeAlertsOff')}
                                     className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[9px] font-mono uppercase tracking-wider border transition-all cursor-pointer ${
                                         overtakePrefs.enabled
                                             ? 'text-[#4FC3F7] border-[#4FC3F7]/30 bg-[#4FC3F7]/10 hover:border-[#4FC3F7]/60'
@@ -270,15 +276,15 @@ export default function LeaderboardView({
                                     }`}
                                 >
                                     <Swords size={10} />
-                                    {overtakePrefs.enabled ? 'Alerts' : 'Alerts off'}
+                                    {overtakePrefs.enabled ? t('lb.alertsOn') : t('lb.alertsOff')}
                                 </button>
                                 <button
                                     onClick={toggleOvertakeSound}
                                     aria-pressed={overtakePrefs.sound}
-                                    aria-label={overtakePrefs.sound ? 'Mute overtake sound' : 'Enable overtake sound'}
+                                    aria-label={overtakePrefs.sound ? t('lb.muteOvertakeSound') : t('lb.enableOvertakeSound')}
                                     title={overtakePrefs.sound
-                                        ? 'Sound ON — plays a soft chime when someone passes you'
-                                        : 'Sound OFF — click to play a soft chime when someone passes you'}
+                                        ? t('lb.overtakeSoundOn')
+                                        : t('lb.overtakeSoundOff')}
                                     className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[9px] font-mono uppercase tracking-wider border transition-all cursor-pointer ${
                                         overtakePrefs.sound
                                             ? 'text-emerald-400 border-emerald-400/30 bg-emerald-400/10 hover:border-emerald-400/60'
@@ -286,7 +292,7 @@ export default function LeaderboardView({
                                     }`}
                                 >
                                     {overtakePrefs.sound ? <Volume2 size={10} /> : <VolumeX size={10} />}
-                                    {overtakePrefs.sound ? 'Sound' : 'Muted'}
+                                    {overtakePrefs.sound ? t('lb.soundOn') : t('lb.soundOff')}
                                 </button>
                             </div>
                         </div>
@@ -299,7 +305,7 @@ export default function LeaderboardView({
                             {kinds.map((candidate) => (
                                 <FilterChip
                                     key={candidate}
-                                    label={LEADERBOARD_KIND_LABELS[candidate]}
+                                    label={tc(`lb.kind.${candidate}`, LEADERBOARD_KIND_LABELS[candidate])}
                                     active={activeKind === candidate}
                                     onClick={() => {
                                         // Reset the loyalty tier filter when switching kinds —
@@ -324,14 +330,14 @@ export default function LeaderboardView({
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search members by name..."
+                            placeholder={t('lb.searchPlaceholder')}
                             className="w-full bg-[#0A0F2C]/60 border border-white/[0.08] text-xs text-white rounded-xl pl-9 pr-8 py-2.5 outline-none focus:border-[#C9A84C]/50 transition placeholder:text-[#E8E0D5]/20"
                         />
                         {searchQuery && (
                             <button
                                 onClick={() => setSearchQuery('')}
                                 className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-[#E8E0D5]/40 hover:text-white transition-all cursor-pointer"
-                                aria-label="Clear search"
+                                aria-label={t('lb.clearSearch')}
                             >
                                 <X size={12} />
                             </button>
@@ -344,10 +350,10 @@ export default function LeaderboardView({
                         <select
                             value={cityFilter}
                             onChange={(e) => setCityFilter(e.target.value)}
-                            aria-label="Filter by city"
+                            aria-label={t('lb.filterByCity')}
                             className="w-full appearance-none bg-[#0A0F2C]/60 border border-white/[0.08] text-xs text-white rounded-xl pl-9 pr-8 py-2.5 outline-none focus:border-[#C9A84C]/50 transition cursor-pointer"
                         >
-                            <option value="All" className="bg-[#0A0F2C]">All cities &middot; {entries.length}</option>
+                            <option value="All" className="bg-[#0A0F2C]">{t('lb.allCities', { count: entries.length })}</option>
                             {cityOptions.map(({ city, count }) => (
                                 <option key={city} value={city} className="bg-[#0A0F2C]">
                                     {city} &middot; {count}
@@ -358,7 +364,7 @@ export default function LeaderboardView({
                             <button
                                 onClick={() => setCityFilter('All')}
                                 className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded text-[#E8E0D5]/40 hover:text-white transition-all cursor-pointer"
-                                aria-label="Clear city filter"
+                                aria-label={t('lb.clearCity')}
                             >
                                 <X size={12} />
                             </button>
@@ -374,7 +380,7 @@ export default function LeaderboardView({
                             {TIER_FILTERS.map((tier) => (
                                 <FilterChip
                                     key={tier}
-                                    label={tier === 'All' ? `All · ${totalBase}` : `${tier} · ${tierCounts?.[tier] ?? 0}`}
+                                    label={tier === 'All' ? t('lb.tierAll', { count: totalBase }) : `${tier} · ${tierCounts?.[tier] ?? 0}`}
                                     active={tierFilter === tier}
                                     onClick={() => setTierFilter(tier)}
                                 />
@@ -384,7 +390,7 @@ export default function LeaderboardView({
                                 hidden, the city simply has no members yet. */}
                             {filterCount > 0 && !selectedCityHasNoMembers && (
                                 <span className="text-[9px] font-mono text-[#E8E0D5]/30 ml-1">
-                                    {filterCount} hidden
+                                    {t('lb.hidden', { count: filterCount })}
                                 </span>
                             )}
                         </div>
@@ -396,14 +402,14 @@ export default function LeaderboardView({
             <section className="py-6 px-4 md:px-8 max-w-7xl mx-auto">
                 {error && (
                     <div className="mb-4 px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[10px] font-mono text-amber-400">
-                        {error} — showing last values
+                        {error} {t('lb.showingLastValues')}
                     </div>
                 )}
 
                 {loading && !entries.length ? (
                     <div className="py-16 flex items-center justify-center">
                         <div className="w-6 h-6 rounded-full border-2 border-[#C9A84C] border-t-transparent animate-spin" />
-                        <p className="ml-3 text-[10px] font-mono text-[#E8E0D5]/50">Loading leaderboard…</p>
+                        <p className="ml-3 text-[10px] font-mono text-[#E8E0D5]/50">{t('lb.loading')}</p>
                     </div>
                 ) : filteredEntries.length === 0 ? (
                     selectedCityHasNoMembers ? (
@@ -413,25 +419,25 @@ export default function LeaderboardView({
                             <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-[#C9A84C]/10 border border-[#C9A84C]/20 flex items-center justify-center">
                                 <MapPin size={22} className="text-[#C9A84C]/70" />
                             </div>
-                            <p className="text-sm text-[#E8E0D5]/70">No members in {cityFilter} yet</p>
+                            <p className="text-sm text-[#E8E0D5]/70">{t('lb.noMembersInCity', { city: cityFilter })}</p>
                             <p className="text-[10px] text-[#E8E0D5]/40 mt-1">
-                                Be the first SADAF member from {cityFilter} — or explore another city
+                                {t('lb.beFirstInCity', { city: cityFilter })}
                             </p>
                             <button
                                 onClick={() => setCityFilter('All')}
-                                aria-label="Reset city filter to all cities"
+                                aria-label={t('lb.resetCityFilter')}
                                 className="mt-5 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#C9A84C]/15 border border-[#C9A84C]/30 text-[#C9A84C] text-[10px] font-mono uppercase tracking-wider hover:bg-[#C9A84C]/25 transition-all cursor-pointer"
                             >
                                 <ArrowLeft size={12} />
-                                Show all cities
+                                {t('lb.showAllCities')}
                             </button>
                         </div>
                     ) : (
                         <div className="py-16 text-center">
                             <Users size={32} className="mx-auto text-[#E8E0D5]/20 mb-3" />
-                            <p className="text-sm text-[#E8E0D5]/60">No members match your filters</p>
+                            <p className="text-sm text-[#E8E0D5]/60">{t('lb.noMatches')}</p>
                             <p className="text-[10px] text-[#E8E0D5]/40 mt-1">
-                                Try a different name, city, or {showTier ? 'tier' : 'metric'}
+                                {t('lb.noMatchesHint', { metric: showTier ? t('lb.tier') : metricLabel })}
                             </p>
                         </div>
                     )
@@ -451,7 +457,7 @@ export default function LeaderboardView({
                                             key={tier}
                                             onClick={() => setTierFilter(isActive ? 'All' : tier)}
                                             aria-pressed={isActive}
-                                            title={`${count} member${count === 1 ? '' : 's'} in ${tier}`}
+                                            title={t('lb.membersInTier', { count, s: count === 1 ? '' : 's', tier })}
                                             className={`flex flex-col items-center gap-1 px-2 py-2.5 bg-[#05081A] transition-colors cursor-pointer ${
                                                 isActive ? 'bg-[#C9A84C]/10' : 'hover:bg-[#0A0F2C]'
                                             }`}
@@ -480,10 +486,10 @@ export default function LeaderboardView({
 
                         {/* Table header */}
                         <div className={`grid ${rowGrid} items-center px-4 md:px-6 py-3 border-b border-white/[0.06] text-[9px] font-mono uppercase tracking-widest text-[#E8E0D5]/40`}>
-                            <span>Rank</span>
-                            <span>Member</span>
-                            {showTier && <span className="hidden md:block">Tier</span>}
-                            <span className="text-right">{metricLabel}</span>
+                            <span>{t('lb.rank')}</span>
+                            <span>{t('lb.member')}</span>
+                            {showTier && <span className="hidden md:block">{t('lb.tier')}</span>}
+                            <span className="text-right">{tc(`lb.kind.${kind}`, metricLabel)}</span>
                         </div>
 
                         {/* Rows */}
@@ -534,8 +540,13 @@ export default function LeaderboardView({
                                                 )}
                                             </span>
                                             <span className="flex flex-col min-w-0">
-                                                <span className="truncate">
-                                                    {isCurrentUser ? `${memberName} (You)` : entry.name}
+                                                <span className="flex items-center gap-1.5 min-w-0">
+                                                    <span className="truncate">
+                                                        {isCurrentUser ? `${memberName} ${t('lb.you')}` : entry.name}
+                                                    </span>
+                                                    <RoleBadge
+                                                        role={isCurrentUser && currentUserRole ? currentUserRole : entry.role}
+                                                    />
                                                 </span>
                                                 <span className="flex items-center gap-1 text-[8px] font-mono text-[#E8E0D5]/35 mt-0.5">
                                                     <MapPin size={8} className="shrink-0 text-[#C9A84C]/60" />
@@ -566,9 +577,9 @@ export default function LeaderboardView({
                         <div className="flex items-center justify-between px-4 md:px-6 py-3 text-[9px] font-mono text-[#E8E0D5]/35">
                             <span className="flex items-center gap-1.5">
                                 <Crown size={10} className="text-[#C9A84C]/60" />
-                                Showing {filteredEntries.length.toLocaleString()} of {entries.length.toLocaleString()} members{cityFilter !== 'All' ? ` · ${cityFilter}` : ''}
+                                {t('lb.showingOf', { shown: filteredEntries.length.toLocaleString(), total: entries.length.toLocaleString() })}{cityFilter !== 'All' ? ` · ${cityFilter}` : ''}
                             </span>
-                            <span>{copy.footnote}</span>
+                            <span>{tc(`lb.footnote.${kind}`, copy.footnote)}</span>
                         </div>
                     </motion.div>
                 )}

@@ -33,6 +33,8 @@ import type { Review } from '@/features/reviews/types';
 import type { RatingCounts } from './ProductPageClient';
 import ReviewForm from '@/features/reviews/components/ReviewForm';
 import { ROUTES } from '@/config/routes';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
+import { localizedProductDescription, localizedProductDetails, localizedProductFabric, localizedProductName } from '@/features/i18n/productNames';
 
 interface ProductViewProps {
     product: FashionProduct;
@@ -77,6 +79,8 @@ export default function ProductView({
     onAddToCart,
     onToggleWishlist,
 }: ProductViewProps) {
+    const { language } = useLanguage();
+
     const [selectedSize, setSelectedSize] = useState<string>(product.sizes[0] ?? '');
     const [selectedColor, setSelectedColor] = useState<string>(product.colors[0]?.name ?? '');
     const [quantity, setQuantity] = useState(1);
@@ -126,7 +130,7 @@ export default function ProductView({
                     <ChevronRight size={11} />
                     <span className="text-[#E8E0D5]/60">{product.category}</span>
                     <ChevronRight size={11} />
-                    <span className="text-[#C9A84C]">{product.name}</span>
+                    <span className="text-[#C9A84C]">{localizedProductName(product, language)}</span>
                 </nav>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
@@ -134,7 +138,7 @@ export default function ProductView({
                     <div className="group relative aspect-[3/4] rounded-2xl overflow-hidden bg-black/40 border border-white/5">
                         <Image
                             src={product.image}
-                            alt={product.name}
+                            alt={localizedProductName(product, language)}
                             fill
                             priority
                             className="object-cover transition-all duration-[800ms] group-hover:scale-105"
@@ -142,7 +146,7 @@ export default function ProductView({
                         {product.hoverImage && (
                             <Image
                                 src={product.hoverImage}
-                                alt={`${product.name} alternative view`}
+                                alt={`${localizedProductName(product, language)} alternative view`}
                                 fill
                                 className="object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
                             />
@@ -156,7 +160,7 @@ export default function ProductView({
                                 {product.category} Label
                             </span>
                             <h1 className="font-serif text-2xl md:text-3xl text-white uppercase tracking-tight mt-2 leading-tight">
-                                {product.name}
+                                {localizedProductName(product, language)}
                             </h1>
                             <div className="flex items-center gap-3 mt-2">
                                 <span className="text-[10px] font-mono text-[#F0D080]">
@@ -168,7 +172,7 @@ export default function ProductView({
                                         : 'Editor\'s rating'}
                                 </span>
                                 <span className="text-[10px] font-mono text-slate-500">
-                                    {product.fabric}
+                                    {localizedProductFabric(product, language)}
                                 </span>
                             </div>
                         </div>
@@ -178,7 +182,7 @@ export default function ProductView({
                         </p>
 
                         <p className="text-sm text-[#E8E0D5]/70 leading-relaxed">
-                            {product.description}
+                            {localizedProductDescription(product, language)}
                         </p>
 
                         {/* Rating breakdown: star distribution + latest reviews, under the description */}
@@ -402,10 +406,10 @@ export default function ProductView({
 
                                 {showEditForm && myReview && (
                                     <ReviewForm
-                                        productName={product.name}
+                                        productName={localizedProductName(product, language)}
                                         initialRating={myReview.rating}
                                         initialComment={myReview.comment}
-                                        title={`Edit your review — ${product.name}`}
+                                        title={`Edit your review — ${localizedProductName(product, language)}`}
                                         submitLabel="Update Review"
                                         onSubmit={async (rating, comment) => {
                                             const result = await onUpdateReview(rating, comment);
@@ -420,7 +424,7 @@ export default function ProductView({
 
                                 {showReviewForm && !hasReviewedProduct && (
                                     <ReviewForm
-                                        productName={product.name}
+                                        productName={localizedProductName(product, language)}
                                         onSubmit={async (rating, comment) => {
                                             const result = await onSubmitReview(rating, comment);
                                             if (result.ok) {
@@ -497,7 +501,7 @@ export default function ProductView({
 
                         {/* Details */}
                         <ul className="flex flex-col gap-2">
-                            {product.details.map((detail) => (
+                            {localizedProductDetails(product, language).map((detail) => (
                                 <li key={detail} className="flex items-start gap-2 text-xs text-[#E8E0D5]/60">
                                     <Check size={13} className="text-[#C9A84C] shrink-0 mt-0.5" />
                                     {detail}
@@ -623,7 +627,7 @@ export default function ProductView({
                                     <div className="relative aspect-[3/4] overflow-hidden bg-black/40">
                                         <Image
                                             src={related.image}
-                                            alt={related.name}
+                                            alt={localizedProductName(related, language)}
                                             fill
                                             className="object-cover transition-all duration-[800ms] group-hover:scale-105"
                                         />
@@ -637,7 +641,7 @@ export default function ProductView({
                                                 {related.category}
                                             </span>
                                             <h3 className="font-serif text-[#E8E0D5] text-sm group-hover:text-[#F0D080] transition-colors duration-300 leading-tight truncate">
-                                                {related.name}
+                                                {localizedProductName(related, language)}
                                             </h3>
                                         </div>
                                         <span className="text-[9px] font-mono text-[#4FC3F7] uppercase tracking-wider mt-2">

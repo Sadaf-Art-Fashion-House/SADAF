@@ -24,6 +24,7 @@ import { TIER_COLORS, RANK_MEDALS } from '../constants/tierStyles';
 import { formatPoints } from '../utils/formatPoints';
 import { useCityFilter } from '../hooks/useCityFilter';
 import { ROUTES } from '@/config/routes';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 
 interface RewardsPanelProps {
     /** Loyalty + leaderboard data for the logged-in user. */
@@ -51,6 +52,7 @@ export default function RewardsPanel({ data, loading, error, memberName, isLive 
     // counts, and empty-state detection. Called unconditionally (before the
     // early returns) per the Rules of Hooks; the empty-array fallback during
     // loading is harmless because the memos recompute once data arrives.
+    const { t } = useLanguage();
     const { cityFilter, setCityFilter, cityOptions, filteredEntries, selectedCityHasNoMembers } =
         useCityFilter(data?.leaderboard ?? []);
 
@@ -58,7 +60,7 @@ export default function RewardsPanel({ data, loading, error, memberName, isLive 
         return (
             <div className="p-6 bg-[#05081A]/90 border border-[#C9A84C]/10 rounded-2xl flex items-center justify-center">
                 <div className="w-6 h-6 rounded-full border-2 border-[#C9A84C] border-t-transparent animate-spin" />
-                <p className="ml-3 text-[10px] font-mono text-[#E8E0D5]/50">Loading your rewards…</p>
+                <p className="ml-3 text-[10px] font-mono text-[#E8E0D5]/50">{t('rewards.loading')}</p>
             </div>
         );
     }
@@ -66,7 +68,7 @@ export default function RewardsPanel({ data, loading, error, memberName, isLive 
     if (!data) {
         return (
             <div className="p-6 bg-[#05081A]/90 border border-[#C9A84C]/10 rounded-2xl text-center">
-                <p className="text-xs text-[#E8E0D5]/60">Rewards are not available yet.</p>
+                <p className="text-xs text-[#E8E0D5]/60">{t('rewards.empty')}</p>
             </div>
         );
     }
@@ -83,19 +85,19 @@ export default function RewardsPanel({ data, loading, error, memberName, isLive 
                         <Award size={14} />
                     </div>
                     <h3 className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold">
-                        Rewards &amp; Leaderboard &bull; نقاط الولاء
+                        {t('rewards.title')}
                     </h3>
                     {/* Live indicator — real-time pushes over personal:user:{userId} */}
                     <span className={`inline-flex items-center gap-1 text-[8px] font-mono uppercase tracking-widest ${
                         isLive ? 'text-green-400' : 'text-amber-400/80'
                     }`}>
                         {isLive ? <Wifi size={9} /> : <WifiOff size={9} />}
-                        {isLive ? 'Live' : 'Polling'}
+                        {isLive ? t('lb.live') : t('lb.polling')}
                     </span>
                 </div>
                 {error && (
                     <span className="text-[8px] font-mono text-amber-400/70">
-                        {error} — showing last values
+                        {error} {t('lb.showingLastValues')}
                     </span>
                 )}
             </div>
@@ -108,13 +110,13 @@ export default function RewardsPanel({ data, loading, error, memberName, isLive 
                         <div>
                             <div className="flex items-center gap-1.5 text-[8px] font-mono uppercase tracking-widest text-[#E8E0D5]/40 mb-1">
                                 <Coins size={10} className="text-[#C9A84C]" />
-                                Points Balance
+                                {t('rewards.pointsBalance')}
                             </div>
                             <p className="text-3xl font-serif text-white font-bold tracking-tight">
                                 {formatPoints(data.points)}
                             </p>
                             <p className="text-[9px] font-mono text-[#E8E0D5]/40 mt-0.5">
-                                {data.pointsPerDollar}x points per $1 &bull; {data.discountPercent}% member discount
+                                {t('rewards.pointsPerDollar', { multiplier: data.pointsPerDollar, percent: data.discountPercent })}
                             </p>
                         </div>
                         <span className={`px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border ${currentTierStyle}`}>
@@ -128,8 +130,8 @@ export default function RewardsPanel({ data, loading, error, memberName, isLive 
                             <span className="flex items-center gap-1.5 text-[9px] font-mono text-[#E8E0D5]/60">
                                 <TrendingUp size={10} className="text-[#C9A84C]" />
                                 {data.nextTier
-                                    ? `Progress to ${data.nextTier}`
-                                    : 'You are at the top tier'}
+                                    ? t('rewards.progressTo', { tier: data.nextTier })
+                                    : t('rewards.atTopTier')}
                             </span>
                             <span className="text-[9px] font-mono text-[#C9A84C]">
                                 {data.nextTier ? `${data.tierProgressPercent}%` : '100%'}
@@ -145,8 +147,8 @@ export default function RewardsPanel({ data, loading, error, memberName, isLive 
                         </div>
                         <p className="text-[8px] font-mono text-[#E8E0D5]/40 mt-2">
                             {data.nextTier
-                                ? `${formatPoints(data.pointsToNextTier)} points to unlock ${data.nextTier}`
-                                : 'Enjoy the highest benefits.'}
+                                ? t('rewards.pointsToUnlock', { points: formatPoints(data.pointsToNextTier), tier: data.nextTier })
+                                : t('rewards.enjoyBenefits')}
                         </p>
                     </div>
 
@@ -171,11 +173,11 @@ export default function RewardsPanel({ data, loading, error, memberName, isLive 
                                         {benefit.tier}
                                     </span>
                                     <span className={`text-[9px] font-mono ${isCurrent ? 'text-[#C9A84C]' : 'text-[#E8E0D5]/35'}`}>
-                                        {benefit.discountPercent}% off
+                                        {t('rewards.off', { percent: benefit.discountPercent })}
                                     </span>
                                     {isCurrent && (
                                         <span className="ml-auto text-[8px] font-mono uppercase tracking-widest text-[#C9A84C]">
-                                            You
+                                            {t('rewards.you')}
                                         </span>
                                     )}
                                 </div>
@@ -190,11 +192,11 @@ export default function RewardsPanel({ data, loading, error, memberName, isLive 
                         <div className="flex items-center gap-2">
                             <Users size={14} className="text-[#C9A84C]" />
                             <h4 className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold">
-                                Leaderboard
+                                {t('rewards.leaderboard')}
                             </h4>
                         </div>
                         <span className="px-2.5 py-1 rounded-full text-[9px] font-mono text-[#C9A84C] bg-[#C9A84C]/10 border border-[#C9A84C]/25">
-                            Your rank: #{data.myRank} of {data.totalMembers}
+                            {t('rewards.yourRankOf', { rank: data.myRank, total: data.totalMembers })}
                         </span>
                     </div>
 
@@ -204,10 +206,10 @@ export default function RewardsPanel({ data, loading, error, memberName, isLive 
                         <select
                             value={cityFilter}
                             onChange={(e) => setCityFilter(e.target.value)}
-                            aria-label="Filter by city"
+                            aria-label={t('lb.filterByCity')}
                             className="w-full appearance-none bg-[#0A0F2C]/60 border border-white/[0.08] text-xs text-white rounded-xl pl-9 pr-8 py-2 outline-none focus:border-[#C9A84C]/50 transition cursor-pointer"
                         >
-                            <option value="All" className="bg-[#0A0F2C]">All cities &middot; {data.leaderboard.length}</option>
+                            <option value="All" className="bg-[#0A0F2C]">{t('lb.allCities', { count: data.leaderboard.length })}</option>
                             {cityOptions.map(({ city, count }) => (
                                 <option key={city} value={city} className="bg-[#0A0F2C]">
                                     {city} &middot; {count}
@@ -218,7 +220,7 @@ export default function RewardsPanel({ data, loading, error, memberName, isLive 
                             <button
                                 onClick={() => setCityFilter('All')}
                                 className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded text-[#E8E0D5]/40 hover:text-white transition-all cursor-pointer"
-                                aria-label="Clear city filter"
+                                aria-label={t('lb.clearCity')}
                             >
                                 <X size={12} />
                             </button>
@@ -235,17 +237,17 @@ export default function RewardsPanel({ data, loading, error, memberName, isLive 
                                 <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-[#C9A84C]/10 border border-[#C9A84C]/20 flex items-center justify-center">
                                     <MapPin size={20} className="text-[#C9A84C]/70" />
                                 </div>
-                                <p className="text-xs text-[#E8E0D5]/70">No members in {cityFilter} yet</p>
+                                <p className="text-xs text-[#E8E0D5]/70">{t('lb.noMembersInCity', { city: cityFilter })}</p>
                                 <p className="text-[9px] text-[#E8E0D5]/40 mt-1">
-                                    Be the first SADAF member from {cityFilter} — or explore another city
+                                    {t('lb.beFirstInCity', { city: cityFilter })}
                                 </p>
                                 <button
                                     onClick={() => setCityFilter('All')}
-                                    aria-label="Reset city filter to all cities"
+                                    aria-label={t('lb.resetCityFilter')}
                                     className="mt-4 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#C9A84C]/15 border border-[#C9A84C]/30 text-[#C9A84C] text-[9px] font-mono uppercase tracking-wider hover:bg-[#C9A84C]/25 transition-all cursor-pointer"
                                 >
                                     <ArrowLeft size={11} />
-                                    Show all cities
+                                    {t('lb.showAllCities')}
                                 </button>
                             </div>
                         ) : (
@@ -272,7 +274,7 @@ export default function RewardsPanel({ data, loading, error, memberName, isLive 
                                         )}
                                     </span>
                                     <span className={`flex-1 text-[11px] font-medium truncate ${isCurrentUser ? 'text-[#C9A84C] font-bold' : 'text-[#E8E0D5]/80'}`}>
-                                        {isCurrentUser ? `${memberName} (You)` : entry.name}
+                                        {isCurrentUser ? `${memberName} ${t('lb.you')}` : entry.name}
                                     </span>
                                     <span className={`px-2 py-0.5 rounded-full text-[8px] font-mono uppercase border ${TIER_COLORS[entry.tier]}`}>
                                         {entry.tier}
@@ -290,12 +292,12 @@ export default function RewardsPanel({ data, loading, error, memberName, isLive 
                     <div className="flex items-center justify-between mt-4 px-1">
                         <span className="flex items-center gap-1.5 text-[8px] font-mono text-[#E8E0D5]/35">
                             <Gift size={9} className="text-[#C9A84C]/60" />
-                            Earn 1 point per $1 spent &bull; unlock higher tiers as you grow
+                            {t('rewards.earnHint')}
                         </span>
                         <span className="flex items-center gap-1.5 text-[8px] font-mono text-[#E8E0D5]/35">
                             <Sparkles size={9} className="text-[#C9A84C]/60" />
                             <Crown size={9} className="text-[#C9A84C]/60" />
-                            Heritage &amp; Platinum perks
+                            {t('rewards.perksHint')}
                         </span>
                     </div>
 
@@ -307,7 +309,7 @@ export default function RewardsPanel({ data, loading, error, memberName, isLive 
                         }
                         className="mt-4 flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl bg-[#C9A84C]/10 border border-[#C9A84C]/25 text-[#C9A84C] text-[9px] font-mono uppercase tracking-widest hover:bg-[#C9A84C]/20 hover:border-[#C9A84C]/40 transition-all duration-300 group"
                     >
-                        View Full Leaderboard
+                        {t('rewards.viewFull')}
                         <ArrowRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
                     </Link>
                 </div>

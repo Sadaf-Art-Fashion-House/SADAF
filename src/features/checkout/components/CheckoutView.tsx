@@ -21,6 +21,9 @@ import {
     AlertCircle,
 } from 'lucide-react';
 import type { CartItem } from '@/shared/types';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
+import type { TranslationKey } from '@/features/i18n/dictionaries';
+import { localizedAiItemName, localizedArtTitle, localizedProductName } from '@/features/i18n/productNames';
 import type {
     ShippingAddress,
     PaymentMethod,
@@ -39,11 +42,11 @@ interface CheckoutViewProps {
 /** Default country if we have no user profile. */
 const DEFAULT_COUNTRY = 'Egypt';
 
-/** Payment method details with icons and labels. */
-const PAYMENT_METHODS: { value: PaymentMethod; label: string; icon: React.ElementType }[] = [
-    { value: 'credit-card', label: 'Credit / Debit Card', icon: CreditCard },
-    { value: 'paypal', label: 'PayPal', icon: Wallet },
-    { value: 'bank-transfer', label: 'Bank Transfer', icon: Landmark },
+/** Payment method details with icons and translated label keys. */
+const PAYMENT_METHODS: { value: PaymentMethod; labelKey: TranslationKey; icon: React.ElementType }[] = [
+    { value: 'credit-card', labelKey: 'checkout.payMethod.card', icon: CreditCard },
+    { value: 'paypal', labelKey: 'checkout.payMethod.paypal', icon: Wallet },
+    { value: 'bank-transfer', labelKey: 'checkout.payMethod.bank', icon: Landmark },
 ];
 
 /** Generates a readable order reference. */
@@ -56,11 +59,11 @@ function generateOrderId(): string {
     return result;
 }
 
-/** Gets a human-readable item name. */
-function getItemName(item: CartItem): string {
-    if (item.product) return item.product.name;
-    if (item.artPiece) return item.artPiece.title;
-    if (item.aiCustomDesign) return `${item.aiCustomDesign.clothingType} — AI Custom`;
+/** Gets a human-readable item name (catalog products use the localized name). */
+function getItemName(item: CartItem, language: 'en' | 'ar'): string {
+    if (item.product) return localizedProductName(item.product, language);
+    if (item.artPiece) return localizedArtTitle(item.artPiece, language);
+    if (item.aiCustomDesign) return localizedAiItemName(item.aiCustomDesign.clothingType, language);
     return 'Unknown Item';
 }
 
@@ -86,6 +89,7 @@ export default function CheckoutView({
     subtotal,
     onPlaceOrder,
 }: CheckoutViewProps) {
+    const { language, t } = useLanguage();
     const [step, setStep] = useState<CheckoutStep>('shipping');
     const [isPlacing, setIsPlacing] = useState(false);
 
@@ -125,16 +129,16 @@ export default function CheckoutView({
     /** Validates the shipping form. */
     const validateShipping = useCallback((): boolean => {
         const newErrors: Record<string, string> = {};
-        if (!shipping.fullName.trim()) newErrors.fullName = 'Full name is required';
-        if (!shipping.email.trim()) newErrors.email = 'Email is required';
-        else if (!/\S+@\S+\.\S+/.test(shipping.email)) newErrors.email = 'Invalid email format';
-        if (!shipping.phone.trim()) newErrors.phone = 'Phone is required';
-        if (!shipping.addressLine1.trim()) newErrors.addressLine1 = 'Address is required';
-        if (!shipping.city.trim()) newErrors.city = 'City is required';
-        if (!shipping.postalCode.trim()) newErrors.postalCode = 'Postal code is required';
+        if (!shipping.fullName.trim()) newErrors.fullName = t('checkout.err.fullName');
+        if (!shipping.email.trim()) newErrors.email = t('checkout.err.email');
+        else if (!/\S+@\S+\.\S+/.test(shipping.email)) newErrors.email = t('checkout.err.emailInvalid');
+        if (!shipping.phone.trim()) newErrors.phone = t('checkout.err.phone');
+        if (!shipping.addressLine1.trim()) newErrors.addressLine1 = t('checkout.err.address');
+        if (!shipping.city.trim()) newErrors.city = t('checkout.err.city');
+        if (!shipping.postalCode.trim()) newErrors.postalCode = t('checkout.err.postal');
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
-    }, [shipping]);
+    }, [shipping, t]);
 
     /** Handles shipping form submission → moves to review. */
     const handleShippingSubmit = useCallback((e: React.FormEvent) => {
@@ -171,7 +175,8 @@ export default function CheckoutView({
                 shippingAddress: shipping,
                 paymentInfo,
                 items: items.map((item) => ({
-                    name: getItemName(item),
+                    name: getItemName(item, language),
+                    productId: item.product?.id ?? item.artPiece?.id ?? undefined,
                     quantity: item.quantity,
                     totalPrice: item.totalPrice,
                     type: getItemType(item),
@@ -212,7 +217,7 @@ export default function CheckoutView({
                     <div className="max-w-5xl mx-auto">
                         <span className="text-xs font-semibold text-[#C9A84C] tracking-[0.35em] uppercase block mb-1">SADAF ATELIER</span>
                         <h1 className="text-3xl md:text-4xl font-serif text-white tracking-tight flex items-center gap-3">
-                            <CreditCard size={28} className="text-[#C9A84C]" /> Checkout
+                            <CreditCard size={28} className="text-[#C9A84C]" /> {t('checkout.title')}
                         </h1>
                     </div>
                 </section>
@@ -221,12 +226,12 @@ export default function CheckoutView({
                         <div className="inline-flex p-6 rounded-full bg-[#C9A84C]/10 border border-[#C9A84C]/20 mb-6">
                             <ShoppingBag size={40} className="text-[#C9A84C]/60" />
                         </div>
-                        <h2 className="text-2xl font-serif text-white mb-3">Nothing to checkout</h2>
+                        <h2 className="text-2xl font-serif text-white mb-3">{t('checkout.nothing')}</h2>
                         <p className="text-sm text-[#E8E0D5]/60 max-w-md mx-auto mb-8 leading-relaxed">
-                            Your shopping bag is empty. Add some pieces before proceeding to checkout.
+                            {t('checkout.emptyBody')}
                         </p>
                         <Link href="/store" className="inline-block px-6 py-3 rounded-full bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/90 text-[#0A0F2C] text-xs font-mono font-bold uppercase tracking-widest transition-all duration-300 hover:scale-105">
-                            Browse Store
+                            {t('checkout.browseStore')}
                         </Link>
                     </motion.div>
                 </section>
@@ -247,13 +252,13 @@ export default function CheckoutView({
                             </div>
                         </motion.div>
                         <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-3xl md:text-4xl font-serif text-white mb-2">
-                            Order Confirmed!
+                            {t('checkout.orderConfirmed')}
                         </motion.h1>
                         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="text-[#C9A84C] font-mono text-sm mb-1">
                             {confirmedOrder.id}
                         </motion.p>
                         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} className="text-[#E8E0D5]/60 text-sm">
-                            A confirmation email will be sent to {shipping.email}
+                            {t('checkout.confirmEmail', { email: shipping.email })}
                         </motion.p>
                     </div>
                 </section>
@@ -263,7 +268,7 @@ export default function CheckoutView({
                         <div className="flex items-center gap-3 pb-4 border-b border-[#C9A84C]/10">
                             <Truck size={16} className="text-[#C9A84C]" />
                             <div>
-                                <p className="text-xs text-[#E8E0D5]/70 font-medium">Shipping to</p>
+                                <p className="text-xs text-[#E8E0D5]/70 font-medium">{t('checkout.shippingTo')}</p>
                                 <p className="text-sm text-white">{shipping.fullName}</p>
                                 <p className="text-[10px] text-[#E8E0D5]/50">{shipping.addressLine1}, {shipping.city}, {shipping.country}</p>
                             </div>
@@ -272,13 +277,13 @@ export default function CheckoutView({
                         <div className="flex items-center gap-3 pb-4 border-b border-[#C9A84C]/10">
                             <CreditCard size={16} className="text-[#C9A84C]" />
                             <div>
-                                <p className="text-xs text-[#E8E0D5]/70 font-medium">Payment</p>
+                                <p className="text-xs text-[#E8E0D5]/70 font-medium">{t('checkout.payment')}</p>
                                 <p className="text-sm text-white">
                                     {paymentMethod === 'credit-card'
-                                        ? `Card •••• ${cardNumber.slice(-4)}`
+                                        ? t('checkout.cardMasked', { last4: cardNumber.slice(-4) })
                                         : paymentMethod === 'paypal'
-                                            ? `PayPal (${paypalEmail})`
-                                            : `Bank Transfer (${bankName || 'Bank'})`}
+                                            ? t('checkout.paypalFormat', { email: paypalEmail })
+                                            : t('checkout.bankFormat', { bank: bankName || 'Bank' })}
                                 </p>
                             </div>
                         </div>
@@ -286,23 +291,23 @@ export default function CheckoutView({
                         <div className="flex items-center gap-3 pb-4 border-b border-[#C9A84C]/10">
                             <Package size={16} className="text-[#C9A84C]" />
                             <div>
-                                <p className="text-xs text-[#E8E0D5]/70 font-medium">Items ({items.length})</p>
+                                <p className="text-xs text-[#E8E0D5]/70 font-medium">{t('checkout.items', { count: items.length })}</p>
                                 <p className="text-sm text-white">${subtotal.toLocaleString()}</p>
                             </div>
                         </div>
 
                         <div className="flex justify-between items-center text-sm font-mono">
-                            <span className="text-[#E8E0D5]/70">Total Charged</span>
+                            <span className="text-[#E8E0D5]/70">{t('checkout.totalCharged')}</span>
                             <span className="text-[#C9A84C] text-xl font-bold">${total.toLocaleString()}</span>
                         </div>
                     </div>
 
                     <div className="mt-8 text-center space-y-4">
                         <Link href="/" className="inline-block px-6 py-3 rounded-full bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/90 text-[#0A0F2C] text-xs font-mono font-bold uppercase tracking-widest transition-all duration-300 hover:scale-105">
-                            Return to Home
+                            {t('checkout.returnHome')}
                         </Link>
                         <p className="text-[10px] text-[#E8E0D5]/40 font-mono">
-                            You can track your order status in your Dashboard.
+                            {t('checkout.trackOrder')}
                         </p>
                     </div>
                 </section>
@@ -324,7 +329,7 @@ export default function CheckoutView({
                             SADAF ATELIER BOUTIQUE
                         </span>
                         <h1 className="text-3xl md:text-4xl font-serif text-white tracking-tight flex items-center gap-3">
-                            <CreditCard size={28} className="text-[#C9A84C]" /> Secure Checkout
+                            <CreditCard size={28} className="text-[#C9A84C]" /> {t('checkout.secureTitle')}
                         </h1>
                     </div>
 
@@ -334,7 +339,7 @@ export default function CheckoutView({
                             className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] hover:text-[#4FC3F7] transition-colors duration-300"
                         >
                             <ArrowLeft size={12} />
-                            Back to Cart
+                            {t('checkout.backToCart')}
                         </Link>
                     )}
                 </div>
@@ -346,14 +351,14 @@ export default function CheckoutView({
                             <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold ${step === 'shipping' ? 'bg-[#C9A84C]/20 border border-[#C9A84C]/40' : 'bg-green-500/20 border border-green-500/40'}`}>
                                 {step === 'review' ? <CheckCircle size={10} /> : '1'}
                             </div>
-                            Shipping
+                            {t('checkout.stepShipping')}
                         </div>
                         <div className="w-8 h-[1px] bg-[#C9A84C]/20" />
                         <div className={`flex items-center gap-1.5 ${step === 'review' ? 'text-[#C9A84C]' : 'text-[#E8E0D5]/40'}`}>
                             <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold ${step === 'review' ? 'bg-[#C9A84C]/20 border border-[#C9A84C]/40' : 'bg-white/5 border border-white/10'}`}>
                                 2
                             </div>
-                            Review & Pay
+                            {t('checkout.stepReview')}
                         </div>
                     </div>
                 )}
@@ -379,21 +384,21 @@ export default function CheckoutView({
                                         <ErrorBanner
                                             tone="red"
                                             icon={AlertCircle}
-                                            message="Please fix the highlighted fields below to continue."
+                                            message={t('checkout.fixFields')}
                                             className="mb-0"
                                         />
                                     )}
 
                                     <div className="p-6 rounded-xl bg-[#0A0F2C]/80 border border-[#C9A84C]/10">
                                         <h2 className="font-serif text-lg text-white mb-5 flex items-center gap-2">
-                                            <Truck size={16} className="text-[#C9A84C]" /> Shipping Information
+                                            <Truck size={16} className="text-[#C9A84C]" /> {t('checkout.shippingInfo')}
                                         </h2>
 
                                         <div className="space-y-4">
                                             {/* Full Name */}
                                             <div>
                                                 <label className="block text-[10px] font-mono uppercase tracking-wider text-[#E8E0D5]/50 mb-1.5">
-                                                    Full Name <span className="text-red-400">*</span>
+                                                    {t('checkout.fullName')} <span className="text-red-400">*</span>
                                                 </label>
                                                 <input
                                                     type="text"
@@ -409,7 +414,7 @@ export default function CheckoutView({
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div>
                                                     <label className="block text-[10px] font-mono uppercase tracking-wider text-[#E8E0D5]/50 mb-1.5">
-                                                        Email <span className="text-red-400">*</span>
+                                                        {t('checkout.email')} <span className="text-red-400">*</span>
                                                     </label>
                                                     <input
                                                         type="email"
@@ -422,7 +427,7 @@ export default function CheckoutView({
                                                 </div>
                                                 <div>
                                                     <label className="block text-[10px] font-mono uppercase tracking-wider text-[#E8E0D5]/50 mb-1.5">
-                                                        Phone <span className="text-red-400">*</span>
+                                                        {t('checkout.phone')} <span className="text-red-400">*</span>
                                                     </label>
                                                     <input
                                                         type="tel"
@@ -438,7 +443,7 @@ export default function CheckoutView({
                                             {/* Address */}
                                             <div>
                                                 <label className="block text-[10px] font-mono uppercase tracking-wider text-[#E8E0D5]/50 mb-1.5">
-                                                    Address Line 1 <span className="text-red-400">*</span>
+                                                    {t('checkout.address1')} <span className="text-red-400">*</span>
                                                 </label>
                                                 <input
                                                     type="text"
@@ -452,7 +457,7 @@ export default function CheckoutView({
 
                                             <div>
                                                 <label className="block text-[10px] font-mono uppercase tracking-wider text-[#E8E0D5]/50 mb-1.5">
-                                                    Address Line 2 <span className="text-[#E8E0D5]/30">(optional)</span>
+                                                    {t('checkout.address2')} <span className="text-[#E8E0D5]/30">{t('checkout.optional')}</span>
                                                 </label>
                                                 <input
                                                     type="text"
@@ -467,7 +472,7 @@ export default function CheckoutView({
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                 <div>
                                                     <label className="block text-[10px] font-mono uppercase tracking-wider text-[#E8E0D5]/50 mb-1.5">
-                                                        City <span className="text-red-400">*</span>
+                                                        {t('checkout.city')} <span className="text-red-400">*</span>
                                                     </label>
                                                     <input
                                                         type="text"
@@ -480,7 +485,7 @@ export default function CheckoutView({
                                                 </div>
                                                 <div>
                                                     <label className="block text-[10px] font-mono uppercase tracking-wider text-[#E8E0D5]/50 mb-1.5">
-                                                        State <span className="text-[#E8E0D5]/30">(optional)</span>
+                                                        {t('checkout.state')} <span className="text-[#E8E0D5]/30">{t('checkout.optional')}</span>
                                                     </label>
                                                     <input
                                                         type="text"
@@ -492,7 +497,7 @@ export default function CheckoutView({
                                                 </div>
                                                 <div>
                                                     <label className="block text-[10px] font-mono uppercase tracking-wider text-[#E8E0D5]/50 mb-1.5">
-                                                        Postal Code <span className="text-red-400">*</span>
+                                                        {t('checkout.postalCode')} <span className="text-red-400">*</span>
                                                     </label>
                                                     <input
                                                         type="text"
@@ -508,7 +513,7 @@ export default function CheckoutView({
                                             {/* Country */}
                                             <div>
                                                 <label className="block text-[10px] font-mono uppercase tracking-wider text-[#E8E0D5]/50 mb-1.5">
-                                                    Country <span className="text-red-400">*</span>
+                                                    {t('checkout.country')} <span className="text-red-400">*</span>
                                                 </label>
                                                 <input
                                                     type="text"
@@ -526,7 +531,7 @@ export default function CheckoutView({
                                         type="submit"
                                         className="w-full py-3.5 rounded bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/90 text-[#0A0F2C] text-xs font-mono font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.01] active:scale-98 cursor-pointer"
                                     >
-                                        Continue to Review <ArrowRight size={14} />
+                                        {t('checkout.continueReview')} <ArrowRight size={14} />
                                     </button>
                                 </motion.form>
                             )}
@@ -543,13 +548,13 @@ export default function CheckoutView({
                                     <div className="p-6 rounded-xl bg-[#0A0F2C]/80 border border-[#C9A84C]/10">
                                         <div className="flex justify-between items-center mb-4">
                                             <h2 className="font-serif text-lg text-white flex items-center gap-2">
-                                                <Truck size={16} className="text-[#C9A84C]" /> Shipping To
+                                                <Truck size={16} className="text-[#C9A84C]" /> {t('checkout.shippingToTitle')}
                                             </h2>
                                             <button
                                                 onClick={() => setStep('shipping')}
                                                 className="text-[10px] font-mono uppercase tracking-wider text-[#C9A84C] hover:text-[#4FC3F7] transition-colors duration-300 cursor-pointer"
                                             >
-                                                Edit
+                                                {t('checkout.edit')}
                                             </button>
                                         </div>
                                         <div className="text-xs text-[#E8E0D5]/80 space-y-1">
@@ -564,7 +569,7 @@ export default function CheckoutView({
                                     {/* Payment method selection */}
                                     <div className="p-6 rounded-xl bg-[#0A0F2C]/80 border border-[#C9A84C]/10">
                                         <h2 className="font-serif text-lg text-white mb-4 flex items-center gap-2">
-                                            <CreditCard size={16} className="text-[#C9A84C]" /> Payment Method
+                                            <CreditCard size={16} className="text-[#C9A84C]" /> {t('checkout.paymentMethod')}
                                         </h2>
 
                                         <div className="space-y-3">
@@ -581,7 +586,7 @@ export default function CheckoutView({
                                                 >
                                                     <method.icon size={16} className={`${paymentMethod === method.value ? 'text-[#C9A84C]' : 'text-slate-500'}`} />
                                                     <span className={`text-xs font-medium ${paymentMethod === method.value ? 'text-white' : 'text-slate-400'}`}>
-                                                        {method.label}
+                                                        {t(method.labelKey)}
                                                     </span>
                                                     {paymentMethod === method.value && (
                                                         <CheckCircle size={14} className="ml-auto text-[#C9A84C]" />
@@ -595,7 +600,7 @@ export default function CheckoutView({
                                             <div className="mt-4 space-y-3 pt-4 border-t border-[#C9A84C]/10">
                                                 <div>
                                                     <label className="block text-[10px] font-mono uppercase tracking-wider text-[#E8E0D5]/50 mb-1.5">
-                                                        Card Number
+                                                        {t('checkout.cardNumber')}
                                                     </label>
                                                     <input
                                                         type="text"
@@ -608,7 +613,7 @@ export default function CheckoutView({
                                                 </div>
                                                 <div>
                                                     <label className="block text-[10px] font-mono uppercase tracking-wider text-[#E8E0D5]/50 mb-1.5">
-                                                        Cardholder Name
+                                                        {t('checkout.cardholder')}
                                                     </label>
                                                     <input
                                                         type="text"
@@ -621,7 +626,7 @@ export default function CheckoutView({
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div>
                                                         <label className="block text-[10px] font-mono uppercase tracking-wider text-[#E8E0D5]/50 mb-1.5">
-                                                            Expiry Date
+                                                            {t('checkout.expiry')}
                                                         </label>
                                                         <input
                                                             type="text"
@@ -634,7 +639,7 @@ export default function CheckoutView({
                                                     </div>
                                                     <div>
                                                         <label className="block text-[10px] font-mono uppercase tracking-wider text-[#E8E0D5]/50 mb-1.5">
-                                                            CVV
+                                                            {t('checkout.cvv')}
                                                         </label>
                                                         <input
                                                             type="text"
@@ -653,11 +658,11 @@ export default function CheckoutView({
                                         {paymentMethod === 'paypal' && (
                                             <div className="mt-4 space-y-3 pt-4 border-t border-[#C9A84C]/10">
                                                 <p className="text-[10px] text-[#4FC3F7]/80 font-mono leading-relaxed bg-[#4FC3F7]/5 border border-[#4FC3F7]/20 rounded-lg p-3">
-                                                    You will be redirected to PayPal to complete your payment after placing the order.
+                                                    {t('checkout.paypalNote')}
                                                 </p>
                                                 <div>
                                                     <label className="block text-[10px] font-mono uppercase tracking-wider text-[#E8E0D5]/50 mb-1.5">
-                                                        PayPal Email <span className="text-red-400">*</span>
+                                                        {t('checkout.paypalEmail')} <span className="text-red-400">*</span>
                                                     </label>
                                                     <input
                                                         type="email"
@@ -674,11 +679,11 @@ export default function CheckoutView({
                                         {paymentMethod === 'bank-transfer' && (
                                             <div className="mt-4 space-y-3 pt-4 border-t border-[#C9A84C]/10">
                                                 <p className="text-[10px] text-[#F0D080]/80 font-mono leading-relaxed bg-[#F0D080]/5 border border-[#F0D080]/20 rounded-lg p-3">
-                                                    Please provide your bank details. Our team will send you the invoice with our bank account information within 24 hours.
+                                                    {t('checkout.bankNote')}
                                                 </p>
                                                 <div>
                                                     <label className="block text-[10px] font-mono uppercase tracking-wider text-[#E8E0D5]/50 mb-1.5">
-                                                        Bank Name <span className="text-red-400">*</span>
+                                                        {t('checkout.bankName')} <span className="text-red-400">*</span>
                                                     </label>
                                                     <input
                                                         type="text"
@@ -690,7 +695,7 @@ export default function CheckoutView({
                                                 </div>
                                                 <div>
                                                     <label className="block text-[10px] font-mono uppercase tracking-wider text-[#E8E0D5]/50 mb-1.5">
-                                                        Account Number <span className="text-red-400">*</span>
+                                                        {t('checkout.accountNumber')} <span className="text-red-400">*</span>
                                                     </label>
                                                     <input
                                                         type="text"
@@ -707,26 +712,26 @@ export default function CheckoutView({
                                     {/* Items preview */}
                                     <div className="p-6 rounded-xl bg-[#0A0F2C]/80 border border-[#C9A84C]/10">
                                         <h2 className="font-serif text-lg text-white mb-4 flex items-center gap-2">
-                                            <Package size={16} className="text-[#C9A84C]" /> Order Items ({items.length})
+                                            <Package size={16} className="text-[#C9A84C]" /> {t('checkout.orderItems', { count: items.length })}
                                         </h2>
                                         <div className="space-y-3">
                                             {items.map((item) => (
                                                 <div key={item.id} className="flex items-center gap-3 p-2 rounded-lg bg-black/20 border border-white/5">
                                                     <div className="relative w-10 h-12 rounded overflow-hidden shrink-0 bg-black/30">
-                                                        {item.product && <Image src={item.product.image} alt={item.product.name} fill className="object-cover" />}
-                                                        {item.artPiece && <Image src={item.artPiece.image} alt={item.artPiece.title} fill className="object-cover" />}
+                                                        {item.product && <Image src={item.product.image} alt={localizedProductName(item.product, language)} fill className="object-cover" />}
+                                                        {item.artPiece && <Image src={item.artPiece.image} alt={localizedArtTitle(item.artPiece, language)} fill className="object-cover" />}
                                                         {item.aiCustomDesign && (
                                                             <div className="w-full h-full flex items-center justify-center p-1 bg-[#12193E]" dangerouslySetInnerHTML={{ __html: item.aiCustomDesign.svgPattern }} />
                                                         )}
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <p className="text-xs text-white truncate">{getItemName(item)}</p>
+                                                        <p className="text-xs text-white truncate">{getItemName(item, language)}</p>
                                                         <div className="flex items-center gap-2 text-[9px] font-mono text-[#E8E0D5]/50">
                                                             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#C9A84C]/10 text-[#C9A84C]">
                                                                 <ItemTypeIcon type={item.itemType} />
                                                                 {getItemType(item)}
                                                             </span>
-                                                            <span>Qty: {item.quantity}</span>
+                                                            <span>{t('checkout.qty')} {item.quantity}</span>
                                                         </div>
                                                     </div>
                                                     <span className="text-xs font-mono text-[#C9A84C] shrink-0">${item.totalPrice.toLocaleString()}</span>
@@ -747,17 +752,17 @@ export default function CheckoutView({
                                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                                                 </svg>
-                                                Processing...
+                                                {t('checkout.processing')}
                                             </>
                                         ) : (
                                             <>
-                                                <Shield size={14} /> Place Order — ${total.toLocaleString()}
+                                                <Shield size={14} /> {t('checkout.placeOrder', { total: total.toLocaleString() })}
                                             </>
                                         )}
                                     </button>
 
                                     <p className="text-[9px] text-[#E8E0D5]/30 font-mono text-center">
-                                        Your payment is processed securely. No real charges are made in demo mode.
+                                        {t('checkout.secureNote')}
                                     </p>
                                 </motion.div>
                             )}
@@ -769,30 +774,30 @@ export default function CheckoutView({
                         <div className="lg:col-span-5">
                             <div className="sticky top-28 p-6 rounded-xl bg-[#0A0F2C]/80 border border-[#C9A84C]/10">
                                 <h3 className="font-serif text-base text-white mb-4 pb-4 border-b border-[#C9A84C]/10">
-                                    Order Summary
+                                    {t('checkout.orderSummary')}
                                 </h3>
 
                                 <div className="space-y-3 text-xs font-mono">
                                     <div className="flex justify-between text-[#E8E0D5]/70">
-                                        <span>Subtotal ({items.length} {items.length === 1 ? 'item' : 'items'})</span>
+                                        <span>{t('checkout.subtotal', { count: items.length, items: items.length === 1 ? t('checkout.itemWord') : t('checkout.itemsWord') })}</span>
                                         <span className="text-white">${subtotal.toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between text-[#E8E0D5]/70">
-                                        <span>Shipping</span>
+                                        <span>{t('checkout.shipping')}</span>
                                         <span className={shippingFee === 0 ? 'text-green-400' : 'text-white'}>
-                                            {shippingFee === 0 ? 'FREE' : `$${shippingFee}`}
+                                            {shippingFee === 0 ? t('checkout.free') : `$${shippingFee}`}
                                         </span>
                                     </div>
                                     {shippingFee > 0 && (
                                         <div className="p-2 rounded bg-[#C9A84C]/5 border border-[#C9A84C]/10 text-[9px] text-[#E8E0D5]/50 text-center">
-                                            Free shipping on orders over $500
+                                            {t('checkout.freeShipping')}
                                         </div>
                                     )}
                                 </div>
 
                                 <div className="mt-4 pt-4 border-t border-[#C9A84C]/10">
                                     <div className="flex justify-between items-center">
-                                        <span className="text-white text-sm font-bold uppercase">Total</span>
+                                        <span className="text-white text-sm font-bold uppercase">{t('checkout.total')}</span>
                                         <span className="text-[#C9A84C] text-lg font-bold font-mono">
                                             ${total.toLocaleString()}
                                         </span>
@@ -812,7 +817,7 @@ export default function CheckoutView({
                                                     {item.artPiece && <Image src={item.artPiece.image} alt="" fill className="object-cover" />}
                                                 </div>
                                                 <span className="text-[8px] font-mono text-[#E8E0D5]/60 truncate max-w-[80px]">
-                                                    {getItemName(item)}
+                                                    {getItemName(item, language)}
                                                 </span>
                                                 <span className="text-[8px] font-mono text-[#C9A84C]">x{item.quantity}</span>
                                             </div>
@@ -823,10 +828,10 @@ export default function CheckoutView({
                                 {/* Trust badges */}
                                 <div className="mt-6 space-y-2">
                                     <div className="flex items-center gap-2 text-[9px] text-[#E8E0D5]/40 font-mono">
-                                        <Shield size={10} className="text-green-400" /> Secure SSL encrypted checkout
+                                        <Shield size={10} className="text-green-400" /> {t('checkout.secureSsl')}
                                     </div>
                                     <div className="flex items-center gap-2 text-[9px] text-[#E8E0D5]/40 font-mono">
-                                        <Truck size={10} className="text-[#4FC3F7]" /> 14–21 day bespoke production
+                                        <Truck size={10} className="text-[#4FC3F7]" /> {t('checkout.bespoke')}
                                     </div>
                                 </div>
                             </div>

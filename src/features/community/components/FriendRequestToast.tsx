@@ -3,6 +3,7 @@
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserPlus, Check, X } from 'lucide-react';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 import type { ConnectionRequest } from '../types';
 
 /**
@@ -32,6 +33,8 @@ export default function FriendRequestToast({
     onDecline,
     onDismiss,
 }: FriendRequestToastProps) {
+    const { t } = useLanguage();
+
     // Rendered through a portal to document.body: the badge lives inside the
     // sticky glass header (backdrop-blur), which would otherwise become the
     // containing block for this fixed toast and misplace/clip it.
@@ -52,13 +55,15 @@ export default function FriendRequestToast({
 
                     <div className="flex-1 min-w-0">
                         <p className="text-[11px] font-semibold text-white">
-                            New friend request
+                            {t('friendRequest.new')}
                         </p>
                         <p className="text-[10px] text-[#E8E0D5]/60 mt-0.5">
                             <span className="font-medium text-[#4FC3F7]">{request.name}</span>{' '}
-                            wants to join your network
+                            {t('friendRequest.wantsToJoin')}
                             <span className="ml-1 text-[8px] font-mono uppercase tracking-wider text-[#E8E0D5]/35">
-                                {request.type === 'family' ? '· Family' : '· Friend'}
+                                {request.type === 'family'
+                                    ? `· ${t('community.family')}`
+                                    : `· ${t('community.friend')}`}
                             </span>
                         </p>
                         {request.message && (
@@ -72,13 +77,13 @@ export default function FriendRequestToast({
                                 onClick={() => onAccept(request)}
                                 className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[9px] font-mono uppercase tracking-wider hover:bg-emerald-500/20 transition-all cursor-pointer"
                             >
-                                <Check size={10} /> Accept
+                                <Check size={10} /> {t('community.accept')}
                             </button>
                             <button
                                 onClick={() => onDecline(request.id)}
                                 className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-[9px] font-mono uppercase tracking-wider hover:bg-red-500/20 transition-all cursor-pointer"
                             >
-                                <X size={10} /> Decline
+                                <X size={10} /> {t('community.decline')}
                             </button>
                         </div>
                     </div>
@@ -86,7 +91,7 @@ export default function FriendRequestToast({
                     <button
                         onClick={onDismiss}
                         className="p-0.5 rounded text-[#E8E0D5]/40 hover:text-white transition-colors cursor-pointer shrink-0"
-                        aria-label="Dismiss"
+                        aria-label={t('common.close')}
                     >
                         <X size={12} />
                     </button>

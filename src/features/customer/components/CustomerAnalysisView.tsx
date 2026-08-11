@@ -34,6 +34,8 @@ import { ErrorBanner } from '@/shared/ui/ErrorGuidance';
 import PersonalActivityFeed from './PersonalActivityFeed';
 import SmartRecommendations from './SmartRecommendations';
 import RewardsPanel from './RewardsPanel';
+import { ErrorBoundary } from '@/shared/ui/ErrorBoundary';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 
 interface CustomerAnalysisViewProps {
     data: CustomerAnalysisData | null;
@@ -70,8 +72,16 @@ const STATUS_COLORS: Record<string, string> = {
     Delivered: 'text-green-400 bg-green-950/40 border-green-500/20',
 };
 
-function formatDate(dateStr: string): string {
-    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+/** Maps the API KPI labels to translation keys (unknown labels fall back to the raw value). */
+const KPI_LABEL_KEYS: Record<string, string> = {
+    'Total Spent': 'analysis.kpi.totalSpent',
+    Orders: 'analysis.kpi.orders',
+    'Wishlist Value': 'analysis.kpi.wishlistValue',
+    'AI Designs': 'analysis.kpi.aiDesigns',
+};
+
+function formatDate(dateStr: string, language: 'en' | 'ar'): string {
+    return new Date(dateStr).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 export default function CustomerAnalysisView({
@@ -88,12 +98,14 @@ export default function CustomerAnalysisView({
     rewardsError,
     isRewardsLive,
 }: CustomerAnalysisViewProps) {
+    const { t, tc, language } = useLanguage();
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[50vh]">
                 <div className="text-center">
                     <div className="w-8 h-8 rounded-full border-2 border-[#C9A84C] border-t-transparent animate-spin mx-auto mb-3" />
-                    <p className="text-xs font-mono text-[#E8E0D5]/50">Loading your personal analysis…</p>
+                    <p className="text-xs font-mono text-[#E8E0D5]/50">{t('analysis.loading')}</p>
                 </div>
             </div>
         );
@@ -104,8 +116,8 @@ export default function CustomerAnalysisView({
             <div className="flex items-center justify-center min-h-[50vh]">
                 <div className="text-center">
                     <Activity size={32} className="mx-auto text-[#E8E0D5]/20 mb-3" />
-                    <p className="text-sm text-[#E8E0D5]/60">No personal analysis available yet.</p>
-                    <p className="text-[10px] text-[#E8E0D5]/40 mt-1">Your spending and order insights will appear here.</p>
+                    <p className="text-sm text-[#E8E0D5]/60">{t('analysis.emptyTitle')}</p>
+                    <p className="text-[10px] text-[#E8E0D5]/40 mt-1">{t('analysis.emptyHint')}</p>
                 </div>
             </div>
         );
@@ -127,10 +139,10 @@ export default function CustomerAnalysisView({
                                 PERSONAL INSIGHTS &bull; تحليلك الشخصي
                             </span>
                             <h1 className="text-3xl md:text-4xl font-serif text-white uppercase tracking-tight">
-                                Your Atelier Analysis
+                                {t('analysis.title')}
                             </h1>
                             <p className="text-xs text-slate-400 mt-1">
-                                Your spending, orders, and creative activity — {memberName}
+                                {t('analysis.subtitle', { name: memberName })}
                             </p>
                         </div>
 
@@ -143,7 +155,7 @@ export default function CustomerAnalysisView({
                                 className="px-4 py-2 bg-black/40 hover:bg-white text-[10px] font-mono uppercase tracking-widest font-bold text-gray-300 hover:text-[#0A0F2C] border border-white/10 transition rounded-xl cursor-pointer flex items-center gap-1.5"
                             >
                                 <ArrowLeft size={11} />
-                                Profile
+                                {t('analysis.profile')}
                             </Link>
                         </div>
                     </div>
@@ -156,23 +168,25 @@ export default function CustomerAnalysisView({
                     <ErrorBanner
                         tone="yellow"
                         icon={Activity}
-                        message={`Live data is degraded: ${error} — showing last known values.`}
+                        message={t('analysis.degraded', { error })}
                     />
                 )}
 
                 {/* Real-time personal activity feed */}
-                <PersonalActivityFeed
-                    events={personalEvents}
-                    isLive={isPersonalLive}
-                    loading={personalActivityLoading}
-                />
+                <ErrorBoundary label="analysis:activity">
+                    <PersonalActivityFeed
+                        events={personalEvents}
+                        isLive={isPersonalLive}
+                        loading={personalActivityLoading}
+                    />
+                </ErrorBoundary>
 
                 {/* Personal activity transport degradation notice */}
                 {personalActivityError && !isPersonalLive && (
                     <div className="mb-6 flex items-center gap-2 px-3 py-2 rounded-xl text-[9px] font-mono text-amber-400/80 bg-amber-500/5 border border-amber-500/15">
                         <WifiOff size={10} className="shrink-0" />
                         <span>
-                            Personal activity is degraded: {personalActivityError} — using polling fallback.
+                            {t('analysis.activityDegraded', { error: personalActivityError })}
                         </span>
                     </div>
                 )}
@@ -190,7 +204,7 @@ export default function CustomerAnalysisView({
                             >
                                 <div className="flex items-center justify-between mb-2">
                                     <span className="text-[7px] font-mono uppercase tracking-widest text-[#E8E0D5]/40 font-semibold">
-                                        {kpi.label}
+                                        {tc(KPI_LABEL_KEYS[kpi.label] ?? '', kpi.label)}
                                     </span>
                                     <Icon size={13} className="text-[#C9A84C]/50 group-hover:text-[#C9A84C] transition-colors" />
                                 </div>
@@ -205,13 +219,15 @@ export default function CustomerAnalysisView({
                 </div>
 
                 {/* Rewards & Leaderboard */}
-                <RewardsPanel
-                    data={rewardsData}
-                    loading={rewardsLoading}
-                    error={rewardsError}
-                    memberName={memberName}
-                    isLive={isRewardsLive}
-                />
+                <ErrorBoundary label="analysis:rewards">
+                    <RewardsPanel
+                        data={rewardsData}
+                        loading={rewardsLoading}
+                        error={rewardsError}
+                        memberName={memberName}
+                        isLive={isRewardsLive}
+                    />
+                </ErrorBoundary>
 
                 {/* Charts */}
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
@@ -221,11 +237,11 @@ export default function CustomerAnalysisView({
                             <div className="flex items-center gap-2">
                                 <Wallet size={14} className="text-[#C9A84C]" />
                                 <h3 className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold">
-                                    Monthly Spending
+                                    {t('analysis.monthlySpending')}
                                 </h3>
                             </div>
                             <span className="text-[9px] font-mono text-[#E8E0D5]/40">
-                                Last 12 months
+                                {t('analysis.last12Months')}
                             </span>
                         </div>
                         <div className="h-56">
@@ -248,7 +264,7 @@ export default function CustomerAnalysisView({
                                             );
                                         }}
                                     />
-                                    <Bar dataKey="value" name="Spending" fill="#C9A84C" radius={[4, 4, 0, 0]} animationDuration={800} />
+                                    <Bar dataKey="value" name={t('analysis.spending')} fill="#C9A84C" radius={[4, 4, 0, 0]} animationDuration={800} />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
@@ -260,7 +276,7 @@ export default function CustomerAnalysisView({
                             <div className="flex items-center gap-2">
                                 <Heart size={14} className="text-[#C9A84C]" />
                                 <h3 className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold">
-                                    Spending by Category
+                                    {t('analysis.spendingByCategory')}
                                 </h3>
                             </div>
                         </div>
@@ -302,7 +318,9 @@ export default function CustomerAnalysisView({
                 </div>
 
                 {/* Smart recommendations matched to spending categories */}
-                <SmartRecommendations recommendations={data.recommendations} />
+                <ErrorBoundary label="analysis:recommendations">
+                    <SmartRecommendations recommendations={data.recommendations} />
+                </ErrorBoundary>
 
                 {/* Orders table */}
                 <div className="p-5 bg-[#05081A]/90 border border-[#C9A84C]/10 rounded-2xl">
@@ -310,13 +328,13 @@ export default function CustomerAnalysisView({
                         <div className="flex items-center gap-2">
                             <ShoppingBag size={14} className="text-[#C9A84C]" />
                             <h3 className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold">
-                                Order History
+                                {t('analysis.orderHistory')}
                             </h3>
                         </div>
                         <div className="flex items-center gap-3 text-[9px] font-mono text-[#E8E0D5]/40">
                             <span className="flex items-center gap-1">
                                 <Calendar size={10} />
-                                Avg Order: <strong className="text-[#C9A84C]">{formatCurrency(data.averageOrderValue)}</strong>
+                                {t('analysis.avgOrder')} <strong className="text-[#C9A84C]">{formatCurrency(data.averageOrderValue)}</strong>
                             </span>
                         </div>
                     </div>
@@ -325,22 +343,22 @@ export default function CustomerAnalysisView({
                         <table className="w-full text-left">
                             <thead>
                                 <tr className="text-[8px] font-mono uppercase tracking-widest text-[#E8E0D5]/40 border-b border-white/[0.05]">
-                                    <th className="py-2 pr-2">Order</th>
-                                    <th className="py-2 pr-2">Date</th>
-                                    <th className="py-2 pr-2">Items</th>
-                                    <th className="py-2 pr-2">Status</th>
-                                    <th className="py-2 text-right">Total</th>
+                                    <th className="py-2 pr-2">{t('analysis.colOrder')}</th>
+                                    <th className="py-2 pr-2">{t('analysis.colDate')}</th>
+                                    <th className="py-2 pr-2">{t('analysis.colItems')}</th>
+                                    <th className="py-2 pr-2">{t('analysis.colStatus')}</th>
+                                    <th className="py-2 text-right">{t('analysis.colTotal')}</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {data.orders.map((order) => (
                                     <tr key={order.id} className="border-b border-white/[0.03] hover:bg-white/[0.02] transition">
                                         <td className="py-2.5 pr-2 text-[10px] font-mono text-[#C9A84C]">{order.id}</td>
-                                        <td className="py-2.5 pr-2 text-[10px] text-[#E8E0D5]/60">{formatDate(order.date)}</td>
+                                        <td className="py-2.5 pr-2 text-[10px] text-[#E8E0D5]/60">{formatDate(order.date, language)}</td>
                                         <td className="py-2.5 pr-2 text-[10px] font-mono text-[#E8E0D5]/50">{order.items}</td>
                                         <td className="py-2.5 pr-2">
                                             <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-mono border font-bold ${STATUS_COLORS[order.status] || STATUS_COLORS.Pending}`}>
-                                                {order.status}
+                                                {tc(`analysis.status.${order.status}`, order.status)}
                                             </span>
                                         </td>
                                         <td className="py-2.5 text-[10px] font-mono text-white text-right">

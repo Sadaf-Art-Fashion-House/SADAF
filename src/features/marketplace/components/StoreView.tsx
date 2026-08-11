@@ -5,6 +5,8 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { ShoppingCart, Heart, Filter, ChevronRight, X, CreditCard, Star } from "lucide-react";
 import { ROUTES } from "@/config/routes";
+import { useLanguage } from "@/features/i18n/LanguageProvider";
+import { localizedArtTitle, localizedProductName } from "@/features/i18n/productNames";
 import type { CartItem, FashionProduct } from "@/shared/types";
 import type { RatingsByProduct } from "@/features/reviews/hooks/useAggregatedRatings";
 import { useMarketplace } from "../hooks/useMarketplace";
@@ -31,6 +33,8 @@ export default function StoreView({
     onToggleWishlist,
     onCheckout,
 }: StoreViewProps) {
+    const { t, tc, language } = useLanguage();
+
     const {
         categories,
         selectedCategory,
@@ -66,10 +70,10 @@ export default function StoreView({
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                     <div>
                         <span className="text-xs font-semibold text-[#C9A84C] tracking-[0.35em] uppercase block mb-1">
-                            ATELIER ARCHIVE COLLECTIONS
+                            {t("store.kicker")}
                         </span>
                         <h1 className="text-3xl md:text-5xl font-serif text-white tracking-tight">
-                            THE BOUTIQUE STORE
+                            {t("store.title")}
                         </h1>
                     </div>
 
@@ -78,7 +82,7 @@ export default function StoreView({
                             onClick={() => setShowCartDrawer(true)}
                             className="relative px-5 py-2.5 rounded bg-[#1B2A6B] hover:bg-[#C9A84C] hover:text-[#0A0F2C] text-xs text-white transition-all duration-300 font-mono font-semibold uppercase flex items-center gap-2 cursor-pointer shadow-lg shadow-black/30"
                         >
-                            <ShoppingCart size={14} /> View Bag
+                            <ShoppingCart size={14} /> {t("store.viewBag")}
                             {cartItems.length > 0 && (
                                 <span className="absolute -top-1.5 -right-1.5 bg-[#C9A84C] text-[#0A0F2C] font-mono text-[9px] w-5 h-5 rounded-full flex items-center justify-center font-bold border border-[#0A0F2C]">
                                     {cartItems.length}
@@ -95,7 +99,7 @@ export default function StoreView({
                 <div className="lg:col-span-3 flex flex-col gap-6 lg:border-r lg:border-[#C9A84C]/10 lg:pr-8 text-left font-sans">
                     <div>
                         <h3 className="font-serif text-lg text-white mb-4 flex items-center gap-2">
-                            <Filter size={16} className="text-[#C9A84C]" /> Category Filter
+                            <Filter size={16} className="text-[#C9A84C]" /> {t("store.categoryFilter")}
                         </h3>
                         <div className="flex flex-col gap-1.5">
                             {categories.map((cat) => (
@@ -108,7 +112,7 @@ export default function StoreView({
                                             : "text-slate-400 hover:text-white hover:bg-white/5"
                                     }`}
                                 >
-                                    <span>{cat}</span>
+                                    <span>{tc(`store.category.${cat}`, cat)}</span>
                                     <ChevronRight
                                         size={10}
                                         className={selectedCategory === cat ? "text-[#C9A84C]" : "opacity-0"}
@@ -119,7 +123,7 @@ export default function StoreView({
                     </div>
 
                     <div className="border-t border-[#C9A84C]/10 pt-6">
-                        <h3 className="font-serif text-lg text-white mb-4">Investment Scale</h3>
+                        <h3 className="font-serif text-lg text-white mb-4">{t("store.investmentScale")}</h3>
                         <div className="flex flex-col gap-2">
                             <input
                                 type="range"
@@ -131,9 +135,9 @@ export default function StoreView({
                                 className="w-full accent-[#C9A84C] cursor-pointer bg-slate-800 h-1.5 rounded"
                             />
                             <div className="flex justify-between items-center text-xs text-gray-500 font-mono pt-1">
-                                <span>Min: $200</span>
+                                <span>{t("store.priceMin")}: $200</span>
                                 <span className="text-[#C9A84C] font-bold">
-                                    Max: ${priceRange.toLocaleString()}
+                                    {t("store.priceMax")}: ${priceRange.toLocaleString()}
                                 </span>
                             </div>
                         </div>
@@ -143,17 +147,16 @@ export default function StoreView({
                     <div className="border-t border-[#C9A84C]/10 pt-6 mt-4">
                         <div className="p-4 rounded-xl bg-gradient-to-br from-[#12193E] to-[#0A0F2C] border border-[#C9A84C]/10 text-xs">
                             <h4 className="font-serif text-[#C9A84C] font-semibold mb-1 uppercase tracking-wider">
-                                Promotional Offer
+                                {t("store.promo.title")}
                             </h4>
                             <p className="text-slate-400 mb-2 leading-relaxed">
-                                Enter coupon code <strong className="text-white">SADAF2026</strong> at check
-                                out block to receive a 15% VIP discount on your entire collection order.
+                                {t("store.promo.body", { code: "SADAF2026" })}
                             </p>
                             <button
                                 onClick={applyCouponCode}
                                 className="mt-2 px-3 py-2 rounded bg-[#1B2A6B] text-white text-[10px] uppercase tracking-wider cursor-pointer"
                             >
-                                Apply Coupon
+                                {t("store.promo.apply")}
                             </button>
                         </div>
                     </div>
@@ -163,7 +166,7 @@ export default function StoreView({
                 <div className="lg:col-span-9">
                     {filteredProducts.length === 0 ? (
                         <div className="py-20 text-center text-gray-400 font-serif text-lg">
-                            No upscale apparel pieces found on selected search range.
+                            {t("store.empty")}
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -219,13 +222,13 @@ export default function StoreView({
                                     <div className="p-5 flex-1 flex flex-col justify-between">
                                         <div>
                                             <span className="text-[9px] uppercase font-mono text-gray-500 mb-0.5 block">
-                                                {prod.category}
+                                                {tc(`store.category.${prod.category}`, prod.category)}
                                             </span>
                                             <Link
                                                 href={`${ROUTES.STORE}/${prod.id}`}
                                                 className="font-serif text-[#E8E0D5] text-base group-hover:text-[#F0D080] transition-colors duration-300 mb-1 leading-tight hover:underline underline-offset-4"
                                             >
-                                                {prod.name}
+                                                {localizedProductName(prod, language)}
                                             </Link>
                                             <p className="text-xs text-[#E8E0D5]/65 line-clamp-2 leading-relaxed mb-3">
                                                 {prod.description}
@@ -245,8 +248,7 @@ export default function StoreView({
                                                 </span>
                                                 {ratingsByProduct[prod.id] && (
                                                     <span className="text-[10px] text-gray-500 font-mono">
-                                                        &middot; {ratingsByProduct[prod.id]!.count} review
-                                                        {ratingsByProduct[prod.id]!.count === 1 ? "" : "s"}
+                                                        &middot; {ratingsByProduct[prod.id]!.count} {t("store.reviews")}
                                                     </span>
                                                 )}
                                             </div>
@@ -256,7 +258,7 @@ export default function StoreView({
                                             onClick={() => openProductDetail(prod)}
                                             className="w-full py-2 bg-white/5 border border-white/10 hover:border-[#4FC3F7] text-xs text-white uppercase tracking-wider font-semibold rounded cursor-pointer transition-all duration-300 text-center"
                                         >
-                                            Configure & Add
+                                            {t("store.configureAdd")}
                                         </button>
                                     </div>
                                 </div>
@@ -298,13 +300,13 @@ export default function StoreView({
                             <div className="flex-1 flex flex-col justify-between font-sans">
                                 <div>
                                     <div className="flex items-center gap-2 text-[10px] font-mono text-[#C9A84C] uppercase tracking-widest">
-                                        <span>{activeProductDetail.category} Label</span>
+                                        <span>{tc(`store.category.${activeProductDetail.category}`, activeProductDetail.category)} {t("store.label")}</span>
                                         <span>&bull;</span>
                                         <span>{activeProductDetail.fabric}</span>
                                     </div>
 
                                     <h2 className="font-serif text-2xl md:text-3xl text-white font-bold tracking-tight uppercase leading-none mt-2 mb-3">
-                                        {activeProductDetail.name}
+                                        {localizedProductName(activeProductDetail, language)}
                                     </h2>
                                     <p className="text-[#C9A84C] font-mono text-lg font-bold mb-4">
                                         ${activeProductDetail.price.toLocaleString()}
@@ -317,7 +319,7 @@ export default function StoreView({
                                     {/* Sizing selection */}
                                     <div className="mb-4">
                                         <span className="text-[10px] font-mono uppercase text-gray-400 block mb-2">
-                                            Select Sizing Standard
+                                            {t("store.selectSize")}
                                         </span>
                                         <div className="flex gap-2">
                                             {activeProductDetail.sizes.map((sz) => (
@@ -339,7 +341,7 @@ export default function StoreView({
                                     {/* Color option swatches */}
                                     <div className="mb-6">
                                         <span className="text-[10px] font-mono uppercase text-gray-400 block mb-2">
-                                            Select Custom Dye Swatch
+                                            {t("store.selectDye")}
                                         </span>
                                         <div className="flex gap-3">
                                             {activeProductDetail.colors.map((cl) => (
@@ -365,7 +367,7 @@ export default function StoreView({
                                     {/* Bullet Spec list */}
                                     <div>
                                         <span className="text-[10px] font-mono uppercase text-gray-400 block mb-2">
-                                            Couture atelier Specifications
+                                            {t("store.specs")}
                                         </span>
                                         <ul className="text-[11px] text-gray-400 pl-4 list-disc space-y-1">
                                             {activeProductDetail.details.map((dt, i) => (
@@ -384,7 +386,7 @@ export default function StoreView({
                                         }}
                                         className="flex-1 py-3 bg-[#C9A84C] hover:bg-white text-[#0A0F2C] text-xs font-semibold uppercase tracking-wider rounded transition flex items-center justify-center gap-1.5 cursor-pointer shadow-lg"
                                     >
-                                        <ShoppingCart size={12} /> Add to bag
+                                        <ShoppingCart size={12} /> {t("store.addToBag")}
                                     </button>
                                     <button
                                         onClick={() => onToggleWishlist(activeProductDetail)}
@@ -420,7 +422,7 @@ export default function StoreView({
                             {/* Drawer header */}
                             <div className="flex justify-between items-center border-b border-[#C9A84C]/10 pb-4">
                                 <h3 className="font-serif text-xl font-bold uppercase tracking-wider text-white">
-                                    Your Shopping Bag
+                                    {t("store.cart.title")}
                                 </h3>
                                 <button
                                     onClick={() => setShowCartDrawer(false)}
@@ -434,7 +436,7 @@ export default function StoreView({
                             <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
                                 {cartItems.length === 0 ? (
                                     <div className="py-20 text-center text-slate-500 text-xs">
-                                        Your luxury bag is empty. Explore Store or AI Studio.
+                                        {t("store.cart.empty")}
                                     </div>
                                 ) : (
                                     cartItems.map((item) => (
@@ -455,7 +457,7 @@ export default function StoreView({
                                                 {item.artPiece && (
                                                     <Image
                                                         src={item.artPiece.image}
-                                                        alt={item.artPiece.title}
+                                                        alt={localizedArtTitle(item.artPiece, language)}
                                                         fill
                                                         className="object-cover"
                                                     />
@@ -475,31 +477,32 @@ export default function StoreView({
                                                 <div>
                                                     <div className="flex justify-between items-start">
                                                         <h4 className="font-serif text-white uppercase text-xs tracking-wide leading-tight line-clamp-1 max-w-[190px]">
-                                                            {item.product?.name ||
-                                                                item.artPiece?.title ||
-                                                                `${item.aiCustomDesign?.clothingType} Custom`}
+                                                            {item.product
+                                                                ? localizedProductName(item.product, language)
+                                                                : item.artPiece?.title ||
+                                                                  `${item.aiCustomDesign?.clothingType} Custom`}
                                                         </h4>
                                                         <button
                                                             onClick={() => onRemoveFromCart(item.id)}
                                                             className="text-gray-500 hover:text-red-400 cursor-pointer text-[10px] font-semibold tracking-wider font-mono"
                                                         >
-                                                            REMOVE
+                                                            {t("store.cart.remove")}
                                                         </button>
                                                     </div>
 
                                                     <div className="text-[10px] text-gray-400 space-y-0.5 mt-1 font-mono">
                                                         <div>
-                                                            Qty: {item.quantity} &bull; Size: {item.selectedSize}
+                                                            {t("store.cart.qty")}: {item.quantity} &bull; {t("store.cart.size")}: {item.selectedSize}
                                                         </div>
-                                                        {item.selectedColor && <div>Dye: {item.selectedColor}</div>}
+                                                        {item.selectedColor && <div>{t("store.cart.dye")}: {item.selectedColor}</div>}
                                                         {item.selectedFabric && (
-                                                            <div>Weave: {item.selectedFabric}</div>
+                                                            <div>{t("store.cart.weave")}: {item.selectedFabric}</div>
                                                         )}
                                                     </div>
                                                 </div>
 
                                                 <div className="flex justify-between items-center mt-2 pt-2 border-t border-white/5 font-mono">
-                                                    <span className="text-gray-500 font-medium">Sum</span>
+                                                    <span className="text-gray-500 font-medium">{t("store.cart.sum")}</span>
                                                     <span className="text-[#C9A84C] font-semibold">
                                                         ${item.totalPrice.toLocaleString()}
                                                     </span>
@@ -518,7 +521,7 @@ export default function StoreView({
                                         <div className="flex gap-2">
                                             <input
                                                 type="text"
-                                                placeholder="Coupon (e.g. SADAF2026)"
+                                                placeholder={t("store.cart.couponPlaceholder", { code: "SADAF2026" })}
                                                 value={coupon}
                                                 onChange={(e) => setCoupon(e.target.value)}
                                                 className="flex-1 bg-black/40 border border-white/10 rounded px-3 py-2 text-xs text-white"
@@ -529,7 +532,7 @@ export default function StoreView({
                                                 className="px-4 bg-[#1B2A6B] hover:bg-[#C9A84C] hover:text-[#0A0F2C] text-xs uppercase font-mono tracking-widest font-semibold rounded active:scale-95 transition-all duration-300"
                                                 disabled={couponApplied}
                                             >
-                                                {couponApplied ? "Applied" : "Apply"}
+                                                {couponApplied ? t("store.cart.applied") : t("store.cart.apply")}
                                             </button>
                                         </div>
                                         {couponMessage && (
@@ -545,7 +548,7 @@ export default function StoreView({
 
                                     <div className="space-y-2 text-xs font-mono text-gray-400 border-b border-white/5 pb-4">
                                         <div className="flex justify-between text-left">
-                                            <span>Products Subtotal</span>
+                                            <span>{t("store.cart.subtotal")}</span>
                                             <span className="text-[#E8E0D5]">
                                                 ${cartSubtotal.toLocaleString()}
                                             </span>
@@ -553,22 +556,22 @@ export default function StoreView({
 
                                         {discountAmount > 0 && (
                                             <div className="flex justify-between text-left text-green-400">
-                                                <span>VIP Coupon Deduction (-{discountPercent}%)</span>
+                                                <span>{t("store.cart.vipDeduction")} (-{discountPercent}%)</span>
                                                 <span>-${discountAmount.toLocaleString()}</span>
                                             </div>
                                         )}
 
                                         <div className="flex justify-between text-left">
-                                            <span>Express International Delivery</span>
+                                            <span>{t("store.cart.shipping")}</span>
                                             <span className="text-[#E8E0D5]">
-                                                {shippingFee === 0 ? "FREE (Exclusive)" : `$${shippingFee}`}
+                                                {shippingFee === 0 ? t("store.cart.shippingFree") : `$${shippingFee}`}
                                             </span>
                                         </div>
                                     </div>
 
                                     {/* GRAND TOTAL */}
                                     <div className="flex justify-between items-center text-sm font-mono tracking-tight text-white py-2">
-                                        <span className="uppercase font-bold">TOTAL ORDER OUTCOME</span>
+                                        <span className="uppercase font-bold">{t("store.cart.total")}</span>
                                         <span className="text-[#C9A84C] text-xl font-bold">
                                             ${cartTotal.toLocaleString()}
                                         </span>
@@ -581,7 +584,7 @@ export default function StoreView({
                                         }}
                                         className="w-full py-4 rounded bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/90 text-[#0A0F2C] hover:text-[#0A0F2C] hover:scale-102 transition duration-300 active:scale-98 font-bold text-xs tracking-[0.2em] uppercase flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-black/40"
                                     >
-                                        <CreditCard size={14} /> Proceed Secure checkout
+                                        <CreditCard size={14} /> {t("store.cart.checkout")}
                                     </button>
                                 </div>
                             )}
