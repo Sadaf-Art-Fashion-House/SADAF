@@ -12,37 +12,20 @@
  */
 
 import { NextResponse } from 'next/server';
-import type { ReferralRecord, SalesPartnerOverview } from '@/features/sales-partner/types';
+import type { SalesPartnerOverview } from '@/features/sales-partner/types';
 import { COMMISSION_RATE } from '@/features/sales-partner/constants';
+import { commissionFor, getReferralRecords } from '@/features/sales-partner/data/referralStore';
 
 /** Never cache: the overview is polled over WS and carries a timestamp. */
 export const dynamic = 'force-dynamic';
 
-const DAY_MS = 86_400_000;
-const HOUR_MS = 3_600_000;
-
-/** Commission for a converted referral: rate × order value, rounded to cents. */
-function commissionFor(orderValue: number): number {
-    return Math.round(orderValue * COMMISSION_RATE * 100) / 100;
-}
-
-// ─── Seed ────────────────────────────────────────────────────────────────────
-// Four converted referrals (with real order values) plus two pending leads
-// so the status filter and KPIs are meaningful. The two most recent
-// conversions fall inside the current month so the "this month" commission
-// counter reads non-zero.
-
-const SEEDED_REFERRALS: ReferralRecord[] = [
-    { id: 'sr-1', name: 'Mariam Khaled', city: 'Cairo', status: 'converted', joinedAt: new Date(Date.now() - 2 * DAY_MS).toISOString(), orderValue: 2400 },
-    { id: 'sr-2', name: 'Omar Nabil', city: 'Alexandria', status: 'converted', joinedAt: new Date(Date.now() - 5 * DAY_MS).toISOString(), orderValue: 1450 },
-    { id: 'sr-3', name: 'Salma Tarek', city: 'Giza', status: 'pending', joinedAt: new Date(Date.now() - 1 * DAY_MS).toISOString() },
-    { id: 'sr-4', name: 'Hossam Adel', city: 'Doha', status: 'converted', joinedAt: new Date(Date.now() - 20 * DAY_MS).toISOString(), orderValue: 890 },
-    { id: 'sr-5', name: 'Farida Nasser', city: 'Riyadh', status: 'pending', joinedAt: new Date(Date.now() - 6 * HOUR_MS).toISOString() },
-    { id: 'sr-6', name: 'Karim Samy', city: 'Sharjah', status: 'converted', joinedAt: new Date(Date.now() - 45 * DAY_MS).toISOString(), orderValue: 3200 },
-];
-
-export async function GET(): Promise<NextResponse<SalesPartnerOverview>> {
-    const referrals = SEEDED_REFERRALS.map((r) =>
+/**
+ * Build the full overview from the current referral state. Shared by GET
+ * (dashboard load / WS poll) and POST /convert so both always return the
+ * exact same shape — the commission math lives here, in one place.
+ */
+function buildOverview(): SalesPartnerOverview {
+    const referrals = getReferralRecords().map((r) =>
         r.status === 'converted' && r.orderValue !== undefined
             ? { ...r, commission: commissionFor(r.orderValue) }
             : r,
@@ -69,7 +52,7 @@ export async function GET(): Promise<NextResponse<SalesPartnerOverview>> {
     const expectedCommission =
         pending > 0 ? Math.round(avgOrderValue * COMMISSION_RATE * pending * 100) / 100 : 0;
 
-    const overview: SalesPartnerOverview = {
+    return {
         referralCode: 'SADAF-SALEH-D6N',
         stats: {
             totalReferrals: referrals.length,
@@ -82,6 +65,34 @@ export async function GET(): Promise<NextResponse<SalesPartnerOverview>> {
         },
         referrals,
     };
+}
 
-    return NextResponse.json(overview);
+export async function GET(): Promise<NextResponse<SalesPartnerOverview>> {
+    return NextResponse.json(buildOverview());
+}
+
+/**
+ * POST /api/dashboard/sales-partner — simulate a referred customer placing
+ * a paying order: the oldest pending referral becomes converted with a
+ * realistic order value and its commission (COMMISSION_RATE × value). The
+ * WS server picks the change up on its next poll and the open dashboard
+ * shows the conversion toast. In production this endpoint would be called by
+ * the order service when a referral-coded order is paid.
+ */
+export async function POST(): Promise<NextResponse> {
+    const pendingReferral = getReferralRecords().find((r) => r.status === 'pending');
+    if (!pendingReferral) {
+        return NextResponse.json(
+            { error: 'No pending referrals left to convert.' },
+            { status: 409 },
+        );
+    }
+
+    // Realistic order value in $100 steps between $800 and $3,200.
+    const orderValue = 800 + Math.round(Math.random() * 24) * 100;
+    pendingReferral.status = 'converted';
+    pendingReferral.orderValue = orderValue;
+    pendingReferral.commission = commissionFor(orderValue);
+
+    return NextResponse.json(buildOverview());
 }
