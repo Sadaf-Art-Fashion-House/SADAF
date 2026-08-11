@@ -28,35 +28,49 @@ export const dynamic = 'force-dynamic';
 
 let demoCounter = 0;
 
+// Templates carry both English and Arabic copy. User-generated values that
+// get interpolated into messages (order IDs, design titles, admin notes, role
+// names) stay in their original language — like Facebook/Instagram, only the
+// surrounding template text is translated.
 const NOTIFICATION_TEMPLATES = [
     {
         type: 'order' as const,
         title: 'New Order Received',
+        titleAr: 'تم استلام طلب جديد',
         message: 'Order #SADAF-1001 has been placed successfully and is being prepared.',
+        messageAr: 'تم تقديم الطلب #SADAF-1001 بنجاح وهو قيد التجهيز.',
         href: '/dashboard/orders',
     },
     {
         type: 'wishlist' as const,
         title: 'Wishlist Price Drop',
+        titleAr: 'انخفاض سعر في المفضلة',
         message: 'An item in your wishlist is now 15% off — limited time only.',
+        messageAr: 'أحد العناصر في مفضلتك أصبح بخصم 15% — لفترة محدودة فقط.',
         href: '/wishlist',
     },
     {
         type: 'review' as const,
         title: 'New Review Posted',
+        titleAr: 'تم نشر مراجعة جديدة',
         message: 'A customer left a 5-star review on one of your products.',
+        messageAr: 'ترك أحد العملاء تقييمًا بخمس نجوم على أحد منتجاتك.',
         href: '/reviews',
     },
     {
         type: 'system' as const,
         title: 'System Update',
+        titleAr: 'تحديث النظام',
         message: 'SADAF platform v2.4.1 deployed with new features and improvements.',
+        messageAr: 'تم نشر منصة SADAF v2.4.1 بميزات وتحسينات جديدة.',
         href: '/dashboard',
     },
     {
         type: 'promotion' as const,
         title: 'Limited Offer',
+        titleAr: 'عرض محدود',
         message: 'Get 20% off on all Traditional Fusion pieces this weekend.',
+        messageAr: 'احصل على خصم 20% على كل قطع الدمج التقليدي هذا الأسبوع.',
         href: '/store',
     },
 ] as const;
@@ -69,7 +83,9 @@ function buildDemoNotifications(count = 5) {
             id: `api-demo-${Date.now()}-${demoCounter}`,
             type: template.type,
             title: template.title,
+            titleAr: template.titleAr,
             message: template.message,
+            messageAr: template.messageAr,
             href: template.href,
             createdAt: new Date(Date.now() - index * 900_000).toISOString(),
             read: false,
@@ -77,43 +93,66 @@ function buildDemoNotifications(count = 5) {
     });
 }
 
-/** Human-readable copy per pipeline status, shared by the bell and the page. */
-function statusEventTitle(event: DesignStatusEvent): string {
+/** Human-readable copy per pipeline status — English + Arabic pairs, with the
+ *  design title / admin note / role interpolated as-is (user data stays in its
+ *  original language, like Facebook keeps names untranslated). */
+function statusEventTitle(event: DesignStatusEvent): { en: string; ar: string } {
     if (event.kind === 'collaborator_added') {
-        return 'Added as a collaborator';
+        return { en: 'Added as a collaborator', ar: 'أُضفت كمتعاون' };
     }
     switch (event.status) {
         case 'approved':
-            return 'Design approved by the atelier';
+            return { en: 'Design approved by the atelier', ar: 'تمت الموافقة على التصميم من الأتيليه' };
         case 'rejected':
-            return 'Design rejected by the atelier';
+            return { en: 'Design rejected by the atelier', ar: 'تم رفض التصميم من الأتيليه' };
         case 'in_production':
-            return 'Design entered production';
+            return { en: 'Design entered production', ar: 'دخل التصميم مرحلة الإنتاج' };
         case 'under_review':
-            return 'Design is under review';
+            return { en: 'Design is under review', ar: 'التصميم قيد المراجعة' };
         default:
-            return 'Atelier decision';
+            return { en: 'Atelier decision', ar: 'قرار الأتيليه' };
     }
 }
 
-function statusEventMessage(event: DesignStatusEvent): string {
+function statusEventMessage(event: DesignStatusEvent): { en: string; ar: string } {
     if (event.kind === 'collaborator_added') {
-        return `You were added as a collaborator to “${event.title}” — role: ${event.collaboratorRole ?? 'Collaborator'}.`;
+        return {
+            en: `You were added as a collaborator to “${event.title}” — role: ${event.collaboratorRole ?? 'Collaborator'}.`,
+            ar: `تمت إضافتك كمتعاون في “${event.title}” — الدور: ${event.collaboratorRole ?? 'Collaborator'}.`,
+        };
     }
     const base = `“${event.title}”`;
     switch (event.status) {
         case 'approved':
-            return `${base} was approved — the atelier begins sampling.`;
+            return {
+                en: `${base} was approved — the atelier begins sampling.`,
+                ar: `تمت الموافقة على “${event.title}” — يبدأ الأتيليه في تجهيز العينات.`,
+            };
         case 'rejected':
             return event.adminNote
-                ? `${base} was rejected. Atelier note: “${event.adminNote}”`
-                : `${base} was rejected — check the atelier feedback.`;
+                ? {
+                    en: `${base} was rejected. Atelier note: “${event.adminNote}”`,
+                    ar: `تم رفض “${event.title}”. ملاحظة الأتيليه: “${event.adminNote}”`,
+                }
+                : {
+                    en: `${base} was rejected — check the atelier feedback.`,
+                    ar: `تم رفض “${event.title}” — راجع ملاحظات الأتيليه.`,
+                };
         case 'in_production':
-            return `${base} is now in production in the atelier.`;
+            return {
+                en: `${base} is now in production in the atelier.`,
+                ar: `“${event.title}” الآن في مرحلة الإنتاج داخل الأتيليه.`,
+            };
         case 'under_review':
-            return `${base} is being reviewed by the atelier.`;
+            return {
+                en: `${base} is being reviewed by the atelier.`,
+                ar: `“${event.title}” قيد المراجعة من الأتيليه.`,
+            };
         default:
-            return `The atelier updated “${event.title}”.`;
+            return {
+                en: `The atelier updated “${event.title}”.`,
+                ar: `حدّث الأتيليه “${event.title}”.`,
+            };
     }
 }
 
@@ -126,15 +165,21 @@ function buildTeamEventNotifications(userId: string): Notification[] {
     return getStatusEventsForUser(userId)
         .slice()
         .reverse()
-        .map((event) => ({
-            id: `atelier-event-${event.id}`,
-            type: 'system' as const,
-            title: statusEventTitle(event),
-            message: statusEventMessage(event),
-            href: `/dashboard/designer/portfolio/${event.submissionId}`,
-            createdAt: event.createdAt,
-            read: false,
-        }));
+        .map((event) => {
+            const title = statusEventTitle(event);
+            const message = statusEventMessage(event);
+            return {
+                id: `atelier-event-${event.id}`,
+                type: 'system' as const,
+                title: title.en,
+                titleAr: title.ar,
+                message: message.en,
+                messageAr: message.ar,
+                href: `/dashboard/designer/portfolio/${event.submissionId}`,
+                createdAt: event.createdAt,
+                read: false,
+            };
+        });
 }
 
 export async function GET(request: NextRequest) {

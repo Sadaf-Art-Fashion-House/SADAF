@@ -84,18 +84,20 @@ let demoNotifCounter = 0;
 function generateDemoGlobalNotification() {
     demoNotifCounter++;
     const templates = [
-        { type: 'order', title: 'New Order Received', message: 'Order #SADAF-' + (1000 + demoNotifCounter) + ' has been placed and is being prepared in the atelier.' },
-        { type: 'system', title: 'Atelier Announcement', message: 'The new Autumn Heritage collection is now live across the atelier and gallery.' },
-        { type: 'promotion', title: 'Limited Offer', message: 'Get 20% off on all Traditional Fusion pieces this weekend.' },
-        { type: 'review', title: 'New Review Posted', message: 'A customer left a 5-star review on one of our pieces.' },
-        { type: 'system', title: 'System Update', message: 'SADAF platform v2.4.1 deployed with new features.' },
+        { type: 'order', title: 'New Order Received', titleAr: 'تم استلام طلب جديد', message: 'Order #SADAF-' + (1000 + demoNotifCounter) + ' has been placed and is being prepared in the atelier.', messageAr: 'تم تقديم الطلب #SADAF-' + (1000 + demoNotifCounter) + ' بنجاح وهو قيد التجهيز في الأتيليه.' },
+        { type: 'system', title: 'Atelier Announcement', titleAr: 'إعلان من الأتيليه', message: 'The new Autumn Heritage collection is now live across the atelier and gallery.', messageAr: 'مجموعة تراث الخريف الجديدة أصبحت متاحة الآن في الأتيليه والمعرض.' },
+        { type: 'promotion', title: 'Limited Offer', titleAr: 'عرض محدود', message: 'Get 20% off on all Traditional Fusion pieces this weekend.', messageAr: 'احصل على خصم 20% على كل قطع الدمج التقليدي هذا الأسبوع.' },
+        { type: 'review', title: 'New Review Posted', titleAr: 'تم نشر مراجعة جديدة', message: 'A customer left a 5-star review on one of our pieces.', messageAr: 'ترك أحد العملاء تقييمًا بخمس نجوم على إحدى قطعنا.' },
+        { type: 'system', title: 'System Update', titleAr: 'تحديث النظام', message: 'SADAF platform v2.4.1 deployed with new features.', messageAr: 'تم نشر منصة SADAF v2.4.1 بميزات جديدة.' },
     ];
     const tpl = templates[demoNotifCounter % templates.length];
     return {
         id: 'demo-global-' + Date.now() + '-' + demoNotifCounter,
         type: tpl.type,
         title: tpl.title,
+        titleAr: tpl.titleAr,
         message: tpl.message,
+        messageAr: tpl.messageAr,
         createdAt: new Date().toISOString(),
         read: false,
         href: '/dashboard/notifications',
@@ -826,9 +828,10 @@ if (DEMO_SALES_PARTNER_ENABLED) {
             }
             console.error(`   ⚠️ sales-partner:global: ${err.message}`);
         }
-    }, 10_000); // Every 10 seconds
+    }, 5_000); // Every 5 seconds — snappy enough that a referral conversion
+    // toast (pending → converted) appears almost immediately on the dashboard.
 
-    console.log('   🤝 Real-time sales partner dashboard enabled — global push every 10s');
+    console.log('   🤝 Real-time sales partner dashboard enabled — global push every 5s');
     console.log('      Set DISABLE_DEMO_SALES_PARTNER=1 to disable');
 }
 
