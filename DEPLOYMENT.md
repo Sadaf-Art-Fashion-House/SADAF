@@ -28,11 +28,12 @@ Other refs: `nextjs-clean` (locked/archived at `0d7a585`), `archive/nextjs-clean
 - Projects: `sadaf` (production, alias sadaf-nu), `sadaf-v1`, `sadaf-v2` —
   all with **framework = `nextjs`** (v1 deploys the Vite app via the project's
   build config) and **deployment protection OFF**.
-- Deploys are **file-based** (from the worktrees `/tmp/deploy-v1`, `/tmp/deploy-v2`,
-  `/tmp/deploy-v3`) — Git auto-deploy is NOT connected because the repo is
-  private and the Vercel GitHub App lacks access. To redeploy a version:
-  `cd /tmp/deploy-vN && vercel deploy --prod --yes`. To enable auto-deploy,
-  grant the Vercel GitHub App access to the repo in the GitHub org settings.
+- Deploys are **file-based** — Git auto-deploy is NOT connected because the
+  repo is private and the Vercel GitHub App lacks access. **To redeploy any
+  version: `./redeploy.sh <v1|v2|v3>`** (the script manages its own throwaway
+  worktree under `/tmp/sadaf-deploy`, links the project, and deploys). To
+  enable auto-deploy, grant the Vercel GitHub App access to the repo in the
+  GitHub org settings.
 
 ## How to deploy each version
 
