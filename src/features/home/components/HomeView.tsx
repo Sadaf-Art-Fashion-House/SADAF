@@ -5,7 +5,7 @@ import { ArrowRight, Star, Compass, Sparkles, Feather } from 'lucide-react';
 import type { Collection, ArtPiece, FashionProduct } from '@/shared/types';
 import SadafLogo from '@/components/common/SadafLogo';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
-import { localizedArtTitle, localizedProductName } from '@/features/i18n/productNames';
+import { localizedArtTitle, localizedProductDescription, localizedProductName } from '@/features/i18n/productNames';
 
 interface HomeViewProps {
     featuredProducts: FashionProduct[];
@@ -166,7 +166,7 @@ export default function HomeView({ featuredProducts, featuredArtwork, collection
                         {featuredProducts.slice(0, 3).map((product) => (
                             <motion.div key={product.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="group relative flex flex-col bg-[#0A0F2C] border border-[#E8E0D5]/10 rounded-xl overflow-hidden shadow-xl">
                                 <Link href="/store" className="relative aspect-[3/4] overflow-hidden bg-[#0A0F2C] cursor-pointer block">
-                                    <Image src={product.image} alt={product.name} fill className="object-cover transition-all duration-500 group-hover:scale-105" />
+                                    <Image src={product.image} alt={localizedProductName(product, language)} fill className="object-cover transition-all duration-500 group-hover:scale-105" />
                                     <div className="absolute top-3 left-3 bg-[#E8E0D5]/15 backdrop-blur-md px-3 py-1 rounded text-[10px] uppercase font-mono tracking-wider border border-white/10 text-white">{product.category}</div>
                                     <div className="absolute bottom-3 right-3 bg-black/50 backdrop-blur-md px-2 py-0.5 rounded text-[9px] text-[#F0D080] flex items-center gap-1">
                                         <Star size={8} fill="#F0D080" /> {product.rating}
@@ -177,7 +177,7 @@ export default function HomeView({ featuredProducts, featuredArtwork, collection
                                         <Link href="/store">
                                             <h3 className="font-serif text-white hover:text-[#C9A84C] transition-colors duration-300 text-lg mb-1.5 cursor-pointer">{localizedProductName(product, language)}</h3>
                                         </Link>
-                                        <p className="text-xs text-[#E8E0D5]/70 line-clamp-2 leading-relaxed mb-4">{product.description}</p>
+                                        <p className="text-xs text-[#E8E0D5]/70 line-clamp-2 leading-relaxed mb-4">{localizedProductDescription(product, language)}</p>
                                     </div>
                                     <div className="flex justify-between items-center border-t border-[#E8E0D5]/10 pt-4 mt-auto">
                                         <span className="font-mono text-sm text-[#C9A84C] font-semibold">${product.price.toLocaleString()}</span>
