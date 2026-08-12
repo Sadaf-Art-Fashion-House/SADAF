@@ -101,6 +101,30 @@ const DAY_LABEL_KEYS: Record<string, TranslationKey> = {
     Sun: 'admin.day.sun',
 };
 
+/**
+ * The chart data ships English-only channel / acquisition / category names
+ * as data. Map the known templates to translation keys (same pattern as
+ * KPI_LABEL_KEYS) so pie legends, axis ticks and tooltips render in the
+ * active language; unknown labels fall back to their raw text.
+ */
+const CHANNEL_LABEL_KEYS: Record<string, TranslationKey> = {
+    'Online Store': 'analytics.channel.onlineStore',
+    'Atelier (Boutique)': 'analytics.channel.atelierBoutique',
+    Exhibitions: 'analytics.channel.exhibitions',
+    Wholesale: 'analytics.channel.wholesale',
+    Referral: 'analytics.channel.referral',
+    'Social Media': 'analytics.channel.socialMedia',
+    Direct: 'analytics.channel.direct',
+    Search: 'analytics.channel.search',
+    Email: 'analytics.channel.email',
+    'Art Pieces': 'analytics.channel.artPieces',
+    Women: 'store.category.Women',
+    Men: 'store.category.Men',
+    Kids: 'store.category.Kids',
+    'Traditional Fusion': 'store.category.Traditional Fusion',
+    'Limited Edition': 'store.category.Limited Edition',
+};
+
 /** Accessible labels for the toolbar banner's Retry button, per failed kind. */
 const TOOLBAR_RETRY_LABELS: Record<ToolbarExportKind, TranslationKey> = {
     charts: 'analytics.retryCharts',
@@ -122,7 +146,7 @@ function ChartTooltip({ active, payload, label }: any) {
     if (!active || !payload?.length) return null;
     return (
         <div className="bg-[#0A0F2C]/95 border border-[#C9A84C]/20 rounded-xl px-3 py-2 shadow-xl backdrop-blur-sm">
-            <p className="text-[10px] font-mono text-[#E8E0D5]/60 mb-1">{label}</p>
+            <p className="text-[10px] font-mono text-[#E8E0D5]/60 mb-1">{(CHANNEL_LABEL_KEYS[label] ? t(CHANNEL_LABEL_KEYS[label]) : label)}</p>
             {payload.map((entry: any, i: number) => (
                 <p key={i} className="text-xs font-mono font-semibold" style={{ color: entry.color }}>
                     {entry.name}: ${entry.value.toLocaleString()}
@@ -139,7 +163,7 @@ function PieTooltip({ active, payload }: any) {
     const hasRevenue = 'revenue' in d;
     return (
         <div className="bg-[#0A0F2C]/95 border border-[#C9A84C]/20 rounded-xl px-3 py-2 shadow-xl backdrop-blur-sm">
-            <p className="text-xs font-mono font-semibold text-white">{d.category || d.label || d.name}</p>
+            <p className="text-xs font-mono font-semibold text-white">{(CHANNEL_LABEL_KEYS[d.category || d.label || d.name] ? t(CHANNEL_LABEL_KEYS[d.category || d.label || d.name]) : d.category || d.label || d.name)}</p>
             {hasRevenue ? (
                 <><p className="text-[10px] font-mono text-[#E8E0D5]/60">${d.revenue.toLocaleString()} ({d.share.toFixed(1)}%)</p><p className="text-[10px] text-[#E8E0D5]/40">{t('analytics.unitsSold', { count: d.unitsSold })}</p></>
             ) : (
@@ -746,7 +770,7 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
                                     <BarChart data={data.revenueByChannel} layout="vertical" barCategoryGap="25%">
                                         <CartesianGrid strokeDasharray="3 3" stroke="#1B2A6B" strokeOpacity={0.3} horizontal={false} />
                                         <XAxis type="number" tick={{ fill: '#E8E0D5', fontSize: 9, fontFamily: 'monospace' }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
-                                        <YAxis dataKey="label" type="category" tick={{ fill: '#E8E0D5', fontSize: 9, fontFamily: 'monospace' }} axisLine={false} tickLine={false} width={90} />
+                                        <YAxis dataKey="label" type="category" tick={{ fill: '#E8E0D5', fontSize: 9, fontFamily: 'monospace' }} axisLine={false} tickLine={false} width={90} tickFormatter={(v: string) => (CHANNEL_LABEL_KEYS[v] ? t(CHANNEL_LABEL_KEYS[v]) : v)} />
                                         <Tooltip content={<ChartTooltip />} cursor={{ fill: '#C9A84C', opacity: 0.08 }} />
                                         <Bar dataKey="value" name={t('analytics.series.revenue')} fill="#4FC3F7" radius={[0, 4, 4, 0]} animationDuration={800} />
                                     </BarChart>
@@ -762,7 +786,7 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
                                             {data.acquisitionChannels.map((_, i) => (<Cell key={i} fill={['#C9A84C', '#4FC3F7', '#10B981', '#F59E0B', '#EC4899'][i % 5]} />))}
                                         </Pie>
                                         <Tooltip content={<PieTooltip />} />
-                                        <Legend wrapperStyle={{ fontSize: '9px', fontFamily: 'monospace', color: '#E8E0D5' }} />
+                                        <Legend wrapperStyle={{ fontSize: '9px', fontFamily: 'monospace', color: '#E8E0D5' }} formatter={(value: string) => (CHANNEL_LABEL_KEYS[value] ? t(CHANNEL_LABEL_KEYS[value]) : value)} />
                                     </RePieChart>
                                 </ResponsiveContainer>
                             </div>
@@ -783,7 +807,7 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
                                             {data.categorySales.map((entry) => (<Cell key={entry.category} fill={entry.color} />))}
                                         </Pie>
                                         <Tooltip content={<PieTooltip />} />
-                                        <Legend wrapperStyle={{ fontSize: '8px', fontFamily: 'monospace', color: '#E8E0D5' }} />
+                                        <Legend wrapperStyle={{ fontSize: '8px', fontFamily: 'monospace', color: '#E8E0D5' }} formatter={(value: string) => (CHANNEL_LABEL_KEYS[value] ? t(CHANNEL_LABEL_KEYS[value]) : value)} />
                                     </RePieChart>
                                 </ResponsiveContainer>
                             </div>
@@ -796,7 +820,7 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
                                         <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center justify-between">
-                                                <span className="text-[10px] text-white font-medium truncate">{cat.category}</span>
+                                                <span className="text-[10px] text-white font-medium truncate">{(CHANNEL_LABEL_KEYS[cat.category] ? t(CHANNEL_LABEL_KEYS[cat.category]) : cat.category)}</span>
                                                 <span className="text-[10px] font-mono text-[#C9A84C] font-semibold shrink-0 ml-2">{formatCurrency(cat.revenue)}</span>
                                             </div>
                                             <div className="w-full h-1.5 bg-[#0A0F2C]/60 rounded-full mt-1 overflow-hidden">
@@ -831,7 +855,7 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
                                                     <span className="text-[10px] text-white font-medium truncate max-w-[140px]">{prod.name}</span>
                                                 </div>
                                             </td>
-                                            <td className="py-2.5 pr-2 text-[9px] text-[#E8E0D5]/50">{prod.category}</td>
+                                            <td className="py-2.5 pr-2 text-[9px] text-[#E8E0D5]/50">{(CHANNEL_LABEL_KEYS[prod.category] ? t(CHANNEL_LABEL_KEYS[prod.category]) : prod.category)}</td>
                                             <td className="py-2.5 pr-2 text-[10px] font-mono text-[#C9A84C] text-right">{formatCurrency(prod.revenue)}</td>
                                             <td className="py-2.5 pr-2 text-[10px] font-mono text-[#E8E0D5]/60 text-right">{prod.unitsSold}</td>
                                             <td className={`py-2.5 text-[10px] font-mono text-right ${prod.growth >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
