@@ -58,6 +58,7 @@ function KpiCard({
     accent: string;
     hoverDetail?: ReactNode;
 }) {
+    const { t } = useLanguage();
     return (
         <div className="relative group p-4 bg-[#0A0F2C]/60 border border-white/5 rounded-2xl">
             <div className="flex items-center justify-between mb-2">
@@ -71,7 +72,7 @@ function KpiCard({
                 {suffix && <span className="text-sm text-[#E8E0D5]/50 ml-1">{suffix}</span>}
                 {hoverDetail && (
                     <span
-                        title="Per-referral projection breakdown"
+                        title={t('sales.projectionHint')}
                         className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#C9A84C]/15 text-[#C9A84C] shrink-0"
                     >
                         <Info size={9} />
@@ -126,7 +127,7 @@ function ReferralLinkPanel({ referralCode }: { referralCode: string }) {
                     <Link2 size={14} />
                 </div>
                 <h2 className="text-[10px] font-mono uppercase tracking-widest text-emerald-400 font-bold">
-                    Your Referral Link
+                    {t('sales.referralTitle')}
                 </h2>
             </div>
 
@@ -135,7 +136,7 @@ function ReferralLinkPanel({ referralCode }: { referralCode: string }) {
                     ref={inputRef}
                     readOnly
                     value={link}
-                    aria-label="Referral link"
+                    aria-label={t('sales.referralAria')}
                     className="flex-1 bg-black/40 border border-white/10 rounded-lg p-3 text-[11px] font-mono text-emerald-300/90 outline-none focus:border-emerald-500/40 transition truncate"
                 />
                 <button
@@ -147,13 +148,12 @@ function ReferralLinkPanel({ referralCode }: { referralCode: string }) {
                     }`}
                 >
                     {copied ? <Check size={13} /> : <Copy size={13} />}
-                    {copied ? 'Copied!' : 'Copy Link'}
+                    {copied ? t('sales.copied') : t('sales.copy')}
                 </button>
             </div>
 
             <p className="text-[10px] text-[#E8E0D5]/40 mt-3 leading-relaxed">
-                Share this link with new customers — when they sign up and place a paying order,
-                you earn commission on the order value. Code: <strong className="text-emerald-400">{referralCode}</strong>
+                {t('sales.linkHint', { code: referralCode })}
             </p>
 
             {origin && (
@@ -173,15 +173,16 @@ function ReferralLinkPanel({ referralCode }: { referralCode: string }) {
 type StatusFilter = 'all' | ReferralStatus;
 
 function ReferralsTable({ referrals }: { referrals: SalesPartnerOverview['referrals'] }) {
+    const { t, language } = useLanguage();
     const [filter, setFilter] = useState<StatusFilter>('all');
 
     const filtered =
         filter === 'all' ? referrals : referrals.filter((r) => r.status === filter);
 
     const filters: { id: StatusFilter; label: string }[] = [
-        { id: 'all', label: 'All' },
-        { id: 'converted', label: 'Converted' },
-        { id: 'pending', label: 'Pending' },
+        { id: 'all', label: t('sales.filter.all') },
+        { id: 'converted', label: t('sales.filter.converted') },
+        { id: 'pending', label: t('sales.filter.pending') },
     ];
 
     return (
@@ -192,7 +193,7 @@ function ReferralsTable({ referrals }: { referrals: SalesPartnerOverview['referr
                         <Users size={14} />
                     </div>
                     <h2 className="text-[10px] font-mono uppercase tracking-widest text-emerald-400 font-bold">
-                        Referrals ({referrals.length})
+                        {t('sales.referralsTitle', { count: referrals.length })}
                     </h2>
                 </div>
                 <div className="flex gap-1.5">
@@ -216,11 +217,13 @@ function ReferralsTable({ referrals }: { referrals: SalesPartnerOverview['referr
             {filtered.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-14 text-center">
                     <Clock size={24} className="text-emerald-500/30 mb-3" />
-                    <p className="text-sm font-serif text-white">No {filter !== 'all' ? filter : ''} referrals yet</p>
+                    <p className="text-sm font-serif text-white">
+                        {t('sales.empty.title', { status: filter !== 'all' ? t(`sales.filter.${filter}`) : '' })}
+                    </p>
                     <p className="text-[11px] text-slate-500 mt-1">
                         {filter === 'pending'
-                            ? 'No pending leads right now — share your link to bring new customers.'
-                            : 'No converted referrals in this view yet.'}
+                            ? t('sales.empty.pending')
+                            : t('sales.empty.converted')}
                     </p>
                 </div>
             ) : (
@@ -228,12 +231,12 @@ function ReferralsTable({ referrals }: { referrals: SalesPartnerOverview['referr
                     <table className="w-full text-left">
                         <thead>
                             <tr className="text-[8px] font-mono uppercase tracking-widest text-[#E8E0D5]/30 border-b border-white/5">
-                                <th className="px-6 py-3 font-medium">Customer</th>
-                                <th className="px-4 py-3 font-medium">City</th>
-                                <th className="px-4 py-3 font-medium">Joined</th>
-                                <th className="px-4 py-3 font-medium">Status</th>
-                                <th className="px-4 py-3 font-medium text-right">Order</th>
-                                <th className="px-6 py-3 font-medium text-right">Commission</th>
+                                <th className="px-6 py-3 font-medium">{t('sales.table.customer')}</th>
+                                <th className="px-4 py-3 font-medium">{t('sales.table.city')}</th>
+                                <th className="px-4 py-3 font-medium">{t('sales.table.joined')}</th>
+                                <th className="px-4 py-3 font-medium">{t('sales.table.status')}</th>
+                                <th className="px-4 py-3 font-medium text-right">{t('sales.table.order')}</th>
+                                <th className="px-6 py-3 font-medium text-right">{t('sales.table.commission')}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -249,12 +252,12 @@ function ReferralsTable({ referrals }: { referrals: SalesPartnerOverview['referr
                                         </td>
                                         <td className="px-4 py-3.5 text-[11px] text-[#E8E0D5]/50">{r.city}</td>
                                         <td className="px-4 py-3.5 text-[11px] text-[#E8E0D5]/50">
-                                            {formatRelativeTime(r.joinedAt)}
+                                            {formatRelativeTime(r.joinedAt, language)}
                                         </td>
                                         <td className="px-4 py-3.5">
                                             <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full border text-[8px] font-mono uppercase tracking-wider ${style.chip}`}>
                                                 <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
-                                                {style.label}
+                                                {t(`sales.filter.${r.status}`)}
                                             </span>
                                         </td>
                                         <td className="px-4 py-3.5 text-right text-[11px] font-mono text-[#E8E0D5]/70">
@@ -289,6 +292,7 @@ export default function SalesPartnerDashboardView({
     wsLive,
     onRetry,
 }: SalesPartnerDashboardViewProps) {
+    const { t, language } = useLanguage();
     const stats = data?.stats;
 
     return (
@@ -297,7 +301,7 @@ export default function SalesPartnerDashboardView({
             <section className="px-6 md:px-10 py-10 border-b border-emerald-500/10 bg-gradient-to-b from-[#0A0F2C] to-[#0A2A1F]">
                 <div className="flex items-center gap-2 mb-3">
                     <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-emerald-400">
-                        Sales Partner Workspace
+                        {t('sales.workspace')}
                     </span>
                     <span
                         className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-[8px] font-mono uppercase tracking-wider ${
@@ -307,15 +311,14 @@ export default function SalesPartnerDashboardView({
                         }`}
                     >
                         {wsLive ? <Wifi size={9} /> : <WifiOff size={9} />}
-                        {wsLive ? 'Live' : 'Polling'}
+                        {wsLive ? t('sales.live') : t('sales.polling')}
                     </span>
                 </div>
                 <h1 className="text-3xl md:text-4xl font-serif text-white uppercase tracking-tight">
-                    Sales <span className="text-emerald-400 italic">Partnership</span>
+                    {t('sales.title')} <span className="text-emerald-400 italic">{t('sales.titleAccent')}</span>
                 </h1>
                 <p className="text-xs md:text-sm text-slate-400 max-w-2xl mt-2 leading-relaxed">
-                    Grow the SADAF family with your referral link and earn commission on every
-                    converted customer.
+                    {t('sales.subtitle')}
                 </p>
             </section>
 
@@ -329,7 +332,7 @@ export default function SalesPartnerDashboardView({
                             onClick={onRetry}
                             className="text-[9px] font-mono uppercase tracking-wider text-[#C9A84C] border border-[#C9A84C]/30 rounded px-2 py-1 hover:bg-[#C9A84C]/10 transition-all cursor-pointer"
                         >
-                            Retry
+                            {t('sales.retry')}
                         </button>
                     </div>
                 )}
@@ -349,12 +352,12 @@ export default function SalesPartnerDashboardView({
                 {/* KPI stats */}
                 {stats && (
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                        <KpiCard label="Total Referrals" value={String(stats.totalReferrals)} icon={Users} accent="text-emerald-400" />
-                        <KpiCard label="Converted" value={String(stats.converted)} icon={UserCheck} accent="text-[#4FC3F7]" />
-                        <KpiCard label="Pending" value={String(stats.pending)} icon={Clock} accent="text-amber-400" />
-                        <KpiCard label="Total Commission" value={`$${stats.totalCommission.toLocaleString()}`} icon={Wallet} accent="text-[#C9A84C]" />
+                        <KpiCard label={t('sales.kpi.total')} value={String(stats.totalReferrals)} icon={Users} accent="text-emerald-400" />
+                        <KpiCard label={t('sales.kpi.converted')} value={String(stats.converted)} icon={UserCheck} accent="text-[#4FC3F7]" />
+                        <KpiCard label={t('sales.kpi.pending')} value={String(stats.pending)} icon={Clock} accent="text-amber-400" />
+                        <KpiCard label={t('sales.kpi.totalCommission')} value={`$${stats.totalCommission.toLocaleString()}`} icon={Wallet} accent="text-[#C9A84C]" />
                         <KpiCard
-                            label="Expected Commission"
+                            label={t('sales.kpi.expected')}
                             value={`$${stats.expectedCommission.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
                             icon={TrendingUp}
                             accent="text-emerald-400"
@@ -362,13 +365,13 @@ export default function SalesPartnerDashboardView({
                                 <div className="flex flex-col gap-2">
                                     <div className="flex items-center justify-between">
                                         <span className="text-[8px] font-mono uppercase tracking-widest text-emerald-400 font-bold">
-                                            Projected Commission
+                                            {t('sales.projected.title')}
                                         </span>
                                         <TrendingUp size={10} className="text-emerald-400" />
                                     </div>
                                     {stats.pending === 0 ? (
                                         <p className="text-[10px] text-[#E8E0D5]/50 italic">
-                                            No pending referrals yet — share your link to start projecting.
+                                            {t('sales.projected.empty')}
                                         </p>
                                     ) : (
                                         <ul className="flex flex-col gap-2 max-h-44 overflow-y-auto pr-1">
@@ -393,7 +396,7 @@ export default function SalesPartnerDashboardView({
                                                                 </span>
                                                             </div>
                                                             <span className="text-[8px] font-mono uppercase tracking-wider text-[#E8E0D5]/40">
-                                                                {r.city} · Pending lead
+                                                                {t('sales.projected.row', { city: r.city })}
                                                             </span>
                                                         </li>
                                                     );
@@ -402,12 +405,16 @@ export default function SalesPartnerDashboardView({
                                     )}
                                     <div className="pt-2 border-t border-white/10 flex flex-col gap-1">
                                         <span className="text-[8px] font-mono uppercase tracking-wider text-[#E8E0D5]/40">
-                                            {COMMISSION_RATE * 100}% of avg order ${stats.avgOrderValue.toLocaleString()} · {stats.pending} pending{' '}
-                                            {stats.pending === 1 ? 'lead' : 'leads'}
+                                            {t('sales.projected.footer', {
+                                                pct: COMMISSION_RATE * 100,
+                                                avg: stats.avgOrderValue.toLocaleString(),
+                                                count: stats.pending,
+                                                s: stats.pending === 1 ? '' : 's',
+                                            })}
                                         </span>
                                         <div className="flex items-center justify-between">
                                             <span className="text-[8px] font-mono uppercase tracking-wider text-[#E8E0D5]/40">
-                                                Total projected
+                                                {t('sales.projected.total')}
                                             </span>
                                             <span className="text-[11px] font-mono text-emerald-400 font-bold">
                                                 $
@@ -428,11 +435,9 @@ export default function SalesPartnerDashboardView({
                     <div className="flex items-center gap-3 px-5 py-3.5 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
                         <TrendingUp size={14} className="text-emerald-400 shrink-0" />
                         <p className="text-[11px] text-[#E8E0D5]/70">
-                            You earned{' '}
-                            <strong className="text-emerald-400 font-mono">
-                                ${stats.thisMonthCommission.toLocaleString()}
-                            </strong>{' '}
-                            in commission this month.
+                            {t('sales.thisMonth', {
+                                amount: `$${stats.thisMonthCommission.toLocaleString()}`,
+                            })}
                         </p>
                     </div>
                 )}

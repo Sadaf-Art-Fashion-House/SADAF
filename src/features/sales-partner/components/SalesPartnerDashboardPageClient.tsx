@@ -13,6 +13,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 import SignedInToast from '@/shared/components/SignedInToast';
 import { useSalesPartnerData } from '../hooks/useSalesPartnerData';
 import type { ReferralRecord } from '../types';
@@ -24,6 +25,7 @@ const TOAST_DURATION_MS = 8_000;
 
 export default function SalesPartnerDashboardPageClient() {
     const { user } = useAuth();
+    const { t } = useLanguage();
     const { data, loading, error, wsLive, refetch, latestConvertedReferral } = useSalesPartnerData();
 
     // Real-time conversion toast state — the hook fires latestConvertedReferral
@@ -52,13 +54,13 @@ export default function SalesPartnerDashboardPageClient() {
             <div className="min-h-[60vh] flex items-center justify-center">
                 <div className="text-center">
                     <p className="text-sm text-[#E8E0D5]/60 mb-4">
-                        You need to sign in to access the sales partner dashboard.
+                        {t('sales.needSignIn')}
                     </p>
                     <Link
                         href="/auth"
                         className="inline-block px-6 py-3 bg-gradient-to-r from-emerald-400 to-[#4FC3F7] text-[#0A0F2C] text-xs font-mono font-bold uppercase tracking-widest rounded-xl transition-all duration-300 hover:scale-105"
                     >
-                        Sign In
+                        {t('common.signIn')}
                     </Link>
                 </div>
             </div>

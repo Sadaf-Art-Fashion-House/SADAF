@@ -14,6 +14,7 @@ import { useCallback, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 import { useDesignerData } from '../hooks/useDesignerData';
 import DesignerPortfolioDetailView from './DesignerPortfolioDetailView';
 import type { DesignCollaborator } from '../types';
@@ -21,6 +22,7 @@ import type { DesignCollaborator } from '../types';
 export default function DesignerPortfolioDetailPageClient() {
     const params = useParams<{ id: string }>();
     const { user } = useAuth();
+    const { t } = useLanguage();
     const { data, loading, error, refetch } = useDesignerData();
     const [addingCollaborator, setAddingCollaborator] = useState(false);
 
@@ -48,7 +50,7 @@ export default function DesignerPortfolioDetailPageClient() {
                 return { ok: true };
             } catch (err: unknown) {
                 const message =
-                    err instanceof Error ? err.message : 'Could not add the collaborator';
+                    err instanceof Error ? err.message : t('designer.err.add');
                 return { ok: false, error: message };
             } finally {
                 setAddingCollaborator(false);
@@ -62,13 +64,13 @@ export default function DesignerPortfolioDetailPageClient() {
             <div className="min-h-[60vh] flex items-center justify-center">
                 <div className="text-center">
                     <p className="text-sm text-[#E8E0D5]/60 mb-4">
-                        You need to sign in to view project details.
+                        {t('designer.needSignIn')}
                     </p>
                     <Link
                         href="/auth"
                         className="inline-block px-6 py-3 bg-gradient-to-r from-[#A78BFA] to-[#4FC3F7] text-[#0A0F2C] text-xs font-mono font-bold uppercase tracking-widest rounded-xl transition-all duration-300 hover:scale-105"
                     >
-                        Sign In
+                        {t('common.signIn')}
                     </Link>
                 </div>
             </div>

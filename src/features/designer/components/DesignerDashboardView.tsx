@@ -27,10 +27,21 @@ import {
     Users,
     User,
 } from 'lucide-react';
-import type { DesignerDashboardData, NewDesignSubmission, DesignCategory, DesignCollaboration } from '../types';
+import type { DesignerDashboardData, NewDesignSubmission, DesignCategory, DesignCollaboration, DesignStatus } from '../types';
+import type { TranslationKey } from '@/features/i18n/dictionaries';
 import { DESIGN_CATEGORIES, DESIGN_STATUS_STYLES } from '../constants';
 import { COMMISSION_POOL_RATE, participantsFor } from '../utils/commissionSplit';
 import { formatRelativeTime } from '@/features/notifications/utils/formatRelativeTime';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
+
+/** Translation key per pipeline status (same map as the admin atelier tab). */
+const STATUS_KEYS: Record<DesignStatus, TranslationKey> = {
+    draft: 'atelierAdmin.status.draft',
+    under_review: 'atelierAdmin.status.underReview',
+    approved: 'atelierAdmin.status.approved',
+    in_production: 'atelierAdmin.status.inProduction',
+    rejected: 'atelierAdmin.status.rejected',
+};
 import { fileToResizedDataUrl } from '@/shared/utils/fileToResizedDataUrl';
 import { ROUTES } from '@/config/routes';
 
@@ -54,13 +65,16 @@ function KpiCard({
     icon: Icon,
     accent,
     hoverDetail,
+    hoverHint,
 }: {
     label: string;
     value: number | string;
     icon: typeof Layers;
     accent: string;
     hoverDetail?: ReactNode;
+    hoverHint?: string;
 }) {
+    const { t } = useLanguage();
     return (
         <div className="relative group p-4 bg-[#0A0F2C]/60 border border-white/5 rounded-2xl">
             <div className="flex items-center justify-between mb-2">
@@ -73,7 +87,7 @@ function KpiCard({
                 {value}
                 {hoverDetail && (
                     <span
-                        title="Per-design commission breakdown"
+                        title={hoverHint ?? t('designer.commissionBreakdownHint')}
                         className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#C9A84C]/15 text-[#C9A84C] shrink-0"
                     >
                         <Info size={9} />
@@ -117,6 +131,7 @@ function PortfolioCard({
     collaboration?: DesignCollaboration;
 }) {
     const style = DESIGN_STATUS_STYLES[status];
+    const { t, language } = useLanguage();
     const isTeam = collaboration?.type === 'team';
     // Credits model: the owner is always a participant, so the count matches
     // the detail page (owner + collaborators, deduped by id).
@@ -143,7 +158,7 @@ function PortfolioCard({
                 )}
                 <span className={`absolute top-2 left-2 flex items-center gap-1.5 px-2 py-1 rounded-full border text-[8px] font-mono uppercase tracking-wider ${style.chip}`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
-                    {style.label}
+                    {t(STATUS_KEYS[status])}
                 </span>
             </div>
             <div className="p-4 flex flex-col gap-2 flex-1">
@@ -153,7 +168,7 @@ function PortfolioCard({
                             {title}
                         </h3>
                         <p className="text-[9px] font-mono uppercase tracking-wider text-[#A78BFA]/70 mt-0.5">
-                            {category} · {formatRelativeTime(submittedAt)}
+                            {category} · {formatRelativeTime(submittedAt, language)}
                         </p>
                     </div>
                     <span className="text-[11px] font-mono text-[#C9A84C] font-semibold shrink-0">
@@ -165,16 +180,18 @@ function PortfolioCard({
                 </p>
                 {adminNote && (
                     <p className="text-[9px] text-[#E8E0D5]/40 border-t border-white/5 pt-2 italic leading-relaxed">
-                        Atelier: “{adminNote}”
+                        {t('designer.portfolio.atelierNote', { note: adminNote })}
                     </p>
                 )}
                 <div className="flex items-center justify-between pt-2 border-t border-white/5 mt-auto">
                     <span className="flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-wider text-[#A78BFA]/60">
                         {isTeam ? <Users size={10} /> : <User size={10} />}
-                        {isTeam ? `${participantCount} Collaborators` : 'Solo Project'}
+                        {isTeam
+                            ? t('designer.portfolio.collaborators', { count: participantCount })
+                            : t('designer.portfolio.solo')}
                     </span>
                     <span className="text-[9px] font-mono uppercase tracking-wider text-[#E8E0D5]/40 group-hover:text-[#A78BFA] transition-colors">
-                        View Project
+                        {t('designer.portfolio.viewProject')}
                     </span>
                 </div>
             </div>
@@ -193,6 +210,8 @@ export default function DesignerDashboardView({
     onSubmit,
     onRetry,
 }: DesignerDashboardViewProps) {
+    const { t, language } = useLanguage();
+
     // ── Submit form state (presentation-only) ──
     const [title, setTitle] = useState('');
     const [category, setCategory] = useState<DesignCategory>('Abaya');
@@ -247,7 +266,7 @@ export default function DesignerDashboardView({
         } catch (err: unknown) {
             setStatusMessage({
                 kind: 'error',
-                text: err instanceof Error ? err.message : 'Could not read the selected image.',
+                text: err instanceof Error ? err.message : t('designer.submit.err.readImage'),
             });
         } finally {
             setIsResizingImage(false);
@@ -257,11 +276,11 @@ export default function DesignerDashboardView({
     const handleSubmit = async () => {
         const parsedPrice = Number(price);
         if (!title.trim()) {
-            setStatusMessage({ kind: 'error', text: 'Please give your design a title.' });
+            setStatusMessage({ kind: 'error', text: t('designer.submit.err.title') });
             return;
         }
         if (!Number.isFinite(parsedPrice) || parsedPrice <= 0) {
-            setStatusMessage({ kind: 'error', text: 'Please enter a positive price in USD.' });
+            setStatusMessage({ kind: 'error', text: t('designer.submit.err.price') });
             return;
         }
 
@@ -281,10 +300,10 @@ export default function DesignerDashboardView({
             setCategory('Abaya');
             setStatusMessage({
                 kind: 'success',
-                text: 'Design submitted to the atelier — it now appears in your portfolio as Draft.',
+                text: t('designer.submit.ok'),
             });
         } else {
-            setStatusMessage({ kind: 'error', text: result.error ?? 'Failed to submit your design.' });
+            setStatusMessage({ kind: 'error', text: result.error ?? t('designer.submit.err.failed') });
         }
     };
 
@@ -294,7 +313,7 @@ export default function DesignerDashboardView({
             <section className="px-6 md:px-10 py-10 border-b border-[#A78BFA]/10 bg-gradient-to-b from-[#0A0F2C] to-[#12103A]">
                 <div className="flex items-center gap-2 mb-3">
                     <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-[#A78BFA]">
-                        Designer Workspace
+                        {t('designer.workspace')}
                     </span>
                     <span
                         className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-[8px] font-mono uppercase tracking-wider ${
@@ -304,15 +323,14 @@ export default function DesignerDashboardView({
                         }`}
                     >
                         {wsLive ? <Wifi size={9} /> : <WifiOff size={9} />}
-                        {wsLive ? 'Live' : 'Polling'}
+                        {wsLive ? t('designer.live') : t('designer.polling')}
                     </span>
                 </div>
                 <h1 className="text-3xl md:text-4xl font-serif text-white uppercase tracking-tight">
-                    The Designer <span className="text-[#A78BFA] italic">Atelier</span>
+                    {t('designer.title')} <span className="text-[#A78BFA] italic">{t('designer.titleAccent')}</span>
                 </h1>
                 <p className="text-xs md:text-sm text-slate-400 max-w-2xl mt-2 leading-relaxed">
-                    Submit original designs to the SADAF atelier, track them through review and
-                    production, and grow your portfolio.
+                    {t('designer.subtitle')}
                 </p>
             </section>
 
@@ -326,7 +344,7 @@ export default function DesignerDashboardView({
                             onClick={onRetry}
                             className="text-[9px] font-mono uppercase tracking-wider text-[#C9A84C] border border-[#C9A84C]/30 rounded px-2 py-1 hover:bg-[#C9A84C]/10 transition-all cursor-pointer"
                         >
-                            Retry
+                            {t('designer.retry')}
                         </button>
                     </div>
                 )}
@@ -343,12 +361,12 @@ export default function DesignerDashboardView({
                 {/* KPI stats */}
                 {stats && (
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                        <KpiCard label="Total Designs" value={stats.total} icon={Layers} accent="text-[#A78BFA]" />
-                        <KpiCard label="Under Review" value={stats.underReview} icon={Clock} accent="text-[#4FC3F7]" />
-                        <KpiCard label="Approved" value={stats.approved} icon={CheckCircle2} accent="text-emerald-400" />
-                        <KpiCard label="In Production" value={stats.inProduction} icon={PackageCheck} accent="text-[#C9A84C]" />
+                        <KpiCard label={t('designer.kpi.total')} value={stats.total} icon={Layers} accent="text-[#A78BFA]" />
+                        <KpiCard label={t('designer.kpi.underReview')} value={stats.underReview} icon={Clock} accent="text-[#4FC3F7]" />
+                        <KpiCard label={t('designer.kpi.approved')} value={stats.approved} icon={CheckCircle2} accent="text-emerald-400" />
+                        <KpiCard label={t('designer.kpi.inProduction')} value={stats.inProduction} icon={PackageCheck} accent="text-[#C9A84C]" />
                         <KpiCard
-                            label="Expected Commission"
+                            label={t('designer.kpi.expected')}
                             value={`$${Math.round(expectedCommission).toLocaleString()}`}
                             icon={Sparkles}
                             accent="text-[#C9A84C]"
@@ -356,13 +374,13 @@ export default function DesignerDashboardView({
                                 <div className="flex flex-col gap-2">
                                     <div className="flex items-center justify-between">
                                         <span className="text-[8px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold">
-                                            Commission Pools
+                                            {t('designer.pools.title')}
                                         </span>
                                         <Sparkles size={10} className="text-[#C9A84C]" />
                                     </div>
                                     {commissionBreakdown.length === 0 ? (
                                         <p className="text-[10px] text-[#E8E0D5]/50 italic">
-                                            No committed designs yet.
+                                            {t('designer.pools.empty')}
                                         </p>
                                     ) : (
                                         <ul className="flex flex-col gap-2 max-h-44 overflow-y-auto pr-1">
@@ -383,14 +401,16 @@ export default function DesignerDashboardView({
                                                         </span>
                                                     </div>
                                                     <span className="text-[8px] font-mono uppercase tracking-wider text-[#E8E0D5]/40">
-                                                        {item.status === 'in_production'
-                                                            ? 'In Production'
-                                                            : 'Approved'}
-                                                        {' · 10% of $'}
-                                                        {item.price.toLocaleString()}
-                                                        {' · '}
-                                                        {item.participants}
-                                                        {item.participants === 1 ? ' member' : ' members'}
+                                                        {t('designer.pools.row', {
+                                                            status:
+                                                                item.status === 'in_production'
+                                                                    ? t('atelierAdmin.status.inProduction')
+                                                                    : t('atelierAdmin.status.approved'),
+                                                            pct: COMMISSION_POOL_RATE * 100,
+                                                            price: item.price.toLocaleString(),
+                                                            count: item.participants,
+                                                            s: item.participants === 1 ? '' : 's',
+                                                        })}
                                                     </span>
                                                 </li>
                                             ))}
@@ -398,7 +418,7 @@ export default function DesignerDashboardView({
                                     )}
                                     <div className="pt-2 border-t border-white/10 flex items-center justify-between">
                                         <span className="text-[8px] font-mono uppercase tracking-wider text-[#E8E0D5]/40">
-                                            Total
+                                            {t('designer.pools.total')}
                                         </span>
                                         <span className="text-[11px] font-mono text-[#C9A84C] font-bold">
                                             $
@@ -418,7 +438,7 @@ export default function DesignerDashboardView({
                             <Upload size={14} />
                         </div>
                         <h2 className="text-[10px] font-mono uppercase tracking-widest text-[#A78BFA] font-bold">
-                            Submit New Design
+                            {t('designer.submit.title')}
                         </h2>
                     </div>
 
@@ -426,19 +446,19 @@ export default function DesignerDashboardView({
                         <div className="flex flex-col gap-4">
                             <div>
                                 <label className="text-[9px] uppercase tracking-wider text-slate-400 block mb-1.5">
-                                    Design Title *
+                                    {t('designer.submit.titleLabel')}
                                 </label>
                                 <input
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
-                                    placeholder="e.g. Al-Muizz Golden Kaftan"
+                                    placeholder={t('designer.submit.titlePlaceholder')}
                                     className="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-xs text-white outline-none focus:border-[#A78BFA] transition"
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-[9px] uppercase tracking-wider text-slate-400 block mb-1.5">
-                                        Category *
+                                        {t('designer.submit.categoryLabel')}
                                     </label>
                                     <select
                                         value={category}
@@ -452,7 +472,7 @@ export default function DesignerDashboardView({
                                 </div>
                                 <div>
                                     <label className="text-[9px] uppercase tracking-wider text-slate-400 block mb-1.5">
-                                        Price (USD) *
+                                        {t('designer.submit.priceLabel')}
                                     </label>
                                     <input
                                         type="number"
@@ -466,13 +486,13 @@ export default function DesignerDashboardView({
                             </div>
                             <div>
                                 <label className="text-[9px] uppercase tracking-wider text-slate-400 block mb-1.5">
-                                    Description
+                                    {t('designer.submit.descLabel')}
                                 </label>
                                 <textarea
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
                                     rows={3}
-                                    placeholder="Describe the concept, silhouette, and craft details..."
+                                    placeholder={t('designer.submit.descPlaceholder')}
                                     className="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-xs text-white outline-none focus:border-[#A78BFA] transition resize-none"
                                 />
                             </div>
@@ -481,7 +501,7 @@ export default function DesignerDashboardView({
                         <div className="flex flex-col gap-4">
                             <div>
                                 <label className="text-[9px] uppercase tracking-wider text-slate-400 block mb-1.5">
-                                    Preview Image (optional)
+                                    {t('designer.submit.previewLabel')}
                                 </label>
                                 <label className="flex flex-col items-center justify-center h-40 bg-[#E8E0D5]/5 border border-dashed border-[#A78BFA]/25 rounded-xl hover:bg-[#A78BFA]/5 hover:border-[#A78BFA]/50 transition-all duration-300 cursor-pointer">
                                     <input
@@ -492,12 +512,12 @@ export default function DesignerDashboardView({
                                     />
                                     {isResizingImage ? (
                                         <span className="text-[10px] text-[#A78BFA] font-mono uppercase tracking-wider">
-                                            Processing…
+                                            {t('designer.submit.processing')}
                                         </span>
                                     ) : imageUrl ? (
                                         <div className="relative w-full h-full">
                                             {/* eslint-disable-next-line @next/next/no-img-element -- data-URL previews can't use next/image */}
-                                            <img src={imageUrl} alt="Design preview" className="w-full h-full object-cover rounded-xl" />
+                                            <img src={imageUrl} alt={t('designer.submit.previewLabel')} className="w-full h-full object-cover rounded-xl" />
                                             <button
                                                 type="button"
                                                 onClick={(e) => {
@@ -505,7 +525,7 @@ export default function DesignerDashboardView({
                                                     setImageUrl(undefined);
                                                 }}
                                                 className="absolute top-2 right-2 p-1 rounded-full bg-black/70 text-white hover:bg-red-500/80 transition-colors cursor-pointer"
-                                                aria-label="Remove preview image"
+                                                aria-label={t('designer.submit.removePreview')}
                                             >
                                                 <X size={12} />
                                             </button>
@@ -514,7 +534,7 @@ export default function DesignerDashboardView({
                                         <div className="text-center flex flex-col items-center px-4">
                                             <Sparkles size={18} className="text-[#A78BFA] mb-2" />
                                             <span className="text-[10px] text-slate-400 tracking-wider">
-                                                Upload a sketch or render (auto-resized)
+                                                {t('designer.submit.uploadHint')}
                                             </span>
                                         </div>
                                     )}
@@ -545,7 +565,7 @@ export default function DesignerDashboardView({
                                 className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#A78BFA] to-[#4FC3F7] text-[#0A0F2C] text-xs font-mono font-bold uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-wait flex items-center justify-center gap-2 shadow-lg shadow-[#A78BFA]/10"
                             >
                                 <Palette size={13} />
-                                {submitting ? 'Submitting…' : 'Submit to Atelier'}
+                                {submitting ? t('designer.submit.submitting') : t('designer.submit.submit')}
                             </button>
                         </div>
                     </div>
@@ -558,17 +578,16 @@ export default function DesignerDashboardView({
                             <Layers size={14} />
                         </div>
                         <h2 className="text-[10px] font-mono uppercase tracking-widest text-[#A78BFA] font-bold">
-                            Portfolio ({stats?.total ?? 0})
+                            {t('designer.portfolio', { count: stats?.total ?? 0 })}
                         </h2>
                     </div>
 
                     {data && data.submissions.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-16 rounded-2xl bg-[#0A0F2C]/40 border border-dashed border-white/10 text-center">
                             <Palette size={28} className="text-[#A78BFA]/40 mb-3" />
-                            <p className="text-sm font-serif text-white">No designs yet</p>
+                            <p className="text-sm font-serif text-white">{t('designer.portfolio.empty')}</p>
                             <p className="text-[11px] text-slate-500 mt-1 max-w-sm">
-                                Submit your first design above and it will appear here with its
-                                pipeline status.
+                                {t('designer.portfolio.emptyHint')}
                             </p>
                         </div>
                     ) : (

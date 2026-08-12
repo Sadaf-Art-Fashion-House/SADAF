@@ -10,10 +10,11 @@ export function monthKeyFor(iso: string): string {
     return iso.slice(0, 7);
 }
 
-/** "August 2026" from a "2026-08" key. */
-export function monthLabel(key: string): string {
+/** "August 2026" from a "2026-08" key — localized when a language is given. */
+export function monthLabel(key: string, language?: string): string {
     const [year, month] = key.split('-').map(Number);
-    const name = new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString('en-US', {
+    const locale = language === 'ar' ? 'ar-EG' : 'en-US';
+    const name = new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString(locale, {
         month: 'long',
     });
     return `${name} ${year}`;
