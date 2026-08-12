@@ -995,6 +995,12 @@ export const en = {
     'company.home.openHub': 'Open Hub',
     'company.home.b2bTitle': 'B2B Orders & Bulk Pricing',
     'company.home.b2bBody': 'Coming next — order collections at wholesale rates and track deliveries for your retail channels.',
+    'company.role': 'Company',
+
+    // ── Customer sidebar ────────────────────────────────────────────────────
+    'customer.sidebar.dashboardHome': 'Dashboard Home',
+    'customer.sidebar.orders': 'Orders',
+    'customer.sidebar.role': 'Customer',
     'common.signIn': 'Sign In',
 
     // ── Orders ──────────────────────────────────────────────────────────────
@@ -1108,6 +1114,7 @@ export const en = {
     'friendRequest.wantsToJoin': 'wants to join your network',
 
     // ── Shared chrome ───────────────────────────────────────────────────────
+    'common.menu': 'menu',
     'common.openMenu': 'Open navigation menu',
     'common.closeMenu': 'Close menu',
     'nav.atelier': 'Atelier',
@@ -2722,6 +2729,12 @@ export const ar: Record<TranslationKey, string> = {
     'company.home.openHub': 'افتح المركز',
     'company.home.b2bTitle': 'طلبات B2B والأسعار بالجملة',
     'company.home.b2bBody': 'قريبًا — اطلب المجموعات بأسعار الجملة وتابع عمليات التسليم لقنوات البيع بالتجزئة.',
+    'company.role': 'شركة',
+
+    // ── سايدبار العميل ──────────────────────────────────────────────────────
+    'customer.sidebar.dashboardHome': 'الرئيسية',
+    'customer.sidebar.orders': 'الطلبات',
+    'customer.sidebar.role': 'عميل',
     'common.signIn': 'تسجيل الدخول',
 
     // ── Orders ──────────────────────────────────────────────────────────────
@@ -2835,6 +2848,7 @@ export const ar: Record<TranslationKey, string> = {
     'friendRequest.wantsToJoin': 'يريد الانضمام إلى شبكتك',
 
     // ── Shared chrome ───────────────────────────────────────────────────────
+    'common.menu': 'القائمة',
     'common.openMenu': 'افتح قائمة التنقل',
     'common.closeMenu': 'أغلق القائمة',
     'nav.atelier': 'الأتيليه',

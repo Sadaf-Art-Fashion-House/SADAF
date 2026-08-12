@@ -49,7 +49,7 @@ export default function CompanySidebar() {
                     </div>
                 </span>
                 <span className="text-[9px] font-mono font-bold text-rose-400 uppercase tracking-widest truncate opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    Company
+                    {t('company.role')}
                 </span>
             </div>
 
@@ -148,7 +148,7 @@ export default function CompanySidebar() {
                                     <div className="w-8 h-8 shrink-0 rounded-full bg-gradient-to-br from-rose-400 to-[#C9A84C] flex items-center justify-center">
                                         <Building2 size={14} className="text-[#0A0F2C]" />
                                     </div>
-                                    <span className="text-[9px] font-mono font-bold text-rose-400 uppercase tracking-widest">Company</span>
+                                    <span className="text-[9px] font-mono font-bold text-rose-400 uppercase tracking-widest">{t('company.role')}</span>
                                 </div>
                                 <nav className="flex flex-col gap-1 w-full">
                                     {links.map(mobileLink)}

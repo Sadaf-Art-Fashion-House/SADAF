@@ -24,6 +24,7 @@ import { useRouter } from 'next/navigation';
 import { LogOut, User, Wallet, BarChart3, Bell } from 'lucide-react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ROLE_BADGES } from '@/features/auth/types';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 import { useUnreadCountStore } from '@/features/notifications/store/useUnreadCountStore';
 import { isCustomerRole } from '@/shared/types';
 import { ROUTES } from '@/config/routes';
@@ -37,6 +38,7 @@ interface SignOutButtonProps {
 
 export default function SignOutButton({ variant = 'rail', onSignedOut }: SignOutButtonProps) {
     const { logout, user } = useAuth();
+    const { t } = useLanguage();
     const router = useRouter();
     const [menuOpen, setMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -112,7 +114,7 @@ export default function SignOutButton({ variant = 'rail', onSignedOut }: SignOut
                 className="flex items-center gap-2 px-3 py-2 text-[10px] font-mono text-[#E8E0D5]/70 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
             >
                 <User size={12} className="text-[#4FC3F7]" />
-                Profile
+                {t('common.profile')}
             </Link>
             {isCustomer && (
                 <Link
@@ -121,7 +123,7 @@ export default function SignOutButton({ variant = 'rail', onSignedOut }: SignOut
                     className="flex items-center gap-2 px-3 py-2 text-[10px] font-mono text-[#E8E0D5]/70 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
                 >
                     <BarChart3 size={12} className="text-[#4FC3F7]" />
-                    My Analysis
+                    {t('common.myAnalysis')}
                 </Link>
             )}
             {isCustomer && (
@@ -131,7 +133,7 @@ export default function SignOutButton({ variant = 'rail', onSignedOut }: SignOut
                     className="flex items-center gap-2 px-3 py-2 text-[10px] font-mono text-[#E8E0D5]/70 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
                 >
                     <Bell size={12} className="text-[#C9A84C]" />
-                    Notifications
+                    {t('common.notifications')}
                 </Link>
             )}
             {hasCommissions && (
@@ -145,7 +147,7 @@ export default function SignOutButton({ variant = 'rail', onSignedOut }: SignOut
                     className="flex items-center gap-2 px-3 py-2 text-[10px] font-mono text-[#E8E0D5]/70 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
                 >
                     <Wallet size={12} className="text-[#C9A84C]" />
-                    Commissions
+                    {t('common.commissions')}
                 </Link>
             )}
             <button
@@ -154,7 +156,7 @@ export default function SignOutButton({ variant = 'rail', onSignedOut }: SignOut
                 className="w-full flex items-center gap-2 px-3 py-2 text-[10px] font-mono text-red-400/70 hover:text-red-400 hover:bg-red-950/20 transition-all cursor-pointer"
             >
                 <LogOut size={12} className="rotate-180" />
-                Sign Out
+                {t('common.signOut')}
                 {unreadCount > 0 && (
                     <span className="ml-auto shrink-0 min-w-4.5 h-4.5 px-1 rounded-full bg-red-400 text-[#0A0F2C] text-[8px] font-mono font-bold flex items-center justify-center">
                         {unreadCount > 9 ? '9+' : unreadCount}
@@ -173,7 +175,7 @@ export default function SignOutButton({ variant = 'rail', onSignedOut }: SignOut
                             type="button"
                             onClick={() => setMenuOpen((open) => !open)}
                             className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/5 mb-1 hover:border-[#C9A84C]/30 transition-all cursor-pointer w-full text-left"
-                            title={`${user.fullName} — ${ROLE_BADGES[user.role] ?? user.role} (menu)`}
+                            title={`${user.fullName} — ${ROLE_BADGES[user.role] ?? user.role} (${t('common.menu')})`}
                         >
                             {avatarCircle}
                             <span className="min-w-0 flex-1">
@@ -211,7 +213,7 @@ export default function SignOutButton({ variant = 'rail', onSignedOut }: SignOut
                     className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-red-400/50 hover:text-red-400 hover:bg-red-950/20 transition-all cursor-pointer"
                 >
                     <LogOut size={16} className="shrink-0 rotate-180" />
-                    <span className="text-[10px] font-mono uppercase tracking-wider">Sign Out</span>
+                    <span className="text-[10px] font-mono uppercase tracking-wider">{t('common.signOut')}</span>
                 </button>
             </div>
         );
@@ -225,7 +227,7 @@ export default function SignOutButton({ variant = 'rail', onSignedOut }: SignOut
                         type="button"
                         onClick={() => setMenuOpen((open) => !open)}
                         className="flex items-center gap-3 py-2 w-full hover:bg-white/[0.03] rounded-lg transition-colors cursor-pointer"
-                        title={`${user.fullName} — ${ROLE_BADGES[user.role] ?? user.role} (menu)`}
+                        title={`${user.fullName} — ${ROLE_BADGES[user.role] ?? user.role} (${t('common.menu')})`}
                     >
                         <span className="w-16 flex justify-center shrink-0">
                             {avatarCircle}
@@ -259,13 +261,13 @@ export default function SignOutButton({ variant = 'rail', onSignedOut }: SignOut
                 type="button"
                 onClick={handleSignOut}
                 className="flex items-center gap-3 py-2 w-full text-red-400/50 hover:text-red-400 hover:bg-red-950/20 transition-all duration-200 cursor-pointer"
-                title="Sign Out"
+                title={t('common.signOut')}
             >
                 <span className="w-16 flex justify-center shrink-0">
                     <LogOut size={16} className="rotate-180" />
                 </span>
                 <span className="text-[10px] font-mono uppercase tracking-wider truncate opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    Sign Out
+                    {t('common.signOut')}
                 </span>
             </button>
         </div>
