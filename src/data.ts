@@ -164,7 +164,7 @@ export const fashionDatabase: FashionProduct[] = [
             'Bespoke fit adjustable buckles preset',
         ],
         detailsAr: [
-            'بنية كتف قماشية مصنوعة يدويًا',
+            'بنية كتف كانفاس مصنوعة يدويًا',
             'أزرار مطعّمة بصدف بحري حقيقي',
             'بطانة داخلية مطبوعة بخط عربي ذهبي تجريدي',
             'إبازيم مضبوطة مسبقًا للمقاس المفصّل',
@@ -180,9 +180,9 @@ export const fashionDatabase: FashionProduct[] = [
         image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=800&q=82',
         hoverImage: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=82',
         description: 'Bias-cut 100% royal mulberry silk dress. Detailed complex Fatimid star constellations printed in dynamic crystal blue-to-gold iridescent hues on high-gloss silk.',
-        descriptionAr: 'فستان من الحرير التوتي الملكي 100% بقصّة مائلة، بنجوم فاطمية معقدة مطبوعة بألوان متلألئة تنتقل من الأزرق البلوري إلى الذهبي على حرير لامع.',
+        descriptionAr: 'فستان من حرير التوت الملكي 100% بقصّة مائلة، بنجوم فاطمية معقدة مطبوعة بألوان متلألئة تنتقل من الأزرق البلوري إلى الذهبي على حرير لامع.',
         fabric: '100% Mulberry Silk',
-        fabricAr: 'حرير توتي 100%',
+        fabricAr: 'حرير التوت 100%',
         sizes: ['XS', 'S', 'M', 'L'],
         colors: [
             { name: 'Royal Navy Blue', hex: '#0A0F2C' },
@@ -211,9 +211,9 @@ export const fashionDatabase: FashionProduct[] = [
         image: 'https://images.unsplash.com/photo-1509967419530-da38b4704bc6?auto=format&fit=crop&w=800&q=82',
         hoverImage: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=800&q=82',
         description: 'An oversized luxury hoodie made from 500gsm organic loopback cotton, featuring puff-printed medieval Cairo architectural grids and modern golden accents.',
-        descriptionAr: 'هودي فاخر بقصّة واسعة من قطن عضوي حلقي 500gsm، بطباعة بارزة لنقوش القاهرة في العصور الوسطى المعمارية ولمسات ذهبية عصرية.',
+        descriptionAr: 'هودي فاخر بقصّة واسعة من قطن عضوي ثقيل 500 غ/م²، بطباعة بارزة لنقوش القاهرة في العصور الوسطى المعمارية ولمسات ذهبية عصرية.',
         fabric: '500gsm heavy loopback cotton',
-        fabricAr: 'قطن حلقي ثقيل 500gsm',
+        fabricAr: 'قطن ثقيل (500 غ/م²)',
         sizes: ['S', 'M', 'L', 'XL'],
         colors: [
             { name: 'Deep Navy', hex: '#0A0F2C' },
@@ -288,13 +288,13 @@ export const lookbookItems: LookbookItem[] = [
 export const fabricsList = [
     { name: 'Luxury Italian Velvet', nameAr: 'مخمل إيطالي فاخر', priceOffset: 120, description: 'Dense, ultra-soft velvet with perfect weight and rich lustre.', descriptionAr: 'مخمل كثيف فائق النعومة بوزن مثالي ولمعان غني.' },
     { name: 'Raw Giza Cotton (500gsm)', nameAr: 'قطن جيزة خام (500 غ/م²)', priceOffset: 40, description: 'World-famous long-staple Egyptian cotton, heavy yet wonderfully breathable.', descriptionAr: 'قطن مصري طويل التيلة عالمي الشهرة، ثقيل لكنه مريح ومهوّى بشكل رائع.' },
-    { name: 'Premium Mulberry Silk', nameAr: 'حرير توتي فاخر', priceOffset: 180, description: 'Highest-grade organic silk weave giving a flawless fluid flow.', descriptionAr: 'نسيج حرير عضوي من أعلى الدرجات يمنح انسيابية سلسة لا تشوبها شائبة.' },
-    { name: 'Super-140s Wool Canvas', nameAr: 'قماش صوف سوبر 140s', priceOffset: 150, description: 'Elite structural tailored wool weave of outstanding drape.', descriptionAr: 'نسيج صوف خياطة بنيوي فاخر بقماشية رائعة.' },
+    { name: 'Premium Mulberry Silk', nameAr: 'حرير التوت الفاخر', priceOffset: 180, description: 'Highest-grade organic silk weave giving a flawless fluid flow.', descriptionAr: 'نسيج حرير عضوي من أعلى الدرجات يمنح انسيابية سلسة لا تشوبها شائبة.' },
+    { name: 'Super-140s Wool Canvas', nameAr: 'قماش صوف سوبر 140s', priceOffset: 150, description: 'Elite structural tailored wool weave of outstanding drape.', descriptionAr: 'قماش صوف خياطة فاخر ببنية محكمة وانسيابية رائعة.' },
 ];
 
 export const printingMethods = [
     { name: 'Embroidery (Gold Thread)', nameAr: 'تطريز (خيط ذهبي)', priceOffset: 150, description: '3D stitching with genuine thin metallic-alloy luxury yarn.', descriptionAr: 'غرز ثلاثية الأبعاد بخيوط معدنية رفيعة حقيقية فاخرة.' },
     { name: 'Puff Multi-Texture Print', nameAr: 'طباعة بارزة متعددة الملمس', priceOffset: 45, description: 'High-rising, velvet-like embossed ink that shifts in light.', descriptionAr: 'حبر منقوش عالي الارتفاع يشبه المخمل يتغير مع الضوء.' },
-    { name: 'Direct-to-Garment Micro-spray', nameAr: 'رش مباشر دقيق على القماش', priceOffset: 25, description: 'High-detail direct pigment spray printing onto natural fibers.', descriptionAr: 'طباعة رذاذ صبغي مباشرة عالية التفاصيل على الألياف الطبيعية.' },
-    { name: 'Artisanal Screen Printing', nameAr: 'طباعة سلك سكرين حرفية', priceOffset: 60, description: 'Layered handcrafted solid metallic ink screens applied individually.', descriptionAr: 'شاشات حبر معدني مصمتة تُرصّف يدويًا وتُطبع كل واحدة على حدة.' },
+    { name: 'Direct-to-Garment Micro-spray', nameAr: 'طباعة مباشرة دقيقة على الملابس', priceOffset: 25, description: 'High-detail direct pigment spray printing onto natural fibers.', descriptionAr: 'طباعة صبغية بالرذاذ مباشرة على الألياف الطبيعية بدقة تفاصيل عالية.' },
+    { name: 'Artisanal Screen Printing', nameAr: 'طباعة سلك سكرين حرفية', priceOffset: 60, description: 'Layered handcrafted solid metallic ink screens applied individually.', descriptionAr: 'شاشات حبر معدني مصمت تُطبق يدويًا، وتُطبع كل طبقة على حدة.' },
 ];
