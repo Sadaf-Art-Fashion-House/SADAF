@@ -43,6 +43,8 @@ import {
 import { useAnalytics } from '../hooks/useAnalytics';
 import { useWSAnalyticsData } from '../hooks/useWSAnalyticsData';
 import { useExportChart, exportElementsAsPDF } from '../hooks/useExportChart';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
+import type { TranslationKey } from '@/features/i18n/dictionaries';
 import { useWatermarkStore, getWatermarkExportPrefix } from '@/features/watermark/store/useWatermarkStore';
 import {
     getExportHistory,
@@ -69,17 +71,17 @@ const TAB_CHART_IDS: Record<string, string[]> = {
     growth: ['chart-user-growth'],
 };
 
-const TAB_LABELS: Record<string, string> = {
-    overview: 'Revenue',
-    products: 'Products',
-    growth: 'Growth',
+const TAB_LABELS: Record<string, TranslationKey> = {
+    overview: 'analytics.tab.overview',
+    products: 'analytics.tab.products',
+    growth: 'analytics.tab.growth',
 };
 
 /** Accessible labels for the toolbar banner's Retry button, per failed kind. */
-const TOOLBAR_RETRY_LABELS: Record<ToolbarExportKind, string> = {
-    charts: 'Retry failed charts export',
-    report: 'Retry failed report export',
-    all: 'Retry failed dashboard export',
+const TOOLBAR_RETRY_LABELS: Record<ToolbarExportKind, TranslationKey> = {
+    charts: 'analytics.retryCharts',
+    report: 'analytics.retryReport',
+    all: 'analytics.retryAll',
 };
 
 /** Every chart across all tabs (for full-dashboard export) */
@@ -92,6 +94,7 @@ const ALL_CHART_IDS = [
 // ─── Tooltip components ───────────────────────────────────────────────────
 
 function ChartTooltip({ active, payload, label }: any) {
+    const { t } = useLanguage();
     if (!active || !payload?.length) return null;
     return (
         <div className="bg-[#0A0F2C]/95 border border-[#C9A84C]/20 rounded-xl px-3 py-2 shadow-xl backdrop-blur-sm">
@@ -106,6 +109,7 @@ function ChartTooltip({ active, payload, label }: any) {
 }
 
 function PieTooltip({ active, payload }: any) {
+    const { t } = useLanguage();
     if (!active || !payload?.length) return null;
     const d = payload[0]?.payload ?? {};
     const hasRevenue = 'revenue' in d;
@@ -113,9 +117,9 @@ function PieTooltip({ active, payload }: any) {
         <div className="bg-[#0A0F2C]/95 border border-[#C9A84C]/20 rounded-xl px-3 py-2 shadow-xl backdrop-blur-sm">
             <p className="text-xs font-mono font-semibold text-white">{d.category || d.label || d.name}</p>
             {hasRevenue ? (
-                <><p className="text-[10px] font-mono text-[#E8E0D5]/60">${d.revenue.toLocaleString()} ({d.share.toFixed(1)}%)</p><p className="text-[10px] text-[#E8E0D5]/40">{d.unitsSold} units sold</p></>
+                <><p className="text-[10px] font-mono text-[#E8E0D5]/60">${d.revenue.toLocaleString()} ({d.share.toFixed(1)}%)</p><p className="text-[10px] text-[#E8E0D5]/40">{t('analytics.unitsSold', { count: d.unitsSold })}</p></>
             ) : (
-                <p className="text-[10px] font-mono text-[#E8E0D5]/60">{d.value} visitors</p>
+                <p className="text-[10px] font-mono text-[#E8E0D5]/60">{t('analytics.visitors', { count: d.value })}</p>
             )}
         </div>
     );
@@ -123,22 +127,22 @@ function PieTooltip({ active, payload }: any) {
 
 // ─── Export history helpers ───────────────────────────────────────────────
 
-const SOURCE_LABELS: Record<string, string> = {
-    chart: 'Chart',
-    kpi: 'KPI',
-    report: 'Report',
-    watermark: 'Watermark',
+const SOURCE_LABELS: Record<string, TranslationKey> = {
+    chart: 'analytics.source.chart',
+    kpi: 'analytics.source.kpi',
+    report: 'analytics.source.report',
+    watermark: 'analytics.source.watermark',
 };
 
-function formatRelativeTime(iso: string): string {
+function formatRelativeTime(iso: string, t: (key: TranslationKey, vars?: Record<string, string | number>) => string): string {
     const diffMs = Date.now() - new Date(iso).getTime();
     const minutes = Math.floor(diffMs / 60000);
-    if (minutes < 1) return 'just now';
-    if (minutes < 60) return `${minutes}m ago`;
+    if (minutes < 1) return t('analytics.justNow');
+    if (minutes < 60) return t('analytics.minutesAgo', { count: minutes });
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
+    if (hours < 24) return t('analytics.hoursAgo', { count: hours });
     const days = Math.floor(hours / 24);
-    return `${days}d ago`;
+    return t('analytics.daysAgo', { count: days });
 }
 
 /**
@@ -149,6 +153,7 @@ function formatRelativeTime(iso: string): string {
  * state before the first export so the panel is discoverable.
  */
 function ExportHistoryPanel() {
+    const { t } = useLanguage();
     const [history, setHistory] = useState<ExportHistoryEntry[]>(() => getExportHistory());
     // Tick every 60s to refresh the relative-time labels.
     const [, setClock] = useState(0);
@@ -172,22 +177,22 @@ function ExportHistoryPanel() {
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                     <div className="p-1.5 rounded-lg bg-[#C9A84C]/10 text-[#C9A84C]"><History size={12} /></div>
-                    <h3 className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold">Export History</h3>
+                    <h3 className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold">{t('analytics.exportHistory')}</h3>
                     {history.length > 0 && (
-                        <span className="text-[9px] font-mono text-[#E8E0D5]/40">last {history.length}/10</span>
+                        <span className="text-[9px] font-mono text-[#E8E0D5]/40">{t('analytics.lastHistory', { count: history.length })}</span>
                     )}
                 </div>
                 {history.length > 0 && (
                     <button onClick={handleClear}
                         className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-mono text-[#E8E0D5]/40 hover:text-red-400 border border-white/10 hover:border-red-500/30 transition-all cursor-pointer"
-                        title="Clear export history">
-                        <Trash2 size={9} /> Clear
+                        title={t('analytics.clearHistory')}>
+                        <Trash2 size={9} /> {t('analytics.clear')}
                     </button>
                 )}
             </div>
             {history.length === 0 ? (
                 <p className="text-[9px] font-mono text-[#E8E0D5]/30 italic px-2 py-1.5">
-                    No exports yet — run any PNG/PDF export and it will appear here.
+                    {t('analytics.noExports')}
                 </p>
             ) : (
                 <ul className="space-y-1 max-h-44 overflow-y-auto pr-1 scrollbar-thin">
@@ -199,8 +204,8 @@ function ExportHistoryPanel() {
                                 {entry.format.toUpperCase()}
                             </span>
                             <span className="text-[9px] font-mono text-[#E8E0D5]/80 truncate flex-1" title={entry.filename}>{entry.filename}</span>
-                            <span className="text-[7px] font-mono uppercase tracking-wider text-[#E8E0D5]/30 shrink-0">{SOURCE_LABELS[entry.source] ?? entry.source}</span>
-                            <span className="text-[7px] font-mono text-[#E8E0D5]/30 shrink-0">{formatRelativeTime(entry.timestamp)}</span>
+                            <span className="text-[7px] font-mono uppercase tracking-wider text-[#E8E0D5]/30 shrink-0">{SOURCE_LABELS[entry.source] ? t(SOURCE_LABELS[entry.source]) : entry.source}</span>
+                            <span className="text-[7px] font-mono text-[#E8E0D5]/30 shrink-0">{formatRelativeTime(entry.timestamp, t)}</span>
                         </li>
                     ))}
                 </ul>
@@ -239,6 +244,7 @@ function ExportDropdown({
      * instead of asking the user to click the menu item again. Stored as a
      * plain format kind (not a function) so everything is reactive state.
      */
+    const { t } = useLanguage();
     const [lastFailedExportFormat, setLastFailedExportFormat] = useState<'png' | 'pdf' | null>(null);
 
     const retryButtonRef = useRef<HTMLButtonElement>(null);
@@ -280,8 +286,8 @@ function ExportDropdown({
                 onClick={() => setOpen(!open)}
                 disabled={isExporting}
                 className="p-1.5 rounded-lg text-[#E8E0D5]/30 hover:text-[#C9A84C] hover:bg-[#C9A84C]/10 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-wait"
-                title={isExporting ? 'Export in progress…' : 'Export'}
-                aria-label="Export chart or KPI"
+                title={isExporting ? t('analytics.exportInProgress') : t('analytics.export')}
+                aria-label={t('analytics.exportAria')}
             >
                 {isExporting ? (
                     <span className="block w-3.5 h-3.5 rounded-full border-2 border-[#C9A84C] border-t-transparent animate-spin" />
@@ -301,7 +307,7 @@ function ExportDropdown({
                             ) : (
                                 <FileImage size={12} className="text-[#4FC3F7]" />
                             )}
-                            {isExportingPNG ? 'Exporting…' : 'Export as PNG'}
+                            {isExportingPNG ? t('analytics.exporting') : t('analytics.exportPng')}
                         </button>
                         <button onClick={() => runExport('pdf')}
                             disabled={isExporting}
@@ -311,7 +317,7 @@ function ExportDropdown({
                             ) : (
                                 <FileText size={12} className="text-[#C9A84C]" />
                             )}
-                            {isExportingPDF ? 'Exporting…' : 'Export as PDF'}
+                            {isExportingPDF ? t('analytics.exporting') : t('analytics.exportPdf')}
                         </button>
 
                         {/* Inline export error — the menu stays open on failure so this is visible */}
@@ -324,16 +330,16 @@ function ExportDropdown({
                                 </span>
                                 {lastFailedExportFormat && (
                                     <button ref={retryButtonRef} onClick={handleRetry} disabled={isExporting}
-                                        aria-label={`Retry failed ${lastFailedExportFormat.toUpperCase()} export`}
+                                        aria-label={t('analytics.retryFailed', { format: lastFailedExportFormat.toUpperCase() })}
                                         className="text-[8px] font-mono uppercase tracking-wider text-[#C9A84C] border border-[#C9A84C]/30 rounded px-1.5 py-0.5 hover:bg-[#C9A84C]/10 hover:text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-wait shrink-0 flex items-center gap-1"
-                                        title="Re-run the last failed export">
-                                        <RotateCcw size={8} /> Retry
+                                        title={t('analytics.rerunFailed')}>
+                                        <RotateCcw size={8} /> {t('analytics.retry')}
                                     </button>
                                 )}
                                 <button onClick={() => { setLastFailedExportFormat(null); onErrorDismiss?.(); }}
-                                    aria-label="Dismiss error"
+                                    aria-label={t('analytics.dismiss')}
                                     className="text-[9px] font-mono text-[#E8E0D5]/30 hover:text-white transition-colors cursor-pointer shrink-0"
-                                    title="Dismiss">✕</button>
+                                    title={t('analytics.dismiss')}>✕</button>
                             </div>
                         )}
                     </div>
@@ -440,6 +446,7 @@ function labelFilename(base: string): string {
 // ─── Main Dashboard ────────────────────────────────────────────────────────
 
 export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardProps) {
+    const { t, language } = useLanguage();
     // ── Real-time data — WS → SSE → polling (same transport ladder as dashboards) ──
     const { data: liveData, wsState, error: dataError } = useWSAnalyticsData(true);
     const isLive = wsState.status === 'connected';
@@ -485,8 +492,8 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
     useWatermarkStore((s) => s.settings);
 
     const timeRanges: { value: TimeRange; label: string }[] = [
-        { value: '7d', label: '7 Days' }, { value: '30d', label: '30 Days' },
-        { value: '90d', label: '90 Days' }, { value: '12m', label: '12 Months' },
+        { value: '7d', label: t('analytics.range.7d') }, { value: '30d', label: t('analytics.range.30d') },
+        { value: '90d', label: t('analytics.range.90d') }, { value: '12m', label: t('analytics.range.12m') },
     ];
 
     const kpiIcons: Record<string, any> = {
@@ -549,8 +556,8 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
             <div className="flex items-center justify-center min-h-[40vh]">
                 <div className="text-center">
                     <TrendingUp size={32} className="mx-auto text-[#E8E0D5]/20 mb-3" />
-                    <p className="text-sm text-[#E8E0D5]/60">No analytics data available yet.</p>
-                    <p className="text-[10px] text-[#E8E0D5]/40 mt-1">Data will appear once orders and users are recorded.</p>
+                    <p className="text-sm text-[#E8E0D5]/60">{t('analytics.noData')}</p>
+                    <p className="text-[10px] text-[#E8E0D5]/40 mt-1">{t('analytics.noDataHint')}</p>
                 </div>
             </div>
         );
@@ -563,7 +570,7 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
 
             {/* Real-time data degradation banner — same pattern as Admin/Founder dashboards */}
             {dataError && (
-                <ErrorBanner tone="yellow" icon={AlertTriangle} message={`Live data is degraded: ${dataError}`} />
+                <ErrorBanner tone="yellow" icon={AlertTriangle} message={t('admin.liveDegraded', { error: dataError })} />
             )}
 
             {/* KPI Cards — wrapped for full-report capture */}
@@ -591,9 +598,9 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6 flex-wrap">
                 <div className="flex items-center gap-2 bg-[#090D2A]/80 p-1.5 border border-white/5 rounded-xl w-fit">
                     {[
-                        { id: 'overview', label: 'Revenue', icon: BarChart3 },
-                        { id: 'products', label: 'Products', icon: PieChart },
-                        { id: 'growth', label: 'Growth', icon: Activity },
+                        { id: 'overview', label: t('analytics.tab.overview'), icon: BarChart3 },
+                        { id: 'products', label: t('analytics.tab.products'), icon: PieChart },
+                        { id: 'growth', label: t('analytics.tab.growth'), icon: Activity },
                     ].map((tab) => (
                         <button key={tab.id} onClick={() => handleTabChange(tab.id as typeof activeTab)}
                             className={`px-4 py-1.5 rounded-lg text-[10px] uppercase font-semibold tracking-wider transition cursor-pointer flex items-center gap-1.5 ${
@@ -624,27 +631,27 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
                         <span className={`w-1.5 h-1.5 rounded-full ${
                             isLive ? 'bg-green-400 animate-pulse' : 'bg-yellow-500'
                         }`} />
-                        {isLive ? 'LIVE via WebSocket' : 'Polling 15s'}
+                        {isLive ? t('admin.live') : t('admin.polling15')}
                     </span>
                     <button onClick={handleExportCharts} disabled={isExportingCharts}
                         className="px-3 py-1.5 rounded-lg text-[9px] font-mono uppercase tracking-wider bg-[#C9A84C]/10 text-[#C9A84C] border border-[#C9A84C]/30 hover:bg-[#C9A84C]/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-wait flex items-center gap-1.5"
-                        title={`Export ${TAB_LABELS[activeTab]} charts as PDF`}>
+                        title={t('analytics.exportChartsTitle', { tab: t(TAB_LABELS[activeTab]) })}>
                         {isExportingCharts ? <span className="block w-3 h-3 rounded-full border-2 border-[#C9A84C] border-t-transparent animate-spin" /> : <FileSpreadsheet size={12} />}
-                        {isExportingCharts ? 'Exporting…' : `Charts (${TAB_CHART_IDS[activeTab]?.length ?? 0})`}
+                        {isExportingCharts ? t('analytics.exporting') : `${t('analytics.charts')} (${TAB_CHART_IDS[activeTab]?.length ?? 0})`}
                     </button>
 
                     <button onClick={handleExportFullReport} disabled={isExportingFull}
                         className="px-3 py-1.5 rounded-lg text-[9px] font-mono uppercase tracking-wider bg-gradient-to-r from-[#C9A84C]/20 to-[#4FC3F7]/10 text-white border border-[#C9A84C]/40 hover:border-[#C9A84C]/60 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-wait flex items-center gap-1.5"
-                        title="Export current tab report (KPIs + charts)">
+                        title={t('analytics.exportReportTitle')}>
                         {isExportingFull ? <span className="block w-3 h-3 rounded-full border-2 border-[#C9A84C] border-t-transparent animate-spin" /> : <FileBarChart size={12} />}
-                        {isExportingFull ? 'Exporting…' : 'Report'}
+                        {isExportingFull ? t('analytics.exporting') : t('analytics.report')}
                     </button>
 
                     <button onClick={handleExportAllDashboard} disabled={isExportingAll}
                         className="px-3 py-1.5 rounded-lg text-[9px] font-mono uppercase tracking-wider bg-gradient-to-r from-[#C9A84C]/30 to-[#EC4899]/10 text-white border border-[#C9A84C]/50 hover:border-[#EC4899]/40 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-wait flex items-center gap-1.5"
-                        title="Export complete dashboard report (all KPIs + all charts)">
+                        title={t('analytics.exportAllTitle')}>
                         {isExportingAll ? <span className="block w-3 h-3 rounded-full border-2 border-[#C9A84C] border-t-transparent animate-spin" /> : <LayoutDashboard size={12} />}
-                        {isExportingAll ? 'Exporting…' : 'All Dashboard'}
+                        {isExportingAll ? t('analytics.exporting') : t('analytics.allDashboard')}
                     </button>
                 </div>
             </div>
@@ -661,16 +668,16 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
                         <button ref={toolbarRetryButtonRef}
                             onClick={() => runToolbarExport(lastFailedToolbarExport)}
                             disabled={isExportingCharts || isExportingFull || isExportingAll}
-                            aria-label={TOOLBAR_RETRY_LABELS[lastFailedToolbarExport]}
+                            aria-label={t(TOOLBAR_RETRY_LABELS[lastFailedToolbarExport])}
                             className="px-2.5 py-1 rounded-lg text-[9px] font-mono uppercase tracking-wider text-[#C9A84C] border border-[#C9A84C]/30 hover:bg-[#C9A84C]/10 hover:text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-wait flex items-center gap-1 shrink-0"
-                            title="Re-run the last failed export">
-                            <RotateCcw size={10} /> Retry
+                            title={t('analytics.rerunFailed')}>
+                            <RotateCcw size={10} /> {t('analytics.retry')}
                         </button>
                     )}
                     <button onClick={() => { setToolbarExportError(null); setLastFailedToolbarExport(null); }}
-                        aria-label="Dismiss error"
+                        aria-label={t('analytics.dismiss')}
                         className="text-[10px] font-mono text-[#E8E0D5]/30 hover:text-white transition-colors cursor-pointer shrink-0"
-                        title="Dismiss">✕</button>
+                        title={t('analytics.dismiss')}>✕</button>
                 </div>
             )}
 
@@ -683,7 +690,7 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
             {/* ═══ OVERVIEW TAB ═══ */}
             {activeTab === 'overview' && (
                 <motion.div key="overview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-                    <ChartCard title="Revenue Overview" icon={BarChart3} chartId="chart-revenue-overview" filename={labelFilename('revenue_overview')}>
+                    <ChartCard title={t('analytics.chart.revenueOverview')} icon={BarChart3} chartId="chart-revenue-overview" filename={labelFilename('revenue_overview')}>
                         <div className="h-56">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={filteredRevenue} barCategoryGap="20%">
@@ -699,16 +706,16 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
                             </ResponsiveContainer>
                         </div>
                         <div className="flex items-center justify-between mt-4 pt-3 border-t border-white/[0.05]">
-                            <div className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#C9A84C]" /><span className="text-[9px] font-mono text-[#E8E0D5]/50">Current Period</span></div>
+                            <div className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#C9A84C]" /><span className="text-[9px] font-mono text-[#E8E0D5]/50">{t('analytics.legend.currentPeriod')}</span></div>
                             {filteredRevenue.some((d) => d.previousValue !== undefined) && (
-                                <div className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#1B2A6B]" /><span className="text-[9px] font-mono text-[#E8E0D5]/50">Previous Period</span></div>
+                                <div className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#1B2A6B]" /><span className="text-[9px] font-mono text-[#E8E0D5]/50">{t('analytics.legend.previousPeriod')}</span></div>
                             )}
-                            <div className="text-right"><p className="text-[9px] font-mono text-[#E8E0D5]/40">Total</p><p className="text-sm font-serif text-white font-bold">{formatCurrency(totalRevenue)}</p></div>
+                            <div className="text-right"><p className="text-[9px] font-mono text-[#E8E0D5]/40">{t('analytics.total')}</p><p className="text-sm font-serif text-white font-bold">{formatCurrency(totalRevenue)}</p></div>
                         </div>
                     </ChartCard>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <ChartCard title="Revenue by Channel" icon={DollarSign} chartId="chart-revenue-channel" filename={labelFilename('revenue_by_channel')}>
+                        <ChartCard title={t('analytics.chart.revenueChannel')} icon={DollarSign} chartId="chart-revenue-channel" filename={labelFilename('revenue_by_channel')}>
                             <div className="h-52">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={data.revenueByChannel} layout="vertical" barCategoryGap="25%">
@@ -722,7 +729,7 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
                             </div>
                         </ChartCard>
 
-                        <ChartCard title="Customer Acquisition" icon={Users} chartId="chart-acquisition" filename={labelFilename('customer_acquisition')}>
+                        <ChartCard title={t('analytics.chart.acquisition')} icon={Users} chartId="chart-acquisition" filename={labelFilename('customer_acquisition')}>
                             <div className="h-52 flex items-center">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <RePieChart>
@@ -743,7 +750,7 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
             {activeTab === 'products' && (
                 <motion.div key="products" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <ChartCard title="Sales by Category" icon={PieChart} chartId="chart-category-sales" filename={labelFilename('category_sales')}>
+                        <ChartCard title={t('analytics.chart.categorySales')} icon={PieChart} chartId="chart-category-sales" filename={labelFilename('category_sales')}>
                             <div className="h-64 flex items-center">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <RePieChart>
@@ -757,7 +764,7 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
                             </div>
                         </ChartCard>
 
-                        <ChartCard title="Category Breakdown" icon={ShoppingBag} chartId="chart-category-breakdown" filename={labelFilename('category_breakdown')}>
+                        <ChartCard title={t('analytics.chart.categoryBreakdown')} icon={ShoppingBag} chartId="chart-category-breakdown" filename={labelFilename('category_breakdown')}>
                             <div className="space-y-2">
                                 {data.categorySales.map((cat) => (
                                     <div key={cat.category} className="flex items-center gap-3 p-2 rounded-lg bg-[#0A0F2C]/40">
@@ -771,8 +778,8 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
                                                 <div className="h-full rounded-full transition-all duration-500" style={{ width: `${cat.share}%`, backgroundColor: cat.color }} />
                                             </div>
                                             <div className="flex items-center justify-between mt-0.5">
-                                                <span className="text-[8px] font-mono text-[#E8E0D5]/40">{cat.share.toFixed(1)}% share</span>
-                                                <span className="text-[8px] font-mono text-[#E8E0D5]/40">{cat.unitsSold} units</span>
+                                                <span className="text-[8px] font-mono text-[#E8E0D5]/40">{t('analytics.share', { share: cat.share.toFixed(1) })}</span>
+                                                <span className="text-[8px] font-mono text-[#E8E0D5]/40">{t('analytics.units', { count: cat.unitsSold })}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -781,12 +788,12 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
                         </ChartCard>
                     </div>
 
-                    <ChartCard title="Top Selling Products" icon={TrendingUp} chartId="chart-top-products" filename={labelFilename('top_products')}>
+                    <ChartCard title={t('analytics.chart.topProducts')} icon={TrendingUp} chartId="chart-top-products" filename={labelFilename('top_products')}>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left">
                                 <thead>
                                     <tr className="text-[8px] font-mono uppercase tracking-widest text-[#E8E0D5]/40 border-b border-white/[0.05]">
-                                        <th className="py-2 pr-2">Product</th><th className="py-2 pr-2">Category</th><th className="py-2 pr-2 text-right">Revenue</th><th className="py-2 pr-2 text-right">Units</th><th className="py-2 text-right">Growth</th>
+                                        <th className="py-2 pr-2">{t('analytics.table.product')}</th><th className="py-2 pr-2">{t('analytics.table.category')}</th><th className="py-2 pr-2 text-right">{t('analytics.table.revenue')}</th><th className="py-2 pr-2 text-right">{t('analytics.table.units')}</th><th className="py-2 text-right">{t('analytics.table.growth')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -817,7 +824,7 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
             {/* ═══ GROWTH TAB ═══ */}
             {activeTab === 'growth' && (
                 <motion.div key="growth" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-                    <ChartCard title="User Growth & Activity" icon={Activity} chartId="chart-user-growth" filename={labelFilename('user_growth')}>
+                    <ChartCard title={t('analytics.chart.userGrowth')} icon={Activity} chartId="chart-user-growth" filename={labelFilename('user_growth')}>
                         <div className="h-64">
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={data.userGrowth}>
@@ -838,10 +845,14 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
                             </ResponsiveContainer>
                         </div>
                         <div className="flex items-center gap-4 mt-4 pt-3 border-t border-white/[0.05]">
-                            {[{ color: '#C9A84C', label: 'Total Users' }, { color: '#4FC3F7', label: 'Active Users' }, { color: '#10B981', label: 'New Users' }].map((item) => (
-                                <div key={item.label} className="flex items-center gap-1.5">
+                            {[
+                                { color: '#C9A84C', labelKey: 'analytics.users.total' as TranslationKey },
+                                { color: '#4FC3F7', labelKey: 'analytics.users.active' as TranslationKey },
+                                { color: '#10B981', labelKey: 'analytics.users.new' as TranslationKey },
+                            ].map((item) => (
+                                <div key={item.labelKey} className="flex items-center gap-1.5">
                                     <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                                    <span className="text-[9px] font-mono text-[#E8E0D5]/50">{item.label}</span>
+                                    <span className="text-[9px] font-mono text-[#E8E0D5]/50">{t(item.labelKey)}</span>
                                 </div>
                             ))}
                         </div>
@@ -849,9 +860,9 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {[
-                            { label: 'Total Users', value: data.userGrowth[data.userGrowth.length - 1].total.toLocaleString(), change: '+24.5% YoY', icon: Users, color: '#C9A84C' },
-                            { label: 'Current Month Active', value: data.userGrowth[data.userGrowth.length - 1].activeUsers.toLocaleString(), change: '+18.2% MoM', icon: Activity, color: '#4FC3F7' },
-                            { label: 'Average Order Value', value: formatCurrency(averageOrderValue), change: formatPercent(growthRate), icon: DollarSign, color: '#10B981' },
+                            { label: t('analytics.users.total'), value: data.userGrowth[data.userGrowth.length - 1].total.toLocaleString(), change: '+24.5% YoY', icon: Users, color: '#C9A84C' },
+                            { label: t('analytics.users.currentMonth'), value: data.userGrowth[data.userGrowth.length - 1].activeUsers.toLocaleString(), change: '+18.2% MoM', icon: Activity, color: '#4FC3F7' },
+                            { label: t('analytics.users.averageOrder'), value: formatCurrency(averageOrderValue), change: formatPercent(growthRate), icon: DollarSign, color: '#10B981' },
                         ].map((metric) => (
                             <div key={metric.label} className="p-4 bg-[#0A0F2C]/60 border border-white/[0.05] rounded-2xl">
                                 <div className="flex items-center justify-between mb-2">

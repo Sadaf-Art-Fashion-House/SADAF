@@ -24,6 +24,7 @@ import Link from 'next/link';
 import type { FashionProduct, ArtPiece } from '@/shared/types';
 import { fashionDatabase, artDatabase, collections } from '@/data';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
+import type { TranslationKey } from '@/features/i18n/dictionaries';
 import { localizedArtTitle, localizedDesignName, localizedProductFabric, localizedProductName } from '@/features/i18n/productNames';
 import { useDesignDraftStore } from '@/features/ai/store/useDesignDraftStore';
 import { designPublisher } from '@/features/ai/services/designPublisher';
@@ -59,7 +60,7 @@ interface AdminDashboardViewProps {
 }
 
 export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps) {
-    const { language } = useLanguage();
+    const { t, language } = useLanguage();
     const [mainTab, setMainTab] = useState<'analytics' | 'products' | 'arts' | 'ai-logs' | 'orders' | 'customers' | 'designs' | 'atelier'>('analytics');
 
     // Product management
@@ -208,14 +209,14 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
     );
 
     const mainTabs = [
-        { id: 'analytics', label: 'Analytics', icon: TrendingUp },
-        { id: 'products', label: 'Products', icon: Shirt },
-        { id: 'arts', label: 'Arts', icon: Image },
-        { id: 'orders', label: 'Orders', icon: ShoppingBag },
-        { id: 'customers', label: 'Customers', icon: Users },
-        { id: 'designs', label: 'Designs', icon: Bookmark },
-        { id: 'atelier', label: 'Atelier', icon: Hammer },
-        { id: 'ai-logs', label: 'AI Logs', icon: Cpu },
+        { id: 'analytics', label: t('admin.tabs.analytics'), icon: TrendingUp },
+        { id: 'products', label: t('admin.tabs.products'), icon: Shirt },
+        { id: 'arts', label: t('admin.tabs.arts'), icon: Image },
+        { id: 'orders', label: t('admin.tabs.orders'), icon: ShoppingBag },
+        { id: 'customers', label: t('admin.tabs.customers'), icon: Users },
+        { id: 'designs', label: t('admin.tabs.designs'), icon: Bookmark },
+        { id: 'atelier', label: t('admin.tabs.atelier'), icon: Hammer },
+        { id: 'ai-logs', label: t('admin.tabs.aiLogs'), icon: Cpu },
     ] as const;
 
     return (
@@ -231,13 +232,13 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                         <div>
                             <span className="text-[10px] font-mono uppercase tracking-widest text-[#4FC3F7] font-bold flex items-center gap-1.5 mb-1">
                                 <Settings size={12} />
-                                ATELIER CONTROL PORTAL &bull; لوحة الإشراف
+                                {t('admin.header.kicker')}
                             </span>
                             <h1 className="text-3xl md:text-5xl font-serif text-white uppercase tracking-tight">
-                                Admin Central
+                                {t('admin.header.title')}
                             </h1>
                             <p className="text-xs text-slate-400 mt-1 max-w-xl">
-                                Manage e-boutique catalog, orders, customers, and AI moderation.
+                                {t('admin.header.subtitle')}
                             </p>
                         </div>
 
@@ -246,13 +247,13 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                 href="/dashboard"
                                 className="px-4 py-2 bg-black/40 hover:bg-white text-[10px] font-mono uppercase tracking-widest font-bold text-gray-300 hover:text-[#0A0F2C] border border-white/10 transition rounded-xl cursor-pointer"
                             >
-                                Dashboard Home
+                                {t('admin.sidebar.dashboardHome')}
                             </Link>
                             <button
                                 onClick={onLogout}
                                 className="px-4 py-2 bg-black/40 hover:bg-white text-[10px] font-mono uppercase tracking-widest font-bold text-gray-300 hover:text-[#0A0F2C] border border-[#C9A84C]/20 transition rounded-xl cursor-pointer"
                             >
-                                Logout
+                                {t('admin.header.logout')}
                             </button>
                         </div>
                     </div>
@@ -280,7 +281,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
             <section className="py-12 px-4 md:px-8 max-w-7xl mx-auto">
                 {/* Real-time data degradation banner */}
                 {dataError && (
-                    <ErrorBanner tone="yellow" icon={AlertTriangle} message={`Live data is degraded: ${dataError}`} />
+                    <ErrorBanner tone="yellow" icon={AlertTriangle} message={t('admin.liveDegraded', { error: dataError })} />
                 )}
 
                 <AnimatePresence mode="wait">
@@ -298,7 +299,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                             <div className="space-y-1.5">
                                 <div className="flex items-center justify-between">
                                     <span className="text-[8px] font-mono uppercase tracking-widest text-gray-600">
-                                        ATELIER METRICS
+                                        {t('admin.metrics')}
                                     </span>
                                     <span className={`inline-flex items-center gap-1 text-[8px] font-mono uppercase tracking-widest ${
                                         isLive ? 'text-green-400' : 'text-yellow-500'
@@ -306,7 +307,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                         <span className={`w-1.5 h-1.5 rounded-full ${
                                             isLive ? 'bg-green-400 animate-pulse' : 'bg-yellow-500'
                                         }`} />
-                                        {isLive ? 'LIVE via WebSocket' : 'Polling 15s'}
+                                        {isLive ? t('admin.live') : t('admin.polling15')}
                                     </span>
                                 </div>
                                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -323,7 +324,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                             <div>
                                                 <span className="text-[10px] uppercase font-mono text-gray-400 tracking-wider block">{kpi.label}</span>
                                                 <span className="text-2xl font-serif text-white font-bold block mt-1.5">{kpi.value}</span>
-                                                <span className="text-[10px] text-green-400 font-mono mt-0.5 inline-block">{kpi.growth} vs prev month</span>
+                                                <span className="text-[10px] text-green-400 font-mono mt-0.5 inline-block">{t('admin.vsPrevMonth', { growth: kpi.growth })}</span>
                                             </div>
                                             <div className="p-3 rounded-full bg-white/5 border border-white/10 shrink-0">
                                                 <DynamicKpiIcon name={kpi.icon} size={18} className={kpi.color} />
@@ -337,8 +338,8 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 {/* Revenue Chart */}
                                 <div className="p-6 rounded-xl bg-[#090D2A]/80 border border-white/5">
-                                    <h4 className="font-serif text-white text-base font-semibold mb-1">HAUTE REVENUE DYNAMICS (WEEKLY)</h4>
-                                    <span className="text-[10px] text-gray-500 font-mono uppercase">Sales tracking by Atelier lines</span>
+                                    <h4 className="font-serif text-white text-base font-semibold mb-1">{t('admin.revenueChart.title')}</h4>
+                                    <span className="text-[10px] text-gray-500 font-mono uppercase">{t('admin.revenueChart.subtitle')}</span>
                                     <div className="h-44 flex items-end justify-between gap-3 pt-8 pb-2 mt-4">
                                         {[45, 68, 80, 52, 95, 76, 110].map((val, idx) => (
                                             <div key={idx} className="flex-1 flex flex-col items-center gap-2">
@@ -347,7 +348,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                                     style={{ height: `${val * 1.2}px` }}
                                                 />
                                                 <span className="text-[8px] font-mono uppercase text-gray-500">
-                                                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][idx]}
+                                                    {t(['admin.day.mon', 'admin.day.tue', 'admin.day.wed', 'admin.day.thu', 'admin.day.fri', 'admin.day.sat', 'admin.day.sun'][idx] as TranslationKey)}
                                                 </span>
                                             </div>
                                         ))}
@@ -357,18 +358,18 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                 {/* Moderation Rules */}
                                 <div className="p-6 rounded-xl bg-[#090D2A]/80 border border-white/5">
                                     <h4 className="font-serif text-white text-base font-semibold mb-1 flex items-center gap-1.5">
-                                        <AlertTriangle className="text-yellow-500" size={16} /> AI PROMPT AUDIT MODERATION
+                                        <AlertTriangle className="text-yellow-500" size={16} /> {t('admin.moderation.title')}
                                     </h4>
-                                    <span className="text-[10px] text-gray-500 font-mono uppercase">Monitored rules in design prompts</span>
+                                    <span className="text-[10px] text-gray-500 font-mono uppercase">{t('admin.moderation.subtitle')}</span>
                                     <div className="divide-y divide-white/5 mt-6">
                                         {moderationRules.map((rule) => (
                                             <div key={rule.word} className="py-3 flex justify-between items-center text-xs">
                                                 <div>
                                                     <code className="text-[#C9A84C] font-mono tracking-wider font-semibold">&bull; {rule.word}</code>
-                                                    <span className="text-[9px] text-gray-500 font-mono uppercase block mt-0.5">Flagged keyword</span>
+                                                    <span className="text-[9px] text-gray-500 font-mono uppercase block mt-0.5">{t('admin.moderation.flaggedKeyword')}</span>
                                                 </div>
                                                 <div className="flex gap-4 items-center">
-                                                    <span className="text-[10px] font-semibold text-slate-400 font-mono">{rule.timesFlagged} occurrences</span>
+                                                    <span className="text-[10px] font-semibold text-slate-400 font-mono">{t('admin.moderation.occurrences', { count: rule.timesFlagged })}</span>
                                                     <span className="bg-red-950 text-red-400 font-semibold px-2 py-0.5 rounded text-[9px] border border-red-900">{rule.action}</span>
                                                 </div>
                                             </div>
@@ -384,17 +385,17 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                         <Coins size={22} />
                                     </div>
                                     <div>
-                                        <h4 className="font-serif text-white font-semibold">GLOBAL ATELIER AI CREDIT MATRIX</h4>
+                                        <h4 className="font-serif text-white font-semibold">{t('admin.credits.title')}</h4>
                                         <p className="text-xs text-slate-400 leading-relaxed max-w-lg mt-0.5">
-                                            100 free Creative Generation Credits monthly. Pro accounts receive infinite rendering priority.
+                                            {t('admin.credits.body')}
                                         </p>
                                     </div>
                                 </div>
                                 <button
-                                    onClick={() => alert('AI credit matrices updated.')}
+                                    onClick={() => alert(t('admin.credits.synced'))}
                                     className="px-4 py-2 bg-[#C9A84C] hover:bg-white text-[#0A0F2C] text-xs font-mono uppercase tracking-wider font-semibold rounded cursor-pointer transition shrink-0"
                                 >
-                                    Sync Credits
+                                    {t('admin.credits.sync')}
                                 </button>
                             </div>
                             </ErrorBoundary>
@@ -414,40 +415,40 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                             {/* Create Product Form */}
                             <div className="lg:col-span-4 bg-[#090D2A]/80 border border-white/5 rounded-xl p-6">
                                 <h3 className="font-serif text-lg text-white mb-4 flex items-center gap-2">
-                                    <Shirt size={16} className="text-[#C9A84C]" /> Create Public Product
+                                    <Shirt size={16} className="text-[#C9A84C]" /> {t('admin.products.createTitle')}
                                 </h3>
 
                                 {formSuccess && (
-                                    <ErrorBanner tone="green" icon={CheckCircle} message="✔ Product successfully registered!" className="mb-4" showGuidance={false} />
+                                    <ErrorBanner tone="green" icon={CheckCircle} message={t('admin.products.success')} className="mb-4" showGuidance={false} />
                                 )}
 
                                 <form onSubmit={handleCreateProduct} className="space-y-4 text-xs">
                                     <div>
-                                        <label className="text-gray-400 uppercase tracking-widest text-[9px] block mb-1">Product Title</label>
+                                        <label className="text-gray-400 uppercase tracking-widest text-[9px] block mb-1">{t('admin.products.titleLabel')}</label>
                                         <input
                                             type="text"
                                             required
                                             value={newProdName}
                                             onChange={(e) => setNewProdName(e.target.value)}
-                                            placeholder="e.g. Diwani Linen Vest"
+                                            placeholder={t('admin.products.titlePlaceholder')}
                                             className="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-white placeholder-slate-600 outline-none focus:border-[#C9A84C]"
                                         />
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <label className="text-gray-400 uppercase tracking-widest text-[9px] block mb-1">Price ($USD)</label>
+                                            <label className="text-gray-400 uppercase tracking-widest text-[9px] block mb-1">{t('admin.products.priceLabel')}</label>
                                             <input
                                                 type="number"
                                                 required
                                                 value={newProdPrice}
                                                 onChange={(e) => setNewProdPrice(e.target.value)}
-                                                placeholder="e.g. 850"
+                                                placeholder={t('admin.products.pricePlaceholder')}
                                                 className="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-white placeholder-slate-600 outline-none focus:border-[#C9A84C]"
                                             />
                                         </div>
                                         <div>
-                                            <label className="text-gray-400 uppercase tracking-widest text-[9px] block mb-1">Category</label>
+                                            <label className="text-gray-400 uppercase tracking-widest text-[9px] block mb-1">{t('admin.products.categoryLabel')}</label>
                                             <select
                                                 value={newProdCategory}
                                                 onChange={(e) => setNewProdCategory(e.target.value as any)}
@@ -463,7 +464,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                     </div>
 
                                     <div>
-                                        <label className="text-gray-400 uppercase tracking-widest text-[9px] block mb-1">Fabric</label>
+                                        <label className="text-gray-400 uppercase tracking-widest text-[9px] block mb-1">{t('admin.products.fabricLabel')}</label>
                                         <input
                                             type="text"
                                             value={newFabric}
@@ -473,7 +474,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                     </div>
 
                                     <div>
-                                        <label className="text-gray-400 uppercase tracking-widest text-[9px] block mb-1">Image URL</label>
+                                        <label className="text-gray-400 uppercase tracking-widest text-[9px] block mb-1">{t('admin.products.imageUrlLabel')}</label>
                                         <input
                                             type="text"
                                             value={newImage}
@@ -483,12 +484,12 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                     </div>
 
                                     <div>
-                                        <label className="text-gray-400 uppercase tracking-widest text-[9px] block mb-1">Description</label>
+                                        <label className="text-gray-400 uppercase tracking-widest text-[9px] block mb-1">{t('admin.products.descriptionLabel')}</label>
                                         <textarea
                                             value={newProdDesc}
                                             onChange={(e) => setNewProdDesc(e.target.value)}
                                             rows={3}
-                                            placeholder="Describe material weight, thread density..."
+                                            placeholder={t('admin.products.descPlaceholder')}
                                             className="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-white placeholder-slate-600 outline-none focus:border-[#C9A84C] resize-none"
                                         />
                                     </div>
@@ -497,7 +498,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                         type="submit"
                                         className="w-full py-3 bg-[#C9A84C] hover:bg-white text-[#0A0F2C] text-xs font-mono tracking-widest font-bold uppercase rounded-lg cursor-pointer transition"
                                     >
-                                        Deploy Haute Item
+                                        {t('admin.products.deploy')}
                                     </button>
                                 </form>
                             </div>
@@ -505,14 +506,14 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                             {/* Products List */}
                             <div className="lg:col-span-8 bg-[#090D2A]/80 border border-white/5 rounded-xl p-6">
                                 <div className="flex justify-between items-center mb-4">
-                                    <h3 className="font-serif text-lg text-white">DEPLOYED APPAREL REGISTRY ({products.length} Items)</h3>
+                                    <h3 className="font-serif text-lg text-white">{t('admin.products.registry', { count: products.length })}</h3>
                                     <div className="relative w-44">
                                         <span className="absolute left-2.5 top-2.5 text-slate-500"><Search size={12} /></span>
                                         <input
                                             type="text"
                                             value={productSearch}
                                             onChange={(e) => setProductSearch(e.target.value)}
-                                            placeholder="Search items..."
+                                            placeholder={t('admin.products.searchPlaceholder')}
                                             className="w-full pl-7 pr-2 py-1.5 bg-black/40 border border-white/10 rounded-lg text-[10px] text-white outline-none"
                                         />
                                     </div>
@@ -540,7 +541,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                             <button
                                                 onClick={() => handleDeleteProduct(prod.id)}
                                                 className="p-2 bg-red-950/20 text-red-400 hover:text-white border border-red-500/20 hover:bg-red-900 rounded-lg transition cursor-pointer"
-                                                title="Delete product"
+                                                title={t('admin.products.delete')}
                                             >
                                                 <Trash2 size={12} />
                                             </button>
@@ -564,36 +565,36 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                             <ErrorBoundary label="admin:arts">
                             <div className="lg:col-span-4 bg-[#090D2A]/80 border border-white/5 rounded-xl p-6">
                                 <h3 className="font-serif text-lg text-white mb-4 flex items-center gap-2">
-                                    <Image size={16} className="text-[#C9A84C]" /> Curate Fine Art Piece
+                                    <Image size={16} className="text-[#C9A84C]" /> {t('admin.arts.curateTitle')}
                                 </h3>
 
                                 <form onSubmit={handleCreateArt} className="space-y-4 text-xs">
                                     <div>
-                                        <label className="text-gray-400 uppercase tracking-widest text-[9px] block mb-1">Artwork Title</label>
+                                        <label className="text-gray-400 uppercase tracking-widest text-[9px] block mb-1">{t('admin.arts.titleLabel')}</label>
                                         <input
                                             type="text"
                                             required
                                             value={newArtTitle}
                                             onChange={(e) => setNewArtTitle(e.target.value)}
-                                            placeholder="e.g. Siwa Gilded Sunset study"
+                                            placeholder={t('admin.arts.titlePlaceholder')}
                                             className="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-white placeholder-slate-600 outline-none focus:border-[#C9A84C]"
                                         />
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <label className="text-gray-400 uppercase tracking-widest text-[9px] block mb-1">Price ($USD)</label>
+                                            <label className="text-gray-400 uppercase tracking-widest text-[9px] block mb-1">{t('admin.arts.priceLabel')}</label>
                                             <input
                                                 type="number"
                                                 required
                                                 value={newArtPrice}
                                                 onChange={(e) => setNewArtPrice(e.target.value)}
-                                                placeholder="e.g. 1200"
+                                                placeholder={t('admin.arts.pricePlaceholder')}
                                                 className="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-white placeholder-slate-600 outline-none focus:border-[#C9A84C]"
                                             />
                                         </div>
                                         <div>
-                                            <label className="text-gray-400 uppercase tracking-widest text-[9px] block mb-1">Category</label>
+                                            <label className="text-gray-400 uppercase tracking-widest text-[9px] block mb-1">{t('admin.arts.categoryLabel')}</label>
                                             <select
                                                 value={newArtCategory}
                                                 onChange={(e) => setNewArtCategory(e.target.value as any)}
@@ -609,12 +610,12 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                     </div>
 
                                     <div>
-                                        <label className="text-gray-400 uppercase tracking-widest text-[9px] block mb-1">Description</label>
+                                        <label className="text-gray-400 uppercase tracking-widest text-[9px] block mb-1">{t('admin.arts.descriptionLabel')}</label>
                                         <textarea
                                             value={newArtDesc}
                                             onChange={(e) => setNewArtDesc(e.target.value)}
                                             rows={3}
-                                            placeholder="Describe pigments, gilding, brush, materials..."
+                                            placeholder={t('admin.arts.descPlaceholder')}
                                             className="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-white placeholder-slate-600 outline-none focus:border-[#C9A84C] resize-none"
                                         />
                                     </div>
@@ -623,21 +624,21 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                         type="submit"
                                         className="w-full py-3 bg-[#C9A84C] hover:bg-white text-[#0A0F2C] text-xs font-mono tracking-widest font-bold uppercase rounded-lg cursor-pointer transition"
                                     >
-                                        Deploy Curated Art
+                                        {t('admin.arts.deploy')}
                                     </button>
                                 </form>
                             </div>
 
                             <div className="lg:col-span-8 bg-[#090D2A]/80 border border-white/5 rounded-xl p-6">
-                                <h3 className="font-serif text-lg text-white mb-4">MUSEUM ARCHIVES REGISTRY ({artDatabase.length} Items)</h3>
+                                <h3 className="font-serif text-lg text-white mb-4">{t('admin.arts.registry', { count: artDatabase.length })}</h3>
                                 <div className="overflow-x-auto text-xs">
                                     <table className="w-full text-left divide-y divide-white/5 text-gray-400">
                                         <thead className="text-[10px] uppercase text-gray-500 font-mono">
                                             <tr>
-                                                <th className="py-2.5">Title</th>
-                                                <th>Category</th>
-                                                <th>Artist</th>
-                                                <th>Price</th>
+                                                <th className="py-2.5">{t('admin.table.title')}</th>
+                                                <th>{t('admin.table.category')}</th>
+                                                <th>{t('admin.table.artist')}</th>
+                                                <th>{t('admin.table.price')}</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-white/5">
@@ -672,8 +673,8 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                             <ErrorBoundary label="admin:orders">
                             <div className="flex justify-between items-center">
                                 <div>
-                                    <h3 className="font-serif text-[#C9A84C] text-lg font-semibold uppercase tracking-wider">Stitch Logistics Orders</h3>
-                                    <p className="text-xs text-slate-400 mt-1">Manually transition ongoing atelier sewing stages.</p>
+                                    <h3 className="font-serif text-[#C9A84C] text-lg font-semibold uppercase tracking-wider">{t('admin.orders.title')}</h3>
+                                    <p className="text-xs text-slate-400 mt-1">{t('admin.orders.subtitle')}</p>
                                 </div>
                             </div>
 
@@ -689,24 +690,24 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                                 <span className="text-xs text-slate-500 font-mono">&bull; {ord.date}</span>
                                             </div>
                                             <h4 className="text-xs font-serif font-bold uppercase text-white">
-                                                Customer: {ord.customerName} <span className="text-[10px] text-slate-500 font-mono italic">({ord.email})</span>
+                                                {t('admin.orders.customer')}: {ord.customerName} <span className="text-[10px] text-slate-500 font-mono italic">({ord.email})</span>
                                             </h4>
                                             <p className="text-[10px] font-mono text-slate-400">
-                                                Items: <strong className="text-slate-300 font-sans">{ord.itemNames}</strong>
+                                                {t('admin.orders.items')}: <strong className="text-slate-300 font-sans">{ord.itemNames}</strong>
                                             </p>
                                         </div>
 
                                         <div className="flex items-center gap-3 w-full md:w-auto self-end md:self-center">
-                                            <span className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] font-semibold">Stage:</span>
+                                            <span className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] font-semibold">{t('admin.orders.stage')}:</span>
                                             <select
                                                 value={ord.status}
                                                 onChange={(e) => updateOrderStatus(ord.id, e.target.value as SimulatedOrder['status'])}
                                                 className="px-3 py-1.5 bg-[#05081A] border border-[#C9A84C]/30 text-[10px] text-[#C9A84C] font-mono font-bold rounded-lg cursor-pointer outline-none"
                                             >
-                                                <option value="Pending">Pending</option>
-                                                <option value="Tailoring">Tailoring</option>
-                                                <option value="Shipped">Shipped</option>
-                                                <option value="Delivered">Delivered</option>
+                                                <option value="Pending">{t('orders.status.pending')}</option>
+                                                <option value="Tailoring">{t('orders.status.tailoring')}</option>
+                                                <option value="Shipped">{t('orders.status.shipped')}</option>
+                                                <option value="Delivered">{t('orders.status.delivered')}</option>
                                             </select>
                                         </div>
                                     </div>
@@ -728,8 +729,8 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                             <ErrorBoundary label="admin:customers">
                             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                                 <div>
-                                    <h3 className="font-serif text-[#C9A84C] text-lg font-semibold uppercase tracking-wider">Registered Curator Roster</h3>
-                                    <p className="text-xs text-slate-400 mt-1">Explore elite boutique accounts and VIP memberships.</p>
+                                    <h3 className="font-serif text-[#C9A84C] text-lg font-semibold uppercase tracking-wider">{t('admin.customers.title')}</h3>
+                                    <p className="text-xs text-slate-400 mt-1">{t('admin.customers.subtitle')}</p>
                                 </div>
                                 <div className="relative w-48">
                                     <span className="absolute left-2.5 top-2.5 text-slate-500"><Search size={12} /></span>
@@ -737,7 +738,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                         type="text"
                                         value={customerSearch}
                                         onChange={(e) => setCustomerSearch(e.target.value)}
-                                        placeholder="Search members..."
+                                        placeholder={t('admin.customers.searchPlaceholder')}
                                         className="w-full pl-7 pr-2 py-1.5 bg-black/40 border border-white/10 rounded-lg text-[10px] text-white outline-none"
                                     />
                                 </div>
@@ -758,7 +759,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                             <span className="block text-[8px] font-mono text-slate-400 font-bold uppercase tracking-widest">{cust.level}</span>
                                         </div>
                                         <div className="text-right text-[9px] font-mono text-slate-500 uppercase">
-                                            <div>Joined</div>
+                                            <div>{t('admin.customers.joined')}</div>
                                             <div className="text-white font-bold mt-0.5">{cust.joinDate}</div>
                                         </div>
                                     </div>
@@ -781,10 +782,10 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                             <div className="flex justify-between items-center">
                                 <div>
                                     <h3 className="font-serif text-[#C9A84C] text-lg font-semibold uppercase tracking-wider">
-                                        AI Studio Design Drafts
+                                        {t('admin.designs.title')}
                                     </h3>
                                     <p className="text-xs text-slate-400 mt-1">
-                                        Review saved AI-generated designs and publish them as products, artworks, or collections.
+                                        {t('admin.designs.subtitle')}
                                     </p>
                                 </div>
                                 {drafts.filter(d => d.status === 'draft').length > 1 && (
@@ -796,7 +797,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                                 : 'bg-black/40 border border-white/10 text-slate-400 hover:text-white'
                                         }`}
                                     >
-                                        {collectionMode ? 'Cancel Collection' : 'Create Collection'}
+                                        {collectionMode ? t('admin.designs.cancelCollection') : t('admin.designs.createCollection')}
                                     </button>
                                 )}
                             </div>
@@ -814,7 +815,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                                 !addToExistingMode ? 'bg-[#C9A84C] text-[#0A0F2C]' : 'bg-white/5 text-slate-400 hover:text-white'
                                             }`}
                                         >
-                                            New Collection
+                                            {t('admin.designs.newCollection')}
                                         </button>
                                         <button
                                             onClick={() => { setAddToExistingMode(true); setCollectionName(''); }}
@@ -822,22 +823,21 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                                 addToExistingMode ? 'bg-[#C9A84C] text-[#0A0F2C]' : 'bg-white/5 text-slate-400 hover:text-white'
                                             }`}
                                         >
-                                            Add to Existing
+                                            {t('admin.designs.addToExisting')}
                                         </button>
                                     </div>
 
                                     {addToExistingMode ? (
                                         <>
                                             <p className="text-[10px] text-slate-400">
-                                                Selected {selectedDraftIds.length} draft{selectedDraftIds.length !== 1 ? 's' : ''}.
-                                                Choose an existing collection to add them to.
+                                                {t('admin.designs.selectedAdd', { count: selectedDraftIds.length })}
                                             </p>
                                             <select
                                                 value={existingCollectionId}
                                                 onChange={(e) => setExistingCollectionId(e.target.value)}
                                                 className="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-xs text-white outline-none cursor-pointer"
                                             >
-                                                <option value="">— Select a collection —</option>
+                                                <option value="">— {t('admin.designs.selectCollection')} —</option>
                                                 {collections.map((c) => (
                                                     <option key={c.id} value={c.id}>{c.name}</option>
                                                 ))}
@@ -846,28 +846,27 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                                 disabled
                                                 className="px-4 py-2 bg-slate-700 text-slate-400 text-[10px] font-mono font-bold uppercase tracking-wider rounded-lg cursor-not-allowed opacity-60"
                                             >
-                                                🚧 Add to Collection (Coming Soon)
+                                                🚧 {t('admin.designs.addComingSoon')}
                                             </button>
                                         </>
                                     ) : (
                                         <>
                                             <p className="text-[10px] text-slate-400">
-                                                Selected {selectedDraftIds.length} draft{selectedDraftIds.length !== 1 ? 's' : ''}.
-                                                Select drafts below, then name your collection.
+                                                {t('admin.designs.selectedName', { count: selectedDraftIds.length })}
                                             </p>
                                             <div className="grid grid-cols-2 gap-3">
                                                 <input
                                                     type="text"
                                                     value={collectionName}
                                                     onChange={(e) => setCollectionName(e.target.value)}
-                                                    placeholder="Collection name (e.g. Fatimid Digital Capsule)"
+                                                    placeholder={t('admin.designs.namePlaceholder')}
                                                     className="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-xs text-white outline-none"
                                                 />
                                                 <input
                                                     type="text"
                                                     value={collectionTagline}
                                                     onChange={(e) => setCollectionTagline(e.target.value)}
-                                                    placeholder="Tagline (optional)"
+                                                    placeholder={t('admin.designs.taglinePlaceholder')}
                                                     className="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-xs text-white outline-none"
                                                 />
                                             </div>
@@ -876,7 +875,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                                     if (selectedDraftIds.length === 0 || !collectionName) return;
                                                     const selectedDrafts = drafts.filter(d => selectedDraftIds.includes(d.id));
                                                     const result = designPublisher.publishAsCollection(selectedDrafts, collectionName, collectionTagline);
-                                                    setPublishMsg(`Collection "${result.entityName}" published successfully! (${selectedDrafts.length} designs)`);
+                                                    setPublishMsg(t('admin.designs.publishedCollection', { name: result.entityName, count: selectedDrafts.length }));
                                                     setCollectionMode(false);
                                                     setSelectedDraftIds([]);
                                                     setCollectionName('');
@@ -886,7 +885,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                                 disabled={selectedDraftIds.length === 0 || !collectionName}
                                                 className="px-4 py-2 bg-[#C9A84C] text-[#0A0F2C] text-[10px] font-mono font-bold uppercase tracking-wider rounded-lg transition cursor-pointer disabled:opacity-40"
                                             >
-                                                Publish Collection
+                                                {t('admin.designs.publishCollection')}
                                             </button>
                                         </>
                                     )}
@@ -897,9 +896,9 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                 {drafts.length === 0 ? (
                                     <div className="text-center py-16 border border-dashed border-white/10 rounded-2xl">
                                         <Bookmark size={28} className="text-[#C9A84C]/30 mx-auto mb-3" />
-                                        <p className="text-sm text-[#E8E0D5]/60 mb-1">No saved designs from AI Studio</p>
+                                        <p className="text-sm text-[#E8E0D5]/60 mb-1">{t('admin.designs.emptyTitle')}</p>
                                         <p className="text-[10px] text-slate-500">
-                                            Go to <Link href="/ai" className="text-[#C9A84C] underline">AI Studio</Link>, generate a design, and hit Save.
+                                            {t('admin.designs.emptyHint')} <Link href="/ai" className="text-[#C9A84C] underline">{t('nav.aiStudio')}</Link>.
                                         </p>
                                     </div>
                                 ) : (
@@ -943,24 +942,24 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                                     <button
                                                         onClick={() => {
                                                             const result = designPublisher.publishAsFashion(draft);
-                                                            setPublishMsg(`"${result.entityName}" published as Fashion Product!`);
+                                                            setPublishMsg(t('admin.designs.publishedFashion', { name: result.entityName }));
                                                             setTimeout(() => setPublishMsg(null), 3000);
                                                         }}
                                                         className="px-2 py-1.5 bg-[#C9A84C]/10 text-[#C9A84C] text-[8px] font-mono uppercase tracking-wider border border-[#C9A84C]/30 rounded-lg hover:bg-[#C9A84C]/20 transition cursor-pointer"
-                                                        title="Publish as Fashion Product"
+                                                        title={t('admin.designs.publishFashionTitle')}
                                                     >
-                                                        <Shirt size={10} className="inline mr-0.5" />Fashion
+                                                        <Shirt size={10} className="inline mr-0.5" />{t('admin.designs.publishFashion')}
                                                     </button>
                                                     <button
                                                         onClick={() => {
                                                             const result = designPublisher.publishAsArt(draft);
-                                                            setPublishMsg(`"${result.entityName}" published as Art Piece!`);
+                                                            setPublishMsg(t('admin.designs.publishedArt', { name: result.entityName }));
                                                             setTimeout(() => setPublishMsg(null), 3000);
                                                         }}
                                                         className="px-2 py-1.5 bg-[#C9A84C]/10 text-[#C9A84C] text-[8px] font-mono uppercase tracking-wider border border-[#C9A84C]/30 rounded-lg hover:bg-[#C9A84C]/20 transition cursor-pointer"
-                                                        title="Publish as Art Piece"
+                                                        title={t('admin.designs.publishArtTitle')}
                                                     >
-                                                        <Image size={10} className="inline mr-0.5" />Art
+                                                        <Image size={10} className="inline mr-0.5" />{t('admin.designs.publishArt')}
                                                     </button>
                                                     {/* Export as JSON */}
                                                     <button
@@ -974,16 +973,16 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                                             URL.revokeObjectURL(url);
                                                         }}
                                                         className="px-2 py-1.5 bg-[#1B2A6B]/50 text-[#4FC3F7] border border-[#4FC3F7]/20 rounded-lg text-[8px] font-mono uppercase tracking-wider hover:bg-[#1B2A6B] transition cursor-pointer"
-                                                        title="Export design as JSON"
+                                                        title={t('admin.designs.exportTitle')}
                                                     >
-                                                        <Download size={10} className="inline mr-0.5" />Export
+                                                        <Download size={10} className="inline mr-0.5" />{t('admin.designs.export')}
                                                     </button>
                                                     <button
                                                         onClick={() => {
                                                             deleteDraft(draft.id);
                                                         }}
                                                         className="p-1.5 bg-red-950/20 text-red-400 hover:bg-red-900 rounded-lg transition cursor-pointer"
-                                                        title="Delete draft"
+                                                        title={t('admin.designs.deleteDraft')}
                                                     >
                                                         <Trash2 size={12} />
                                                     </button>
@@ -1008,14 +1007,14 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                         >
                             <ErrorBoundary label="admin:ai-logs">
                             <h3 className="font-serif text-xl text-white mb-2 flex items-center gap-1.5">
-                                <Cpu className="text-[#C9A84C]" size={20} /> REAL-TIME AI STUDIO TELEMETRY
+                                <Cpu className="text-[#C9A84C]" size={20} /> {t('admin.aiLogs.title')}
                             </h3>
                             <div className="divide-y divide-white/5 bg-[#090D2A]/80 rounded-xl border border-white/5 p-6">
                                 {aiGenerationLogs.map((log) => (
                                     <div key={log.id} className="py-4 first:pt-0 last:pb-0 flex justify-between gap-6 items-center text-xs">
                                         <div>
                                             <span className="text-gray-500 font-mono text-[9px] uppercase tracking-wider block mb-1">
-                                                {log.stamp} &bull; Prompt telemetry
+                                                {log.stamp} &bull; {t('admin.aiLogs.promptTelemetry')}
                                             </span>
                                             <blockquote className="text-white font-mono italic">&ldquo;{log.prompt}&rdquo;</blockquote>
                                         </div>

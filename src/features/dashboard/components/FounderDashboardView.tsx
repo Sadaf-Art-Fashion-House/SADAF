@@ -13,6 +13,8 @@ import {
 import Link from 'next/link';
 import type { UserProfile } from '@/shared/types';
 import { useWSFounderDashboardData } from '@/features/dashboard/hooks/useDashboardData';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
+import type { TranslationKey } from '@/features/i18n/dictionaries';
 import { ErrorBanner } from '@/shared/ui/ErrorGuidance';
 import { ErrorBoundary } from '@/shared/ui/ErrorBoundary';
 
@@ -31,6 +33,7 @@ interface FounderDashboardViewProps {
 }
 
 export default function FounderDashboardView({ user, onLogout }: FounderDashboardViewProps) {
+    const { t } = useLanguage();
     const [founderTab, setFounderTab] = useState<'analytics' | 'revenue' | 'team'>('analytics');
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
@@ -71,7 +74,7 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
         };
 
         setTeam((prev) => [...prev, newMember]);
-        setSuccessMsg(`Artisan credentials registered for ${inviteName}.`);
+        setSuccessMsg(t('founder.team.added', { name: inviteName }));
         setInviteName('');
         setTimeout(() => setSuccessMsg(null), 3500);
     }, [inviteName, inviteRole]);
@@ -108,13 +111,13 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
                         <div>
                             <span className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold flex items-center gap-1.5 mb-1 animate-pulse">
                                 <Crown size={14} />
-                                EXECUTIVE SUMMIT PLANE &bull; ديوان الإدارة العامة
+                                {t('founder.header.kicker')}
                             </span>
                             <h1 className="text-3xl md:text-5xl font-serif text-white uppercase tracking-tight">
-                                Chief Executive: {user.fullName || 'Directress Yasmine'}
+                                {t('founder.header.title', { name: user.fullName || t('founder.header.defaultName') })}
                             </h1>
                             <p className="text-xs text-slate-400 mt-1 max-w-xl">
-                                Ultimate accounting books, artisan personnel dispatch, and real-time AI creation metrics.
+                                {t('founder.header.subtitle')}
                             </p>
                         </div>
 
@@ -123,13 +126,13 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
                                 href="/dashboard"
                                 className="px-4 py-2 bg-black/40 hover:bg-white text-[10px] font-mono uppercase tracking-widest font-bold text-gray-300 hover:text-[#0A0F2C] border border-white/10 transition rounded-xl cursor-pointer"
                             >
-                                Dashboard Home
+                                {t('admin.sidebar.dashboardHome')}
                             </Link>
                             <button
                                 onClick={onLogout}
                                 className="px-4 py-2 bg-black/40 hover:bg-white text-[10px] font-mono uppercase tracking-widest font-bold text-gray-300 hover:text-[#0A0F2C] border border-[#C9A84C]/20 transition rounded-xl cursor-pointer"
                             >
-                                Logout Summit
+                                {t('founder.header.logout')}
                             </button>
                         </div>
                     </div>
@@ -137,9 +140,9 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
                     {/* Tab navigation */}
                     <div className="flex gap-2 mt-8 bg-[#090D2A]/80 p-1.5 border border-white/5 rounded-xl w-fit">
                         {[
-                            { id: 'analytics', label: 'Analytics' },
-                            { id: 'revenue', label: 'Revenue' },
-                            { id: 'team', label: 'Team' },
+                            { id: 'analytics', label: t('founder.tabs.analytics') },
+                            { id: 'revenue', label: t('founder.tabs.revenue') },
+                            { id: 'team', label: t('founder.tabs.team') },
                         ].map((tab) => (
                             <button
                                 key={tab.id}
@@ -161,33 +164,33 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
             <section className="py-12 px-4 md:px-8 max-w-7xl mx-auto">
                 {/* Real-time data degradation banner */}
                 {dataError && (
-                    <ErrorBanner tone="yellow" icon={AlertTriangle} message={`Live data is degraded: ${dataError}`} />
+                    <ErrorBanner tone="yellow" icon={AlertTriangle} message={t('admin.liveDegraded', { error: dataError })} />
                 )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     {/* Left sidebar */}
                     <div className="lg:col-span-3 space-y-4">
                         <div className="p-5 bg-[#1B2A6B]/20 border border-[#C9A84C]/25 rounded-2xl">
-                            <span className="text-[9px] font-mono text-slate-500 uppercase block mb-1">CASH FLOW LIQUIDITY</span>
+                            <span className="text-[9px] font-mono text-slate-500 uppercase block mb-1">{t('founder.cashFlow')}</span>
                             <div className="flex gap-2 items-center">
                                 <Coins size={16} className="text-[#C9A84C]" />
                                 <span className="text-lg font-mono font-bold text-white">$148,500.00</span>
                             </div>
                             <p className="text-[10px] text-slate-400 mt-2">
-                                94% of liquid capital securely locked in sovereign Alexandria vault ledgers.
+                                {t('founder.cashFlow.hint')}
                             </p>
                         </div>
 
                         <div className="p-5 bg-[#0A0F2C]/80 border border-white/5 rounded-2xl">
-                            <span className="text-[9px] font-mono text-slate-500 uppercase block mb-1">FOUNDER TRUST</span>
+                            <span className="text-[9px] font-mono text-slate-500 uppercase block mb-1">{t('founder.trust')}</span>
                             <span className="text-2xl font-serif text-white block font-bold">98.4%</span>
-                            <p className="text-[10px] text-slate-400 mt-1">Curator confidence index up 2.7% this quarter.</p>
+                            <p className="text-[10px] text-slate-400 mt-1">{t('founder.trust.hint')}</p>
                         </div>
 
                         <div className="p-5 bg-[#0A0F2C]/80 border border-white/5 rounded-2xl">
-                            <span className="text-[9px] font-mono text-slate-500 uppercase block mb-1">ATELIER OCCUPANCY</span>
+                            <span className="text-[9px] font-mono text-slate-500 uppercase block mb-1">{t('founder.occupancy')}</span>
                             <span className="text-2xl font-serif text-white block font-bold">12/14</span>
-                            <p className="text-[10px] text-slate-400 mt-1">Workstations currently occupied by artisans.</p>
+                            <p className="text-[10px] text-slate-400 mt-1">{t('founder.occupancy.hint')}</p>
                         </div>
                     </div>
 
@@ -211,7 +214,7 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
                                     <ErrorBoundary label="founder:analytics">
                                     <div className="flex items-center justify-between">
                                         <span className="text-[8px] font-mono uppercase tracking-widest text-gray-600">
-                                            EXECUTIVE FOUNDER METRICS
+                                            {t('founder.metrics')}
                                         </span>
                                         <span className={`inline-flex items-center gap-1 text-[8px] font-mono uppercase tracking-widest ${
                                             isLive ? 'text-green-400' : 'text-yellow-500'
@@ -219,7 +222,7 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
                                             <span className={`w-1.5 h-1.5 rounded-full ${
                                                 isLive ? 'bg-green-400 animate-pulse' : 'bg-yellow-500'
                                             }`} />
-                                            {isLive ? 'LIVE via WebSocket' : 'Polling 15s'}
+                                            {isLive ? t('admin.live') : t('admin.polling15')}
                                         </span>
                                     </div>
 
@@ -238,7 +241,7 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
 
                                     {/* Artisan pulse */}
                                     <div className="p-6 rounded-xl bg-[#090D2A]/80 border border-white/5">
-                                        <h4 className="font-serif text-white text-base font-semibold mb-3">ATELIER PULSE (WEEKLY)</h4>
+                                        <h4 className="font-serif text-white text-base font-semibold mb-3">{t('founder.pulse')}</h4>
                                         <div className="h-36 flex items-end justify-between gap-3 pt-6">
                                             {[72, 50, 88, 65, 95, 78, 100].map((val, idx) => (
                                                 <div key={idx} className="flex-1 flex flex-col items-center gap-2">
@@ -247,7 +250,7 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
                                                         style={{ height: `${val * 0.8}px` }}
                                                     />
                                                     <span className="text-[8px] font-mono uppercase text-gray-500">
-                                                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][idx]}
+                                                        {t(['admin.day.mon', 'admin.day.tue', 'admin.day.wed', 'admin.day.thu', 'admin.day.fri', 'admin.day.sat', 'admin.day.sun'][idx] as TranslationKey)}
                                                     </span>
                                                 </div>
                                             ))}
@@ -268,17 +271,17 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
                                 >
                                     <ErrorBoundary label="founder:revenue">
                                     <h3 className="font-serif text-[#C9A84C] text-lg font-semibold uppercase tracking-wider">
-                                        Transaction Ledger
+                                        {t('founder.revenue.title')}
                                     </h3>
                                     <div className="bg-[#090D2A]/80 border border-white/5 rounded-xl p-4 overflow-x-auto">
                                         <table className="w-full text-left text-xs divide-y divide-white/5">
                                             <thead className="text-[10px] uppercase text-gray-500 font-mono">
                                                 <tr>
-                                                    <th className="py-2.5">Ref</th>
-                                                    <th>Client</th>
-                                                    <th>Value</th>
-                                                    <th>Type</th>
-                                                    <th>Details</th>
+                                                    <th className="py-2.5">{t('founder.table.ref')}</th>
+                                                    <th>{t('founder.table.client')}</th>
+                                                    <th>{t('founder.table.value')}</th>
+                                                    <th>{t('founder.table.type')}</th>
+                                                    <th>{t('founder.table.details')}</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-white/5 text-gray-300">
@@ -310,9 +313,9 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
                                     <ErrorBoundary label="founder:team">
                                     <div className="flex justify-between items-center">
                                         <h3 className="font-serif text-[#C9A84C] text-lg font-semibold uppercase tracking-wider">
-                                            Artisan Personnel
+                                            {t('founder.team.title')}
                                         </h3>
-                                        <span className="text-[10px] font-mono text-slate-500">{team.length} members</span>
+                                        <span className="text-[10px] font-mono text-slate-500">{t('founder.team.members', { count: team.length })}</span>
                                     </div>
 
                                     <div className="space-y-3">
@@ -345,7 +348,7 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
                                     <div className="p-6 bg-[#090D2A]/80 border border-[#C9A84C]/25 rounded-xl">
                                         <h4 className="font-serif text-white text-base mb-3 flex items-center gap-2">
                                             <UserPlus size={16} className="text-[#C9A84C]" />
-                                            Invite Artisan
+                                            {t('founder.team.invite')}
                                         </h4>
                                         <form onSubmit={handleInviteTeam} className="flex flex-col sm:flex-row gap-3">
                                             <input
@@ -353,7 +356,7 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
                                                 required
                                                 value={inviteName}
                                                 onChange={(e) => setInviteName(e.target.value)}
-                                                placeholder="Full name of artisan..."
+                                                placeholder={t('founder.team.invitePlaceholder')}
                                                 className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white placeholder-slate-600 outline-none focus:border-[#C9A84C] transition"
                                             />
                                             <select
@@ -371,7 +374,7 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
                                                 type="submit"
                                                 className="px-4 py-2 bg-[#C9A84C] hover:bg-white text-[#0A0F2C] text-[10px] font-mono font-bold uppercase tracking-wider rounded-lg transition cursor-pointer shrink-0"
                                             >
-                                                Add to Roster
+                                                {t('founder.team.add')}
                                             </button>
                                         </form>
                                     </div>

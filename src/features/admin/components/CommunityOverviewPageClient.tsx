@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { ROUTES } from '@/config/routes';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 import { useCommunityOverview } from '../hooks/useCommunityOverview';
 import CommunityOverviewView from './CommunityOverviewView';
 
@@ -22,6 +23,7 @@ interface CommunityOverviewPageClientProps {
  */
 export default function CommunityOverviewPageClient({ initialReferrer }: CommunityOverviewPageClientProps) {
     const { user } = useAuth();
+    const { t } = useLanguage();
     const { data, loading, error, wsLive, refetch, resolveRequest, resolvingId } = useCommunityOverview();
 
     // User is not logged in — show sign-in prompt
@@ -30,13 +32,13 @@ export default function CommunityOverviewPageClient({ initialReferrer }: Communi
             <div className="min-h-[60vh] flex items-center justify-center">
                 <div className="text-center">
                     <p className="text-sm text-[#E8E0D5]/60 mb-4">
-                        You need to sign in to view the community overview.
+                        {t('communityOverview.needSignIn')}
                     </p>
                     <Link
                         href={ROUTES.AUTH}
                         className="inline-block px-6 py-3 bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/80 text-[#0A0F2C] text-xs font-mono font-bold uppercase tracking-widest rounded-xl transition-all duration-300 hover:scale-105"
                     >
-                        Sign In
+                        {t('common.signIn')}
                     </Link>
                 </div>
             </div>

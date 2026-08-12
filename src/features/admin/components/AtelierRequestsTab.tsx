@@ -35,17 +35,28 @@ import { DESIGN_STATUS_STYLES } from '@/features/designer/constants';
 import { COMMISSION_POOL_RATE, computeCommissionSplit, participantsFor } from '@/features/designer/utils/commissionSplit';
 import { useAtelierRequests } from '../hooks/useAtelierRequests';
 import { useExportChart } from '@/features/analytics/hooks/useExportChart';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
+import type { TranslationKey } from '@/features/i18n/dictionaries';
 import { formatRelativeTime } from '@/features/notifications/utils/formatRelativeTime';
 
 // ─── Status filter options ───────────────────────────────────────────────────
 
-const FILTERS: Array<{ id: DesignStatus | 'all'; label: string }> = [
-    { id: 'all', label: 'All' },
-    { id: 'draft', label: 'Draft' },
-    { id: 'under_review', label: 'Under Review' },
-    { id: 'approved', label: 'Approved' },
-    { id: 'in_production', label: 'In Production' },
-    { id: 'rejected', label: 'Rejected' },
+/** Translation key per pipeline status (local to this tab). */
+const STATUS_KEYS: Record<DesignStatus, TranslationKey> = {
+    draft: 'atelierAdmin.status.draft',
+    under_review: 'atelierAdmin.status.underReview',
+    approved: 'atelierAdmin.status.approved',
+    in_production: 'atelierAdmin.status.inProduction',
+    rejected: 'atelierAdmin.status.rejected',
+};
+
+const FILTERS: Array<{ id: DesignStatus | 'all'; labelKey: TranslationKey }> = [
+    { id: 'all', labelKey: 'atelierAdmin.filter.all' },
+    { id: 'draft', labelKey: 'atelierAdmin.status.draft' },
+    { id: 'under_review', labelKey: 'atelierAdmin.status.underReview' },
+    { id: 'approved', labelKey: 'atelierAdmin.status.approved' },
+    { id: 'in_production', labelKey: 'atelierAdmin.status.inProduction' },
+    { id: 'rejected', labelKey: 'atelierAdmin.status.rejected' },
 ];
 
 // ─── Small pieces ────────────────────────────────────────────────────────────
@@ -76,10 +87,11 @@ function KpiCard({
 
 function StatusChip({ status }: { status: DesignStatus }) {
     const style = DESIGN_STATUS_STYLES[status];
+    const { t } = useLanguage();
     return (
         <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full border text-[8px] font-mono uppercase tracking-wider ${style.chip}`}>
             <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
-            {style.label}
+            {t(STATUS_KEYS[status])}
         </span>
     );
 }
@@ -113,6 +125,7 @@ function SubmissionCard({
     onReview: (id: string, status: DesignStatus, adminNote?: string) => Promise<{ ok: boolean; error?: string }>;
     onFeedback: (message: { kind: 'success' | 'error'; text: string }) => void;
 }) {
+    const { t, language } = useLanguage();
     const [rejecting, setRejecting] = useState(false);
     const [note, setNote] = useState('');
 
@@ -134,7 +147,7 @@ function SubmissionCard({
     const handleReview = async (nextStatus: DesignStatus, requireNote = false) => {
         const trimmedNote = note.trim();
         if (requireNote && !trimmedNote) {
-            onFeedback({ kind: 'error', text: 'Add a note so the designer understands the decision.' });
+            onFeedback({ kind: 'error', text: t('atelierAdmin.needNote') });
             return;
         }
         const result = await onReview(id, nextStatus, trimmedNote || undefined);
@@ -145,13 +158,13 @@ function SubmissionCard({
                 kind: 'success',
                 text:
                     nextStatus === 'approved'
-                        ? `“${title}” approved — moving to the atelier.`
+                        ? t('atelierAdmin.approvedMsg', { name: title })
                         : nextStatus === 'rejected'
-                            ? `“${title}” rejected with feedback.`
-                            : `“${title}” moved to ${nextStatus === 'in_production' ? 'production' : 'review'}.`,
+                            ? t('atelierAdmin.rejectedMsg', { name: title })
+                            : t(nextStatus === 'in_production' ? 'atelierAdmin.movedProduction' : 'atelierAdmin.movedReview', { name: title }),
             });
         } else {
-            onFeedback({ kind: 'error', text: result.error ?? 'Failed to update the submission.' });
+            onFeedback({ kind: 'error', text: result.error ?? t('atelierAdmin.failedMsg') });
         }
     };
 
@@ -161,7 +174,7 @@ function SubmissionCard({
                 <div className="min-w-0">
                     <h4 className="font-serif text-white text-sm leading-snug">{title}</h4>
                     <p className="text-[9px] font-mono uppercase tracking-wider text-[#C9A84C]/70 mt-1">
-                        {category} · {formatRelativeTime(submittedAt)}
+                        {category} · {formatRelativeTime(submittedAt, language)}
                     </p>
                 </div>
                 <div className="flex flex-col items-end gap-2 shrink-0">
@@ -178,7 +191,7 @@ function SubmissionCard({
 
             {adminNote && (
                 <p className="text-[9px] text-[#E8E0D5]/40 border-t border-white/5 pt-2 italic leading-relaxed">
-                    Atelier note: “{adminNote}”
+                    {t('atelierAdmin.atelierNote')} “{adminNote}”
                 </p>
             )}
 
@@ -186,11 +199,15 @@ function SubmissionCard({
             {commissionData && (
                 <div className="p-3 rounded-xl bg-[#C9A84C]/5 border border-[#C9A84C]/15">
                     <p className="text-[8px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold mb-1">
-                        Projected Commission Split
+                        {t('atelierAdmin.commissionTitle')}
                     </p>
                     <p className="text-[8px] text-slate-500 mb-1.5">
-                        Pool: {Math.round(COMMISSION_POOL_RATE * 100)}% of ${price.toLocaleString()} =
-                        ${commissionData.pool.toLocaleString()} · {commissionData.participants.length} participants
+                        {t('atelierAdmin.commissionPool', {
+                            rate: Math.round(COMMISSION_POOL_RATE * 100),
+                            price: price.toLocaleString(),
+                            pool: commissionData.pool.toLocaleString(),
+                            count: commissionData.participants.length,
+                        })}
                     </p>
                     <div className="flex flex-col gap-1">
                         {commissionData.shares.map((share) => {
@@ -205,7 +222,7 @@ function SubmissionCard({
                                         {member.name}
                                         {member.id === collaboration?.ownerId && (
                                             <span className="ml-1 text-[7px] font-mono uppercase text-[#C9A84C]/70">
-                                                (owner)
+                                                {t('atelierAdmin.owner')}
                                             </span>
                                         )}
                                     </span>
@@ -226,7 +243,7 @@ function SubmissionCard({
                     disabled={reviewing}
                     className="self-start py-2 px-4 rounded-lg border border-[#4FC3F7]/40 text-[#4FC3F7] text-[9px] font-mono font-bold uppercase tracking-widest hover:bg-[#4FC3F7]/10 transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-wait"
                 >
-                    Start Review
+                    {t('atelierAdmin.startReview')}
                 </button>
             )}
 
@@ -238,7 +255,7 @@ function SubmissionCard({
                             disabled={reviewing}
                             className="flex-1 py-2 rounded-lg bg-emerald-500 text-[#090D2A] text-[9px] font-mono font-bold uppercase tracking-widest hover:bg-emerald-400 transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-wait flex items-center justify-center gap-1.5"
                         >
-                            <CheckCircle2 size={11} /> Approve
+                            <CheckCircle2 size={11} /> {t('atelierAdmin.approve')}
                         </button>
                         <button
                             onClick={() => {
@@ -248,19 +265,19 @@ function SubmissionCard({
                             disabled={reviewing}
                             className="flex-1 py-2 rounded-lg border border-red-500/40 text-red-400 text-[9px] font-mono font-bold uppercase tracking-widest hover:bg-red-500/10 transition-all duration-300 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
                         >
-                            <XCircle size={11} /> Reject
+                            <XCircle size={11} /> {t('atelierAdmin.reject')}
                         </button>
                     </div>
                     {rejecting && (
                         <div className="flex flex-col gap-2 p-3 bg-red-950/20 border border-red-500/20 rounded-lg">
                             <label className="flex items-center gap-1.5 text-[8px] font-mono uppercase tracking-wider text-red-300">
-                                <MessageSquare size={9} /> Feedback for the designer *
+                                <MessageSquare size={9} /> {t('atelierAdmin.feedbackLabel')} *
                             </label>
                             <textarea
                                 value={note}
                                 onChange={(e) => setNote(e.target.value)}
                                 rows={2}
-                                placeholder="e.g. Refine the cuff embroidery density and resubmit…"
+                                placeholder={t('atelierAdmin.feedbackPlaceholder')}
                                 className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-[11px] text-white outline-none focus:border-red-500/50 transition resize-none"
                             />
                             <div className="flex gap-2">
@@ -269,13 +286,13 @@ function SubmissionCard({
                                     disabled={reviewing}
                                     className="flex-1 py-1.5 rounded-lg bg-red-500 text-white text-[9px] font-mono font-bold uppercase tracking-widest hover:bg-red-400 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-wait flex items-center justify-center gap-1.5"
                                 >
-                                    <Send size={10} /> Confirm Reject
+                                    <Send size={10} /> {t('atelierAdmin.confirmReject')}
                                 </button>
                                 <button
                                     onClick={() => setRejecting(false)}
                                     className="px-3 py-1.5 rounded-lg border border-white/10 text-[9px] font-mono uppercase tracking-widest text-slate-400 hover:text-white transition-all cursor-pointer"
                                 >
-                                    Cancel
+                                    {t('atelierAdmin.cancel')}
                                 </button>
                             </div>
                         </div>
@@ -289,13 +306,13 @@ function SubmissionCard({
                     disabled={reviewing}
                     className="self-start py-2 px-4 rounded-lg bg-[#C9A84C] text-[#090D2A] text-[9px] font-mono font-bold uppercase tracking-widest hover:bg-[#D9BC63] transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-wait flex items-center justify-center gap-1.5"
                 >
-                    <Hammer size={11} /> Start Production
+                    <Hammer size={11} /> {t('atelierAdmin.startProduction')}
                 </button>
             )}
 
             {(status === 'in_production' || status === 'rejected') && (
                 <p className="text-[9px] font-mono uppercase tracking-wider text-slate-500">
-                    {status === 'in_production' ? 'In the atelier — no further action' : 'Closed — feedback sent to the designer'}
+                    {status === 'in_production' ? t('atelierAdmin.inProductionNote') : t('atelierAdmin.rejectedNote')}
                 </p>
             )}
         </div>
@@ -305,6 +322,7 @@ function SubmissionCard({
 // ─── Main tab ────────────────────────────────────────────────────────────────
 
 export default function AtelierRequestsTab() {
+    const { t } = useLanguage();
     const { data, loading, error, wsLive, refetch, reviewSubmission, reviewing } = useAtelierRequests();
     const [filter, setFilter] = useState<DesignStatus | 'all'>('all');
     const [feedback, setFeedback] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
@@ -333,17 +351,17 @@ export default function AtelierRequestsTab() {
             <div className="flex flex-wrap justify-between items-start gap-3">
                 <div>
                     <h3 className="font-serif text-[#C9A84C] text-lg font-semibold uppercase tracking-wider">
-                        Atelier Requests
+                        {t('atelierAdmin.title')}
                     </h3>
                     <p className="text-xs text-slate-400 mt-1">
-                        Review designs submitted by SADAF designers — approve, reject with feedback, or send them to production.
+                        {t('atelierAdmin.subtitle')}
                     </p>
                 </div>
                 <span className={`inline-flex items-center gap-1 text-[8px] font-mono uppercase tracking-widest ${
                     wsLive ? 'text-green-400' : 'text-yellow-500'
                 }`}>
                     {wsLive ? <Wifi size={10} /> : <WifiOff size={10} />}
-                    {wsLive ? 'LIVE via WebSocket' : 'Polling 30s'}
+                    {wsLive ? t('admin.live') : t('atelierAdmin.polling30')}
                 </span>
             </div>
 
@@ -356,7 +374,7 @@ export default function AtelierRequestsTab() {
                         onClick={refetch}
                         className="text-[9px] font-mono uppercase tracking-wider text-[#C9A84C] border border-[#C9A84C]/30 rounded px-2 py-1 hover:bg-[#C9A84C]/10 transition-all cursor-pointer"
                     >
-                        Retry
+                        {t('atelierAdmin.retry')}
                     </button>
                 </div>
             )}
@@ -373,11 +391,11 @@ export default function AtelierRequestsTab() {
             {/* KPIs */}
             {stats && (
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <KpiCard label="Total" value={stats.total} icon={Layers} accent="text-[#C9A84C]" />
-                    <KpiCard label="Under Review" value={stats.underReview} icon={Clock} accent="text-[#4FC3F7]" />
-                    <KpiCard label="Approved" value={stats.approved} icon={CheckCircle2} accent="text-emerald-400" />
-                    <KpiCard label="In Production" value={stats.inProduction} icon={PackageCheck} accent="text-[#C9A84C]" />
-                    <KpiCard label="Rejected" value={stats.rejected} icon={XCircle} accent="text-red-400" />
+                    <KpiCard label={t('atelierAdmin.kpi.total')} value={stats.total} icon={Layers} accent="text-[#C9A84C]" />
+                    <KpiCard label={t('atelierAdmin.kpi.underReview')} value={stats.underReview} icon={Clock} accent="text-[#4FC3F7]" />
+                    <KpiCard label={t('atelierAdmin.kpi.approved')} value={stats.approved} icon={CheckCircle2} accent="text-emerald-400" />
+                    <KpiCard label={t('atelierAdmin.kpi.inProduction')} value={stats.inProduction} icon={PackageCheck} accent="text-[#C9A84C]" />
+                    <KpiCard label={t('atelierAdmin.kpi.rejected')} value={stats.rejected} icon={XCircle} accent="text-red-400" />
                 </div>
             )}
 
@@ -390,10 +408,10 @@ export default function AtelierRequestsTab() {
                     <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                         <div>
                             <h4 className="font-serif text-[#C9A84C] text-sm font-semibold uppercase tracking-wider">
-                                Atelier Report
+                                {t('atelierAdmin.report.title')}
                             </h4>
                             <p className="text-[10px] text-slate-500 mt-0.5">
-                                Expected commission per committed design — exportable as PNG or PDF.
+                                {t('atelierAdmin.report.subtitle')}
                             </p>
                         </div>
                         <div className="flex items-center gap-2">
@@ -404,7 +422,7 @@ export default function AtelierRequestsTab() {
                                     <button
                                         onClick={clearError}
                                         className="hover:text-white transition-colors cursor-pointer"
-                                        aria-label="Dismiss export error"
+                                        aria-label={t('atelierAdmin.dismissExportError')}
                                     >
                                         <X size={10} />
                                     </button>
@@ -414,7 +432,7 @@ export default function AtelierRequestsTab() {
                                 onClick={exportAsPNG}
                                 disabled={isExportingPNG || isExportingPDF}
                                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#4FC3F7]/10 text-[#4FC3F7] border border-[#4FC3F7]/30 text-[9px] font-mono uppercase tracking-wider hover:bg-[#4FC3F7]/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-wait"
-                                title="Export report as PNG"
+                                title={t('atelierAdmin.exportPngTitle')}
                             >
                                 {isExportingPNG ? (
                                     <span className="block w-3 h-3 rounded-full border-2 border-[#4FC3F7] border-t-transparent animate-spin" />
@@ -427,7 +445,7 @@ export default function AtelierRequestsTab() {
                                 onClick={exportAsPDF}
                                 disabled={isExportingPNG || isExportingPDF}
                                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#C9A84C]/10 text-[#C9A84C] border border-[#C9A84C]/30 text-[9px] font-mono uppercase tracking-wider hover:bg-[#C9A84C]/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-wait"
-                                title="Export report as PDF"
+                                title={t('atelierAdmin.exportPdfTitle')}
                             >
                                 {isExportingPDF ? (
                                     <span className="block w-3 h-3 rounded-full border-2 border-[#C9A84C] border-t-transparent animate-spin" />
@@ -443,12 +461,12 @@ export default function AtelierRequestsTab() {
                         <table className="w-full text-left border-collapse min-w-[640px]">
                             <thead>
                                 <tr className="border-b border-white/10">
-                                    <th className="py-2 pr-3 text-[8px] font-mono uppercase tracking-widest text-slate-500 font-semibold">Design</th>
-                                    <th className="py-2 pr-3 text-[8px] font-mono uppercase tracking-widest text-slate-500 font-semibold">Category</th>
-                                    <th className="py-2 pr-3 text-[8px] font-mono uppercase tracking-widest text-slate-500 font-semibold">Status</th>
-                                    <th className="py-2 pr-3 text-[8px] font-mono uppercase tracking-widest text-slate-500 font-semibold">Price</th>
+                                    <th className="py-2 pr-3 text-[8px] font-mono uppercase tracking-widest text-slate-500 font-semibold">{t('atelierAdmin.table.design')}</th>
+                                    <th className="py-2 pr-3 text-[8px] font-mono uppercase tracking-widest text-slate-500 font-semibold">{t('atelierAdmin.table.category')}</th>
+                                    <th className="py-2 pr-3 text-[8px] font-mono uppercase tracking-widest text-slate-500 font-semibold">{t('atelierAdmin.table.status')}</th>
+                                    <th className="py-2 pr-3 text-[8px] font-mono uppercase tracking-widest text-slate-500 font-semibold">{t('atelierAdmin.table.price')}</th>
                                     <th className="py-2 text-[8px] font-mono uppercase tracking-widest text-[#C9A84C] font-semibold">
-                                        Expected Commission
+                                        {t('atelierAdmin.table.commission')}
                                     </th>
                                 </tr>
                             </thead>
@@ -484,7 +502,7 @@ export default function AtelierRequestsTab() {
                                                 {commission ? (
                                                     <div className="flex flex-col gap-1">
                                                         <p className="text-[9px] font-mono text-[#C9A84C]">
-                                                            Pool: ${commission.pool.toLocaleString()} · {participants.length} participants
+                                                            {t('atelierAdmin.poolShort', { pool: commission.pool.toLocaleString(), count: participants.length })}
                                                         </p>
                                                         {commission.shares.map((share) => {
                                                             const member = participants.find((m) => m.id === share.memberId);
@@ -497,7 +515,7 @@ export default function AtelierRequestsTab() {
                                                                     {member.name}
                                                                     {member.id === s.collaboration?.ownerId && (
                                                                         <span className="ml-1 text-[7px] font-mono uppercase text-[#C9A84C]/60">
-                                                                            (owner)
+                                                                            ({t('atelierAdmin.owner')})
                                                                         </span>
                                                                     )}
                                                                     : {share.percent}% · ${share.amount.toLocaleString()}
@@ -539,7 +557,7 @@ export default function AtelierRequestsTab() {
                     <button
                         onClick={() => setFeedback(null)}
                         className="text-current/60 hover:text-current transition-colors cursor-pointer"
-                        aria-label="Dismiss message"
+                        aria-label={t('atelierAdmin.dismissMessage')}
                     >
                         <X size={13} />
                     </button>
@@ -558,7 +576,7 @@ export default function AtelierRequestsTab() {
                                 : 'bg-black/40 border-white/10 text-slate-400 hover:text-white hover:border-white/25'
                         }`}
                     >
-                        {f.label}
+                        {t(f.labelKey)}
                     </button>
                 ))}
             </div>
@@ -567,11 +585,11 @@ export default function AtelierRequestsTab() {
             {data && submissions.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 rounded-2xl bg-[#090D2A]/40 border border-dashed border-white/10 text-center">
                     <Layers size={28} className="text-[#C9A84C]/40 mb-3" />
-                    <p className="text-sm font-serif text-white">No submissions here</p>
+                    <p className="text-sm font-serif text-white">{t('atelierAdmin.noSubmissions')}</p>
                     <p className="text-[11px] text-slate-500 mt-1 max-w-sm">
                         {filter === 'all'
-                            ? 'Designer submissions will appear here as soon as they are sent to the atelier.'
-                            : 'No submissions match this status filter.'}
+                            ? t('atelierAdmin.emptyAll')
+                            : t('atelierAdmin.emptyFilter')}
                     </p>
                 </div>
             ) : (

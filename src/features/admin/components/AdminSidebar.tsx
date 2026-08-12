@@ -24,10 +24,12 @@ import {
 } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
 import { getUnreadErrorCount } from '@/features/error-logging';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 import SignOutButton from '@/shared/components/SignOutButton';
 
 export default function AdminSidebar() {
     const pathname = usePathname();
+    const { t } = useLanguage();
     const [mobileOpen, setMobileOpen] = useState(false);
     const [unreadErrors, setUnreadErrors] = useState(0);
 
@@ -51,18 +53,18 @@ export default function AdminSidebar() {
         icon: LucideIcon;
         badge?: number;
     }> = [
-        { href: ROUTES.DASHBOARD, label: 'Dashboard Home', icon: LayoutDashboard },
-        { href: ROUTES.DASHBOARD_ADMIN, label: 'Full Dashboard', icon: Compass },
-        { href: ROUTES.DASHBOARD_ADMIN_ANALYTICS, label: 'Analytics', icon: TrendingUp },
-        { href: ROUTES.DASHBOARD_ERROR_LOGS, label: 'Error Logs', icon: FileWarning, badge: unreadErrors },
-        { href: ROUTES.DASHBOARD_EMAIL_SETTINGS, label: 'Email Settings', icon: Mail },
-        { href: ROUTES.DASHBOARD_ADMIN_LEADERBOARD, label: 'Leaderboard', icon: Trophy },
-        { href: ROUTES.DASHBOARD_ADMIN_COMMUNITY, label: 'Community', icon: Users },
-        { href: ROUTES.STORE, label: 'Store', icon: Store },
-        { href: ROUTES.AI_STUDIO, label: 'AI Studio', icon: Cpu },
-        { href: ROUTES.ATELIER, label: 'Atelier', icon: Brush },
-        { href: ROUTES.ARTWORKS, label: 'Artworks', icon: Shirt },
-        { href: ROUTES.DASHBOARD_ADMIN_SETTINGS, label: 'Settings', icon: Settings },
+        { href: ROUTES.DASHBOARD, label: t('admin.sidebar.dashboardHome'), icon: LayoutDashboard },
+        { href: ROUTES.DASHBOARD_ADMIN, label: t('admin.sidebar.fullDashboard'), icon: Compass },
+        { href: ROUTES.DASHBOARD_ADMIN_ANALYTICS, label: t('admin.sidebar.analytics'), icon: TrendingUp },
+        { href: ROUTES.DASHBOARD_ERROR_LOGS, label: t('admin.sidebar.errorLogs'), icon: FileWarning, badge: unreadErrors },
+        { href: ROUTES.DASHBOARD_EMAIL_SETTINGS, label: t('admin.sidebar.emailSettings'), icon: Mail },
+        { href: ROUTES.DASHBOARD_ADMIN_LEADERBOARD, label: t('admin.sidebar.leaderboard'), icon: Trophy },
+        { href: ROUTES.DASHBOARD_ADMIN_COMMUNITY, label: t('admin.sidebar.community'), icon: Users },
+        { href: ROUTES.STORE, label: t('nav.store'), icon: Store },
+        { href: ROUTES.AI_STUDIO, label: t('nav.aiStudio'), icon: Cpu },
+        { href: ROUTES.ATELIER, label: t('nav.atelier'), icon: Brush },
+        { href: ROUTES.ARTWORKS, label: t('nav.arts'), icon: Shirt },
+        { href: ROUTES.DASHBOARD_ADMIN_SETTINGS, label: t('admin.sidebar.settings'), icon: Settings },
     ];
 
     const sidebarContent = (
@@ -74,7 +76,7 @@ export default function AdminSidebar() {
                     </div>
                 </span>
                 <span className="text-[9px] font-mono font-bold text-[#4FC3F7] uppercase tracking-widest truncate opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    Admin
+                    {t('admin.sidebar.roleAdmin')}
                 </span>
             </div>
 
@@ -158,7 +160,7 @@ export default function AdminSidebar() {
             <button
                 onClick={() => setMobileOpen(true)}
                 className="md:hidden fixed bottom-5 right-5 w-12 h-12 rounded-full bg-[#4FC3F7] text-[#0A0F2C] flex items-center justify-center shadow-lg shadow-[#4FC3F7]/30 z-50 hover:scale-105 transition-transform"
-                aria-label="Open navigation menu"
+                aria-label={t('common.openMenu')}
             >
                 <Menu size={20} />
             </button>
@@ -184,7 +186,7 @@ export default function AdminSidebar() {
                             <button
                                 onClick={() => setMobileOpen(false)}
                                 className="self-end p-1.5 rounded-lg text-[#E8E0D5]/60 hover:text-white hover:bg-white/5 transition-all"
-                                aria-label="Close menu"
+                                aria-label={t('common.closeMenu')}
                             >
                                 <X size={18} />
                             </button>
@@ -193,7 +195,7 @@ export default function AdminSidebar() {
                                     <div className="w-8 h-8 shrink-0 rounded-full bg-gradient-to-br from-[#4FC3F7] to-[#1B2A6B] flex items-center justify-center">
                                         <Shield size={14} className="text-white" />
                                     </div>
-                                    <span className="text-[9px] font-mono font-bold text-[#4FC3F7] uppercase tracking-widest">Admin</span>
+                                    <span className="text-[9px] font-mono font-bold text-[#4FC3F7] uppercase tracking-widest">{t('admin.sidebar.roleAdmin')}</span>
                                 </div>
                                 <nav className="flex flex-col gap-1 w-full">
                                     {links.map(mobileLink)}
