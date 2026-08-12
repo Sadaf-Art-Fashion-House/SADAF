@@ -77,6 +77,30 @@ const TAB_LABELS: Record<string, TranslationKey> = {
     growth: 'analytics.tab.growth',
 };
 
+/**
+ * The API/WS payload ships English-only KPI labels as data. Map the known
+ * templates to translation keys so the KPI cards render in the active
+ * language; unknown labels fall back to their raw text.
+ */
+const KPI_LABEL_KEYS: Record<string, TranslationKey> = {
+    'Total Revenue': 'analytics.kpi.totalRevenue',
+    'Orders': 'analytics.kpi.orders',
+    'Active Customers': 'analytics.kpi.activeCustomers',
+    'Avg Order Value': 'analytics.kpi.avgOrderValue',
+    'Conversion Rate': 'analytics.kpi.conversionRate',
+    'AI Designs Created': 'analytics.kpi.aiDesigns',
+};
+
+const DAY_LABEL_KEYS: Record<string, TranslationKey> = {
+    Mon: 'admin.day.mon',
+    Tue: 'admin.day.tue',
+    Wed: 'admin.day.wed',
+    Thu: 'admin.day.thu',
+    Fri: 'admin.day.fri',
+    Sat: 'admin.day.sat',
+    Sun: 'admin.day.sun',
+};
+
 /** Accessible labels for the toolbar banner's Retry button, per failed kind. */
 const TOOLBAR_RETRY_LABELS: Record<ToolbarExportKind, TranslationKey> = {
     charts: 'analytics.retryCharts',
@@ -396,7 +420,7 @@ function KpiCard({
     cardId,
     filename,
 }: {
-    label: string;
+    label: TranslationKey;
     value: string;
     change: string;
     isPositive: boolean;
@@ -404,6 +428,7 @@ function KpiCard({
     cardId: string;
     filename: string;
 }) {
+    const { t } = useLanguage();
     const cardRef = useRef<HTMLDivElement>(null);
     const { exportAsPNG, exportAsPDF, isExportingPNG, isExportingPDF, exportError, clearError } = useExportChart(cardRef, filename, 'kpi');
 
@@ -420,7 +445,7 @@ function KpiCard({
 
             <div ref={cardRef} id={cardId}>
                 <div className="flex items-center justify-between mb-2">
-                    <span className="text-[7px] font-mono uppercase tracking-widest text-[#E8E0D5]/40 font-semibold">{label}</span>
+                    <span className="text-[7px] font-mono uppercase tracking-widest text-[#E8E0D5]/40 font-semibold">{t(label)}</span>
                     <Icon size={13} className="text-[#C9A84C]/50 group-hover:text-[#C9A84C] transition-colors" />
                 </div>
                 <p className="text-lg font-serif text-white font-bold tracking-tight">{value}</p>
@@ -581,7 +606,7 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
                         return (
                             <KpiCard
                                 key={kpi.label}
-                                label={kpi.label}
+                                label={(KPI_LABEL_KEYS[kpi.label] ?? kpi.label) as TranslationKey}
                                 value={kpi.value}
                                 change={kpi.change}
                                 isPositive={kpi.isPositive}
@@ -695,13 +720,13 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={filteredRevenue} barCategoryGap="20%">
                                     <CartesianGrid strokeDasharray="3 3" stroke="#1B2A6B" strokeOpacity={0.3} />
-                                    <XAxis dataKey="label" tick={{ fill: '#E8E0D5', fontSize: 10, fontFamily: 'monospace' }} axisLine={{ stroke: '#1B2A6B' }} tickLine={false} />
+                                    <XAxis dataKey="label" tick={{ fill: '#E8E0D5', fontSize: 10, fontFamily: 'monospace' }} axisLine={{ stroke: '#1B2A6B' }} tickLine={false} tickFormatter={(v: string) => (DAY_LABEL_KEYS[v] ? t(DAY_LABEL_KEYS[v]) : v)} />
                                     <YAxis tick={{ fill: '#E8E0D5', fontSize: 10, fontFamily: 'monospace' }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
                                     <Tooltip content={<ChartTooltip />} cursor={{ fill: '#C9A84C', opacity: 0.08 }} />
                                     {filteredRevenue.some((d) => d.previousValue !== undefined) && (
-                                        <Bar dataKey="previousValue" name="Previous Period" fill="#1B2A6B" radius={[3, 3, 0, 0]} opacity={0.4} />
+                                        <Bar dataKey="previousValue" name={t('analytics.legend.previousPeriod')} fill="#1B2A6B" radius={[3, 3, 0, 0]} opacity={0.4} />
                                     )}
-                                    <Bar dataKey="value" name="Revenue" fill="#C9A84C" radius={[4, 4, 0, 0]} animationDuration={800} />
+                                    <Bar dataKey="value" name={t('analytics.series.revenue')} fill="#C9A84C" radius={[4, 4, 0, 0]} animationDuration={800} />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
@@ -723,7 +748,7 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
                                         <XAxis type="number" tick={{ fill: '#E8E0D5', fontSize: 9, fontFamily: 'monospace' }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
                                         <YAxis dataKey="label" type="category" tick={{ fill: '#E8E0D5', fontSize: 9, fontFamily: 'monospace' }} axisLine={false} tickLine={false} width={90} />
                                         <Tooltip content={<ChartTooltip />} cursor={{ fill: '#C9A84C', opacity: 0.08 }} />
-                                        <Bar dataKey="value" name="Revenue" fill="#4FC3F7" radius={[0, 4, 4, 0]} animationDuration={800} />
+                                        <Bar dataKey="value" name={t('analytics.series.revenue')} fill="#4FC3F7" radius={[0, 4, 4, 0]} animationDuration={800} />
                                     </BarChart>
                                 </ResponsiveContainer>
                             </div>
@@ -838,9 +863,9 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
                                             {payload.map((entry: any, i: number) => (<p key={i} className="text-[10px] font-mono" style={{ color: entry.color }}>{entry.name}: {entry.value.toLocaleString()}</p>))}
                                         </div>);
                                     }} />
-                                    <Line type="monotone" dataKey="total" name="Total Users" stroke="#C9A84C" strokeWidth={2} dot={{ r: 3, fill: '#C9A84C', strokeWidth: 0 }} activeDot={{ r: 5, fill: '#C9A84C', strokeWidth: 2, stroke: '#0A0F2C' }} />
-                                    <Line type="monotone" dataKey="activeUsers" name="Active Users" stroke="#4FC3F7" strokeWidth={2} dot={{ r: 2, fill: '#4FC3F7', strokeWidth: 0 }} />
-                                    <Line type="monotone" dataKey="newUsers" name="New Users" stroke="#10B981" strokeWidth={1.5} strokeDasharray="4 3" dot={{ r: 2, fill: '#10B981', strokeWidth: 0 }} />
+                                    <Line type="monotone" dataKey="total" name={t('analytics.users.total')} stroke="#C9A84C" strokeWidth={2} dot={{ r: 3, fill: '#C9A84C', strokeWidth: 0 }} activeDot={{ r: 5, fill: '#C9A84C', strokeWidth: 2, stroke: '#0A0F2C' }} />
+                                    <Line type="monotone" dataKey="activeUsers" name={t('analytics.users.active')} stroke="#4FC3F7" strokeWidth={2} dot={{ r: 2, fill: '#4FC3F7', strokeWidth: 0 }} />
+                                    <Line type="monotone" dataKey="newUsers" name={t('analytics.users.new')} stroke="#10B981" strokeWidth={1.5} strokeDasharray="4 3" dot={{ r: 2, fill: '#10B981', strokeWidth: 0 }} />
                                 </LineChart>
                             </ResponsiveContainer>
                         </div>
