@@ -7,7 +7,7 @@ import { Heart, ShoppingBag, Trash2, ArrowLeft, Sparkles } from 'lucide-react';
 import type { FashionProduct } from '@/shared/types';
 import { ROUTES } from '@/config/routes';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
-import { localizedProductName } from '@/features/i18n/productNames';
+import { localizedProductFabric, localizedProductName } from '@/features/i18n/productNames';
 
 interface WishlistViewProps {
     items: FashionProduct[];
@@ -22,7 +22,7 @@ export default function WishlistView({
     onToggleWishlist,
     onAddToCart,
 }: WishlistViewProps) {
-    const { language } = useLanguage();
+    const { language, t, tc } = useLanguage();
     const isEmpty = items.length === 0;
 
     return (
@@ -44,11 +44,11 @@ export default function WishlistView({
                                 className="text-red-400"
                                 fill="currentColor"
                             />
-                            Your Wishlist
+                            {t('wishlist.title')}
                         </h1>
                         {!isEmpty && (
                             <p className="text-xs text-[#E8E0D5]/50 font-mono mt-1">
-                                {items.length} {items.length === 1 ? 'saved piece' : 'saved pieces'}
+                                {items.length} {items.length === 1 ? t('wishlist.savedOne') : t('wishlist.savedMany')}
                             </p>
                         )}
                     </div>
@@ -58,7 +58,7 @@ export default function WishlistView({
                         className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] hover:text-[#4FC3F7] transition-colors duration-300"
                     >
                         <ArrowLeft size={12} />
-                        Browse Store
+                        {t('store.cart.browseStore')}
                     </Link>
                 </div>
             </section>
@@ -74,23 +74,22 @@ export default function WishlistView({
                         <div className="inline-flex p-6 rounded-full bg-red-500/10 border border-red-500/20 mb-6">
                             <Heart size={40} className="text-red-400/60" />
                         </div>
-                        <h2 className="text-2xl font-serif text-white mb-3">Your wishlist is empty</h2>
+                        <h2 className="text-2xl font-serif text-white mb-3">{t('wishlist.emptyTitle')}</h2>
                         <p className="text-sm text-[#E8E0D5]/60 max-w-md mx-auto mb-8 leading-relaxed">
-                            Save your favourite luxury pieces and fine artworks here.
-                            Browse the boutique store or AI Studio to discover pieces you love.
+                            {t('wishlist.emptyBody')}
                         </p>
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                             <Link
                                 href="/store"
                                 className="px-6 py-3 rounded-full bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/90 text-[#0A0F2C] text-xs font-mono font-bold uppercase tracking-widest transition-all duration-300 hover:scale-105"
                             >
-                                Browse Store
+                                {t('store.cart.browseStore')}
                             </Link>
                             <Link
                                 href="/fashion"
                                 className="px-6 py-3 rounded-full border border-[#C9A84C]/30 text-[#C9A84C] text-xs font-mono font-bold uppercase tracking-widest transition-all duration-300 hover:bg-[#C9A84C]/10"
                             >
-                                Fashion Collection
+                                {t('wishlist.fashionCollection')}
                             </Link>
                         </div>
                     </motion.div>
@@ -132,14 +131,14 @@ export default function WishlistView({
                                         <button
                                             onClick={() => onToggleWishlist(product)}
                                             className="absolute top-3 right-3 p-2 rounded-full backdrop-blur-md bg-black/60 border border-white/10 text-red-400 hover:bg-red-950/50 active:scale-95 transition-all duration-300 cursor-pointer"
-                                            title="Remove from wishlist"
+                                            title={t('wishlist.removeTitle')}
                                         >
                                             <Trash2 size={13} />
                                         </button>
 
                                         {/* Category badge */}
                                         <div className="absolute top-3 left-3 bg-[#E8E0D5]/15 backdrop-blur-md px-2.5 py-1 rounded text-[9px] uppercase font-mono tracking-wider border border-white/10 text-white">
-                                            {product.category}
+                                            {tc(`store.category.${product.category}`, product.category)}
                                         </div>
 
                                         {/* Price */}
@@ -158,7 +157,7 @@ export default function WishlistView({
                                                 {localizedProductName(product, language)}
                                             </Link>
                                             <p className="text-[10px] text-[#E8E0D5]/60 line-clamp-2 leading-relaxed mb-1">
-                                                {product.fabric}
+                                                {localizedProductFabric(product, language)}
                                             </p>
                                             {product.rating && (
                                                 <div className="flex items-center gap-1 text-[9px] text-[#F0D080] font-mono">
@@ -178,7 +177,7 @@ export default function WishlistView({
                                             }`}
                                         >
                                             <ShoppingBag size={12} />
-                                            {isInCart(product.id) ? 'In Bag' : 'Add to Bag'}
+                                            {isInCart(product.id) ? t('wishlist.inBag') : t('wishlist.addToBag')}
                                         </button>
                                     </div>
                                 </motion.div>
@@ -197,7 +196,7 @@ export default function WishlistView({
                             className="text-[#C9A84C] hover:text-[#4FC3F7] transition-colors duration-300 flex items-center gap-1.5"
                         >
                             <ArrowLeft size={11} />
-                            Continue Shopping
+                            {t('orders.continueShopping')}
                         </Link>
                         <span className="text-[#C9A84C]/30">&bull;</span>
                         <Link
@@ -205,7 +204,7 @@ export default function WishlistView({
                             className="text-[#C9A84C] hover:text-[#4FC3F7] transition-colors duration-300 flex items-center gap-1.5"
                         >
                             <ShoppingBag size={11} />
-                            View Shopping Bag
+                            {t('store.cart.viewBag')}
                         </Link>
                         <span className="text-[#C9A84C]/30">&bull;</span>
                         <Link
