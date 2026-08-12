@@ -952,6 +952,18 @@ export const en = {
     'connections.updateFailed': 'Failed to update the request.',
     'connections.needSignIn': 'You need to sign in to access the connections hub.',
     'connections.dismissMessage': 'Dismiss message',
+
+    // ── Company workspace ───────────────────────────────────────────────────
+    'company.sidebar.home': 'Company Home',
+    'company.sidebar.connections': 'Connections',
+    'company.home.kicker': 'Company Workspace',
+    'company.home.title': 'Build Your Brand',
+    'company.home.titleAccent': 'Network',
+    'company.home.subtitle': 'A dedicated space for brands: discover SADAF designers, open partnership requests, and manage your active collaborations.',
+    'company.home.connectionsBody': 'Browse designer portfolios, send collaboration requests, and track your partnerships in real time.',
+    'company.home.openHub': 'Open Hub',
+    'company.home.b2bTitle': 'B2B Orders & Bulk Pricing',
+    'company.home.b2bBody': 'Coming next — order collections at wholesale rates and track deliveries for your retail channels.',
     'common.signIn': 'Sign In',
 
     // ── Orders ──────────────────────────────────────────────────────────────
@@ -2636,6 +2648,18 @@ export const ar: Record<TranslationKey, string> = {
     'connections.updateFailed': 'فشل تحديث الطلب.',
     'connections.needSignIn': 'تحتاج إلى تسجيل الدخول للوصول إلى مركز الاتصالات.',
     'connections.dismissMessage': 'إغلاق الرسالة',
+
+    // ── مساحة عمل الشركة ────────────────────────────────────────────────────
+    'company.sidebar.home': 'الرئيسية',
+    'company.sidebar.connections': 'الاتصالات',
+    'company.home.kicker': 'مساحة عمل الشركة',
+    'company.home.title': 'ابنِ علامتك التجارية',
+    'company.home.titleAccent': 'شبكتك',
+    'company.home.subtitle': 'مساحة مخصصة للعلامات التجارية: اكتشف مصممي صدف، وافتح طلبات الشراكة، وتابع تعاوناتك النشطة.',
+    'company.home.connectionsBody': 'تصفح محافظ المصممين، وأرسل طلبات التعاون، وتابع شراكاتك لحظيًا.',
+    'company.home.openHub': 'افتح المركز',
+    'company.home.b2bTitle': 'طلبات B2B والأسعار بالجملة',
+    'company.home.b2bBody': 'قريبًا — اطلب المجموعات بأسعار الجملة وتابع عمليات التسليم لقنوات البيع بالتجزئة.',
     'common.signIn': 'تسجيل الدخول',
 
     // ── Orders ──────────────────────────────────────────────────────────────
