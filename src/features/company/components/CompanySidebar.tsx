@@ -23,19 +23,21 @@ import {
     Settings,
 } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 import SignOutButton from '@/shared/components/SignOutButton';
 
 export default function CompanySidebar() {
     const pathname = usePathname();
+    const { t } = useLanguage();
     const [mobileOpen, setMobileOpen] = useState(false);
 
     const isActive = (href: string) => pathname.startsWith(href);
 
     const links: Array<{ href: string; label: string; icon: LucideIcon }> = [
-        { href: ROUTES.DASHBOARD_COMPANY, label: 'Company Home', icon: LayoutDashboard },
-        { href: ROUTES.DASHBOARD_COMPANY_CONNECTIONS, label: 'Connections', icon: Handshake },
-        { href: ROUTES.STORE, label: 'Store', icon: Store },
-        { href: ROUTES.DASHBOARD_COMPANY_SETTINGS, label: 'Settings', icon: Settings },
+        { href: ROUTES.DASHBOARD_COMPANY, label: t('company.sidebar.home'), icon: LayoutDashboard },
+        { href: ROUTES.DASHBOARD_COMPANY_CONNECTIONS, label: t('company.sidebar.connections'), icon: Handshake },
+        { href: ROUTES.STORE, label: t('nav.store'), icon: Store },
+        { href: ROUTES.DASHBOARD_COMPANY_SETTINGS, label: t('admin.sidebar.settings'), icon: Settings },
     ];
 
     const sidebarContent = (
@@ -111,7 +113,7 @@ export default function CompanySidebar() {
             <button
                 onClick={() => setMobileOpen(true)}
                 className="md:hidden fixed bottom-5 right-5 w-12 h-12 rounded-full bg-rose-500 text-[#0A0F2C] flex items-center justify-center shadow-lg shadow-rose-500/30 z-50 hover:scale-105 transition-transform"
-                aria-label="Open navigation menu"
+                aria-label={t('common.openMenu')}
             >
                 <Menu size={20} />
             </button>
@@ -137,7 +139,7 @@ export default function CompanySidebar() {
                             <button
                                 onClick={() => setMobileOpen(false)}
                                 className="self-end p-1.5 rounded-lg text-[#E8E0D5]/60 hover:text-white hover:bg-white/5 transition-all"
-                                aria-label="Close menu"
+                                aria-label={t('common.closeMenu')}
                             >
                                 <X size={18} />
                             </button>
