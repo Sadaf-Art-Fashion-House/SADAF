@@ -201,7 +201,7 @@ export default function AiStudioView({
                                             onChange={(e) => setPrompt(e.target.value)}
                                             rows={3}
                                             className="w-full bg-black/40 border border-[#C9A84C]/30 focus:border-[#4FC3F7] focus:ring-1 focus:ring-[#4FC3F7] rounded-lg p-3 text-xs md:text-sm text-white placeholder-slate-600 outline-none transition-all duration-300"
-                                            placeholder="e.g. Damascus geometric floral meshes in Gilded wire embroidery..."
+                                            placeholder={t('ai.promptPlaceholder')}
                                         />
                                         <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1.5 text-[9px] font-mono text-gray-500">
                                             <span>{t('ai.promptEnhance')}</span>
