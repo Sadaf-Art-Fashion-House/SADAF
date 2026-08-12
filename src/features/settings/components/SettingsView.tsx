@@ -28,6 +28,7 @@ import {
     CheckCircle2,
 } from 'lucide-react';
 import Link from 'next/link';
+import { ROUTES } from '@/config/routes';
 import SuccessToast from '@/shared/components/SuccessToast';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
 import {
@@ -451,19 +452,21 @@ export default function SettingsView() {
                 </button>
             </SectionCard>
 
-            {/* ── Watermark & export preferences (legacy settings page) ── */}
+            {/* ── Watermark & export preferences ── */}
             <section className="bg-[#05081A]/90 border border-white/5 rounded-3xl p-5 md:p-6">
                 <Link
-                    href="/dashboard/settings/watermark"
+                    href={ROUTES.DASHBOARD_WATERMARK_SETTINGS}
                     className="flex items-center gap-3 group"
                 >
                     <span className="p-2 rounded-xl bg-gradient-to-br from-[#C9A84C]/20 to-[#4FC3F7]/10 border border-[#C9A84C]/20 text-[#C9A84C] shrink-0">
                         <Stamp size={16} />
                     </span>
                     <span className="flex-1 min-w-0">
-                        <span className="block font-serif text-white text-base font-bold">Watermark & Export</span>
+                        <span className="block font-serif text-white text-base font-bold">
+                            {t('settings.watermark.title')}
+                        </span>
                         <span className="block text-[10px] text-[#E8E0D5]/50 mt-0.5">
-                            Watermark text, logo placement, and export defaults for your reports.
+                            {t('settings.watermark.subtitle')}
                         </span>
                     </span>
                     <ArrowRight size={14} className="text-[#C9A84C] group-hover:translate-x-0.5 transition-transform rtl:rotate-180" />
@@ -473,7 +476,7 @@ export default function SettingsView() {
             {/* ── Reset ── */}
             <div className="flex items-center justify-between gap-4 bg-[#05081A]/60 border border-white/5 rounded-2xl px-4 py-3">
                 <span className="text-[10px] text-[#E8E0D5]/50">
-                    {showResetConfirm ? t('settings.resetConfirm') : t('appearance.subtitle')}
+                    {showResetConfirm ? t('settings.resetConfirm') : t('settings.reset.hint')}
                 </span>
                 {showResetConfirm ? (
                     <div className="flex gap-2 shrink-0">

@@ -5,9 +5,10 @@ import Link from 'next/link';
 import { Sparkles, Feather, Palette, Scissors, ArrowRight, Star, Shirt, Brush, Gem, Compass } from 'lucide-react';
 import { fabricsList, printingMethods } from '@/data';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
+import { localizedFabricName, localizedFabricDescription, localizedPrintingName, localizedPrintingDescription } from '@/features/i18n/productNames';
 
 export default function AtelierView() {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     return (
         <div className="relative w-full overflow-hidden">
             {/* Hero */}
@@ -148,8 +149,8 @@ export default function AtelierView() {
                                     <Feather size={16} className="text-[#C9A84C]" />
                                     <span className="text-[10px] font-mono text-[#4FC3F7] font-bold">+${fabric.priceOffset}</span>
                                 </div>
-                                <h4 className="font-serif text-white text-sm mb-1.5 group-hover:text-[#C9A84C] transition-colors">{fabric.name}</h4>
-                                <p className="text-[10px] text-[#E8E0D5]/60 leading-relaxed">{fabric.description}</p>
+                                <h4 className="font-serif text-white text-sm mb-1.5 group-hover:text-[#C9A84C] transition-colors">{localizedFabricName(fabric.name, language)}</h4>
+                                <p className="text-[10px] text-[#E8E0D5]/60 leading-relaxed">{localizedFabricDescription(fabric.name, language)}</p>
                             </motion.div>
                         ))}
                     </div>
@@ -178,8 +179,8 @@ export default function AtelierView() {
                                 <Palette size={16} className="text-[#4FC3F7]" />
                                 <span className="text-[10px] font-mono text-[#C9A84C] font-bold">+${method.priceOffset}</span>
                             </div>
-                            <h4 className="font-serif text-white text-sm mb-1.5 group-hover:text-[#4FC3F7] transition-colors">{method.name}</h4>
-                            <p className="text-[10px] text-[#E8E0D5]/60 leading-relaxed">{method.description}</p>
+                            <h4 className="font-serif text-white text-sm mb-1.5 group-hover:text-[#4FC3F7] transition-colors">{localizedPrintingName(method.name, language)}</h4>
+                            <p className="text-[10px] text-[#E8E0D5]/60 leading-relaxed">{localizedPrintingDescription(method.name, language)}</p>
                         </motion.div>
                     ))}
                 </div>

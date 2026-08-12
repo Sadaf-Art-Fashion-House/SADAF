@@ -15,6 +15,7 @@ import {
 } from '../hooks/usePendingFriendRequests';
 import FriendRequestToast from './FriendRequestToast';
 import { ROUTES } from '@/config/routes';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 
 /**
  * Header friend-requests badge — shows the number of incoming connection
@@ -34,6 +35,7 @@ import { ROUTES } from '@/config/routes';
  * guests have no account — so the badge is hidden entirely for all of them.
  */
 export default function FriendRequestsBadge() {
+    const { t } = useLanguage();
     const { user } = useAuth();
     // Only customers take part in family & friends networking — non-customer
     // roles never see the badge, so don't open a WS connection or subscribe
@@ -94,8 +96,8 @@ export default function FriendRequestsBadge() {
             <Link
                 href={ROUTES.DASHBOARD_COMMUNITY}
                 className="p-2 text-slate-300 hover:text-[#4FC3F7] relative transition-colors duration-300"
-                title={count > 0 ? `${count} pending friend request${count === 1 ? '' : 's'}${wsLive ? ' (live)' : ''}` : wsLive ? 'My Network — live' : 'My Network'}
-                aria-label={count > 0 ? `Friend requests (${count} pending)` : 'My Network'}
+                title={count > 0 ? `${t('community.badge.pending', { count })}${wsLive ? t('community.badge.live') : ''}` : wsLive ? t('community.badge.networkLive') : t('community.badge.network')}
+                aria-label={count > 0 ? t('community.badge.ariaPending', { count }) : t('community.badge.ariaNetwork')}
             >
                 {/* Icon with arrival pulse — keyed so every new request replays
                     the scale bounce (the ring ping is a sibling, below). */}
@@ -132,7 +134,7 @@ export default function FriendRequestsBadge() {
                 {wsLive && (
                     <span
                         className="absolute -bottom-0.5 -left-0.5 w-2 h-2 rounded-full bg-green-400 border border-[#0A0F2C]"
-                        title="Live — friend requests update in real time"
+                        title={t('community.badge.liveDot')}
                     />
                 )}
             </Link>

@@ -26,6 +26,9 @@ import {
     PenLine,
     AlertTriangle,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
+import type { TranslationKey } from '@/features/i18n/dictionaries';
 import { useWatermarkStore, DEFAULT_WATERMARK_SETTINGS } from '../store/useWatermarkStore';
 import type { WatermarkSettings, WatermarkType, WatermarkPosition, LogoEntry } from '../store/useWatermarkStore';
 import { captureElementWithOklabFix } from '@/shared/utils/captureElementWithOklabFix';
@@ -41,19 +44,32 @@ import {
 
 // ─── Position definitions ──────────────────────────────────────────────────
 
-const POSITION_OPTIONS: {
-    value: WatermarkPosition;
-    label: string;
-    icon: any;
-    desc: string;
-}[] = [
-    { value: 'tiled', label: 'Tiled', icon: Grid3X3, desc: 'Repeating diagonal pattern across the full page' },
-    { value: 'center', label: 'Center', icon: Move, desc: 'Single centred logo' },
-    { value: 'top-left', label: 'Top Left', icon: MoveUpLeft, desc: 'Positioned in the top-left corner' },
-    { value: 'top-right', label: 'Top Right', icon: MoveUpRight, desc: 'Positioned in the top-right corner' },
-    { value: 'bottom-left', label: 'Bottom Left', icon: MoveDownLeft, desc: 'Positioned in the bottom-left corner' },
-    { value: 'bottom-right', label: 'Bottom Right', icon: MoveDownRight, desc: 'Positioned in the bottom-right corner' },
+const POSITION_OPTIONS: { value: WatermarkPosition; icon: LucideIcon }[] = [
+    { value: 'tiled', icon: Grid3X3 },
+    { value: 'center', icon: Move },
+    { value: 'top-left', icon: MoveUpLeft },
+    { value: 'top-right', icon: MoveUpRight },
+    { value: 'bottom-left', icon: MoveDownLeft },
+    { value: 'bottom-right', icon: MoveDownRight },
 ];
+
+const POSITION_LABEL_KEYS: Record<WatermarkPosition, TranslationKey> = {
+    tiled: 'watermark.position.tiled',
+    center: 'watermark.position.center',
+    'top-left': 'watermark.position.top-left',
+    'top-right': 'watermark.position.top-right',
+    'bottom-left': 'watermark.position.bottom-left',
+    'bottom-right': 'watermark.position.bottom-right',
+};
+
+const POSITION_DESC_KEYS: Record<WatermarkPosition, TranslationKey> = {
+    tiled: 'watermark.position.tiled.desc',
+    center: 'watermark.position.center.desc',
+    'top-left': 'watermark.position.top-left.desc',
+    'top-right': 'watermark.position.top-right.desc',
+    'bottom-left': 'watermark.position.bottom-left.desc',
+    'bottom-right': 'watermark.position.bottom-right.desc',
+};
 
 const POSITION_LABEL_SHORT: Record<string, string> = {
     center: '⨁',
@@ -66,6 +82,8 @@ const POSITION_LABEL_SHORT: Record<string, string> = {
 // ─── Preview ───────────────────────────────────────────────────────────────
 
 function WatermarkPreview({ settings }: { settings: WatermarkSettings }) {
+    const { t } = useLanguage();
+
     const fillStyle = useMemo(() => {
         if (!settings.enabled || settings.watermarkType !== 'text') return 'none';
         const hex = settings.color.replace('#', '');
@@ -150,8 +168,8 @@ function WatermarkPreview({ settings }: { settings: WatermarkSettings }) {
                 </svg>
             )}
 
-            {!settings.enabled && <div className="absolute inset-0 flex items-center justify-center text-[#E8E0D5]/30 text-[10px] font-mono uppercase tracking-widest">Watermark Disabled</div>}
-            {settings.enabled && settings.watermarkType === 'logo' && previewLogos.length === 0 && <div className="absolute inset-0 flex items-center justify-center text-[#E8E0D5]/30 text-[10px] font-mono uppercase tracking-widest">Upload logos below</div>}
+            {!settings.enabled && <div className="absolute inset-0 flex items-center justify-center text-[#E8E0D5]/30 text-[10px] font-mono uppercase tracking-widest">{t('watermark.disabled')}</div>}
+            {settings.enabled && settings.watermarkType === 'logo' && previewLogos.length === 0 && <div className="absolute inset-0 flex items-center justify-center text-[#E8E0D5]/30 text-[10px] font-mono uppercase tracking-widest">{t('watermark.uploadLogos')}</div>}
         </div>
     );
 }
@@ -181,6 +199,7 @@ function SliderControl({ label, icon: Icon, value, min, max, step = 0.01, displa
 function LogoCard({ logo, onRemove, onUpdateLabel }: {
     logo: LogoEntry; onRemove: () => void; onUpdateLabel: (label: string) => void;
 }) {
+    const { t } = useLanguage();
     const [editing, setEditing] = useState(false);
     const [draft, setDraft] = useState(logo.label ?? '');
     const inputRef = useRef<HTMLInputElement>(null);
@@ -200,7 +219,7 @@ function LogoCard({ logo, onRemove, onUpdateLabel }: {
     return (
         <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[#0A0F2C]/60 border border-white/10 group hover:border-[#C9A84C]/20 transition-all duration-200">
             <div className="w-10 h-10 rounded-lg overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-                <img src={logo.dataUrl} alt={logo.label || 'Watermark logo'} className="max-w-full max-h-full object-contain" />
+                <img src={logo.dataUrl} alt={logo.label || t('watermark.logoAlt')} className="max-w-full max-h-full object-contain" />
             </div>
             <div className="flex-1 min-w-0" onClick={!editing ? startEditing : undefined}>
                 {editing ? (
@@ -208,11 +227,11 @@ function LogoCard({ logo, onRemove, onUpdateLabel }: {
                         onBlur={commitLabel}
                         onKeyDown={(e) => { if (e.key === 'Enter') commitLabel(); if (e.key === 'Escape') { setDraft(logo.label ?? ''); setEditing(false); } }}
                         className="w-full bg-black/60 border border-[#C9A84C]/40 text-[10px] text-white rounded-md px-2 py-0.5 outline-none focus:border-[#C9A84C] transition font-mono"
-                        placeholder="Name this logo…" autoFocus />
+                        placeholder={t('watermark.namePlaceholder')} autoFocus />
                 ) : (
                     <div className="cursor-text group/label">
                         <p className="text-[10px] font-mono text-[#E8E0D5]/70 truncate flex items-center gap-1.5">
-                            {logo.label || <span className="text-[#E8E0D5]/40 italic">Click to name&hellip;</span>}
+                            {logo.label || <span className="text-[#E8E0D5]/40 italic">{t('watermark.clickToName')}</span>}
                             <PenLine size={9} className="text-[#E8E0D5]/20 group-hover/label:text-[#C9A84C]/60 transition-colors shrink-0" />
                         </p>
                         <p className="text-[7px] font-mono text-[#E8E0D5]/30">{(logo.dataUrl.length * 0.75 / 1024).toFixed(0)} KB</p>
@@ -221,7 +240,7 @@ function LogoCard({ logo, onRemove, onUpdateLabel }: {
             </div>
             <button onClick={onRemove}
                 className="p-1.5 rounded-lg text-red-400/30 hover:text-red-400 hover:bg-red-950/20 transition-all cursor-pointer opacity-0 group-hover:opacity-100"
-                title="Remove this logo"><Trash2 size={12} /></button>
+                title={t('watermark.removeLogo')}><Trash2 size={12} /></button>
         </div>
     );
 }
@@ -231,17 +250,18 @@ function LogoCard({ logo, onRemove, onUpdateLabel }: {
 function LogosUploadArea({ logos, onAdd, onRemove, onUpdateLabel }: {
     logos: LogoEntry[]; onAdd: (dataUrl: string) => void; onRemove: (id: string) => void; onUpdateLabel: (id: string, label: string) => void;
 }) {
+    const { t } = useLanguage();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isDragOver, setIsDragOver] = useState(false);
     const dragCounterRef = useRef(0);
 
     const processFile = useCallback((file: File) => {
-        if (!['image/png', 'image/svg+xml', 'image/webp'].includes(file.type)) { alert('Please upload a PNG, SVG, or WebP image with transparency.'); return; }
-        if (file.size > 2 * 1024 * 1024) { alert('Each logo must be smaller than 2 MB.'); return; }
+        if (!['image/png', 'image/svg+xml', 'image/webp'].includes(file.type)) { alert(t('watermark.invalidType')); return; }
+        if (file.size > 2 * 1024 * 1024) { alert(t('watermark.tooLarge')); return; }
         const reader = new FileReader();
         reader.onload = () => { if (typeof reader.result === 'string') onAdd(reader.result); };
         reader.readAsDataURL(file);
-    }, [onAdd]);
+    }, [onAdd, t]);
 
     const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]; if (!file) return; processFile(file);
@@ -262,7 +282,7 @@ function LogosUploadArea({ logos, onAdd, onRemove, onUpdateLabel }: {
     return (
         <div className="space-y-2">
             <label className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-[#E8E0D5]/60">
-                <ImageIcon size={11} className="text-[#C9A84C]/70" /> Logos ({logos.length})
+                <ImageIcon size={11} className="text-[#C9A84C]/70" /> {t('watermark.logos.count', { count: logos.length })}
             </label>
             {logos.length > 0 && (
                 <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1 scrollbar-thin">
@@ -274,11 +294,11 @@ function LogosUploadArea({ logos, onAdd, onRemove, onUpdateLabel }: {
             <div onDragEnter={handleDragEnter} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()} className={`${dz} ${isDragOver ? dzActive : dzIdle}`}>
                 {isDragOver ? (
-                    <><ArrowDownToLine size={20} className="text-[#C9A84C] animate-bounce" /><span className="text-[10px] font-mono text-[#C9A84C] font-semibold">Drop logo here</span></>
+                    <><ArrowDownToLine size={20} className="text-[#C9A84C] animate-bounce" /><span className="text-[10px] font-mono text-[#C9A84C] font-semibold">{t('watermark.dropHere')}</span></>
                 ) : (
                     <><div className="flex items-center gap-1.5"><Plus size={14} className="text-[#E8E0D5]/30 group-hover:text-[#C9A84C] transition-colors" /><Upload size={14} className="text-[#E8E0D5]/30 group-hover:text-[#C9A84C] transition-colors" /></div>
-                        <span className="text-[9px] font-mono text-[#E8E0D5]/40 group-hover:text-[#E8E0D5]/60 transition-colors">Add logo &middot; or drag &amp; drop</span>
-                        <span className="text-[7px] font-mono text-[#E8E0D5]/30">PNG / SVG / WebP &middot; Max 2 MB each</span></>
+                        <span className="text-[9px] font-mono text-[#E8E0D5]/40 group-hover:text-[#E8E0D5]/60 transition-colors">{t('watermark.addOrDrop')}</span>
+                        <span className="text-[7px] font-mono text-[#E8E0D5]/30">{t('watermark.formatHint')}</span></>
                 )}
             </div>
             <input ref={fileInputRef} type="file" accept="image/png,image/svg+xml,image/webp" onChange={handleFileChange} className="hidden" />
@@ -289,17 +309,19 @@ function LogosUploadArea({ logos, onAdd, onRemove, onUpdateLabel }: {
 // ─── Position selector ─────────────────────────────────────────────────────
 
 function PositionSelector({ value, onChange }: { value: WatermarkPosition; onChange: (v: WatermarkPosition) => void }) {
+    const { t } = useLanguage();
+
     return (
         <div className="space-y-2">
-            <label className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-[#E8E0D5]/60"><Grid3X3 size={11} className="text-[#C9A84C]/70" /> Position</label>
+            <label className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-[#E8E0D5]/60"><Grid3X3 size={11} className="text-[#C9A84C]/70" /> {t('watermark.position')}</label>
             <div className="grid grid-cols-3 gap-1.5">
                 {POSITION_OPTIONS.map((opt) => (
-                    <button key={opt.value} onClick={() => onChange(opt.value)} title={opt.desc}
+                    <button key={opt.value} onClick={() => onChange(opt.value)} title={t(POSITION_DESC_KEYS[opt.value])}
                         className={`flex flex-col items-center gap-1 p-2 rounded-lg text-[9px] font-mono transition-all duration-200 cursor-pointer ${
                             value === opt.value ? 'bg-[#C9A84C]/15 text-[#C9A84C] border border-[#C9A84C]/30 shadow-sm shadow-[#C9A84C]/10'
                                 : 'text-[#E8E0D5]/40 border border-transparent hover:text-white hover:bg-white/5'
                         }`}>
-                        <opt.icon size={14} /><span className="text-[7px] uppercase tracking-wider">{opt.label}</span>
+                        <opt.icon size={14} /><span className="text-[7px] uppercase tracking-wider">{t(POSITION_LABEL_KEYS[opt.value])}</span>
                     </button>
                 ))}
             </div>
@@ -310,17 +332,19 @@ function PositionSelector({ value, onChange }: { value: WatermarkPosition; onCha
 // ─── Mode tabs ─────────────────────────────────────────────────────────────
 
 function ModeTabs({ value, onChange }: { value: WatermarkType; onChange: (v: WatermarkType) => void }) {
+    const { t } = useLanguage();
+
     return (
         <div className="flex items-center gap-1 bg-[#0A0F2C]/60 p-0.5 rounded-lg border border-white/5 w-fit">
             {[
-                { id: 'text' as WatermarkType, label: 'Text', icon: AlignLeft },
-                { id: 'logo' as WatermarkType, label: 'Logo', icon: ImageIcon },
+                { id: 'text' as WatermarkType, labelKey: 'watermark.mode.text' as TranslationKey, icon: AlignLeft },
+                { id: 'logo' as WatermarkType, labelKey: 'watermark.mode.logo' as TranslationKey, icon: ImageIcon },
             ].map((tab) => (
                 <button key={tab.id} onClick={() => onChange(tab.id)}
                     className={`px-3 py-1.5 rounded-md text-[9px] font-mono uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
                         value === tab.id ? 'bg-[#C9A84C] text-[#0A0F2C] font-bold' : 'text-[#E8E0D5]/40 hover:text-white'
                     }`}>
-                    <tab.icon size={11} /> {tab.label}
+                    <tab.icon size={11} /> {t(tab.labelKey)}
                 </button>
             ))}
         </div>
@@ -341,6 +365,7 @@ function sanitizeFilename(text: string): string {
 // ─── Main component ────────────────────────────────────────────────────────
 
 export default function WatermarkSettings() {
+    const { t } = useLanguage();
     const { settings, updateSettings, addLogo, removeLogo, updateLogoLabel, resetDefaults } = useWatermarkStore();
     const isDefault = useMemo(
         () =>
@@ -615,13 +640,13 @@ export default function WatermarkSettings() {
                 <div className="flex items-center gap-2.5">
                     <div className="p-2 rounded-lg bg-[#C9A84C]/10 text-[#C9A84C]"><Eye size={16} /></div>
                     <div>
-                        <h2 className="text-lg font-serif text-[#C9A84C] font-semibold uppercase tracking-wider">Watermark Settings</h2>
-                        <p className="text-[11px] text-slate-400">Customise the watermark applied to exported charts, KPIs, and reports.</p>
+                        <h2 className="text-lg font-serif text-[#C9A84C] font-semibold uppercase tracking-wider">{t('watermark.title')}</h2>
+                        <p className="text-[11px] text-slate-400">{t('watermark.subtitle')}</p>
                     </div>
                 </div>
                 <button onClick={resetDefaults} disabled={isDefault}
                     className="px-3 py-1.5 rounded-lg text-[9px] font-mono uppercase tracking-wider text-[#E8E0D5]/50 hover:text-white border border-white/10 hover:border-white/20 transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1.5"
-                    title="Reset to default watermark settings"><RefreshCw size={11} /> Reset</button>
+                    title={t('watermark.resetTitle')}><RefreshCw size={11} /> {t('watermark.reset')}</button>
             </div>
 
             <div id="watermark-preview-container"><WatermarkPreview settings={settings} /></div>
@@ -632,7 +657,7 @@ export default function WatermarkSettings() {
                 <div className="space-y-5 p-5 bg-[#05081A]/60 border border-white/5 rounded-2xl">
                     <div className="flex items-center justify-between">
                         <label className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-[#E8E0D5]/60">
-                            {settings.enabled ? <Eye size={11} className="text-emerald-400" /> : <EyeOff size={11} className="text-red-400" />} Watermark
+                            {settings.enabled ? <Eye size={11} className="text-emerald-400" /> : <EyeOff size={11} className="text-red-400" />} {t('watermark.toggleLabel')}
                         </label>
                         <button onClick={() => updateSettings({ enabled: !settings.enabled })}
                             className={`relative w-10 h-5 rounded-full transition-colors duration-300 cursor-pointer ${settings.enabled ? 'bg-[#C9A84C]' : 'bg-white/10'}`}>
@@ -642,12 +667,12 @@ export default function WatermarkSettings() {
                     {settings.watermarkType === 'text' && (
                         <>
                             <div className="space-y-1.5">
-                                <label className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-[#E8E0D5]/60"><Type size={11} className="text-[#C9A84C]/70" /> Watermark Text</label>
+                                <label className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-[#E8E0D5]/60"><Type size={11} className="text-[#C9A84C]/70" /> {t('watermark.text')}</label>
                                 <input type="text" value={settings.text} onChange={(e) => updateSettings({ text: e.target.value })}
                                     className="w-full bg-black/40 border border-white/10 text-xs text-white rounded-xl p-3 outline-none focus:border-[#C9A84C] transition placeholder-slate-600" placeholder="SADAF Analytics" />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-[#E8E0D5]/60"><Palette size={11} className="text-[#C9A84C]/70" /> Color</label>
+                                <label className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-[#E8E0D5]/60"><Palette size={11} className="text-[#C9A84C]/70" /> {t('watermark.color')}</label>
                                 <div className="flex items-center gap-3">
                                     <input type="color" value={settings.color} onChange={(e) => updateSettings({ color: e.target.value })}
                                         className="w-10 h-10 rounded-xl border border-white/10 cursor-pointer bg-transparent [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-lg [&::-webkit-color-swatch]:border-none" />
@@ -662,20 +687,20 @@ export default function WatermarkSettings() {
                 </div>
 
                 <div className="space-y-5 p-5 bg-[#05081A]/60 border border-white/5 rounded-2xl">
-                    <SliderControl label="Opacity" icon={Sliders} value={settings.opacity} min={0} max={0.5} step={0.01}
+                    <SliderControl label={t('watermark.opacity')} icon={Sliders} value={settings.opacity} min={0} max={0.5} step={0.01}
                         displayValue={`${Math.round(settings.opacity * 100)}%`} onChange={(v) => updateSettings({ opacity: v })} />
                     {settings.watermarkType === 'logo' && (
                         <PositionSelector value={settings.watermarkPosition} onChange={(v) => updateSettings({ watermarkPosition: v })} />
                     )}
                     {settings.watermarkType === 'text' && (
-                        <SliderControl label="Font Size" icon={Type} value={settings.fontSize} min={16} max={120} step={2}
+                        <SliderControl label={t('watermark.fontSize')} icon={Type} value={settings.fontSize} min={16} max={120} step={2}
                             displayValue={`${settings.fontSize}px`} onChange={(v) => updateSettings({ fontSize: v })} />
                     )}
                     {settings.watermarkType === 'logo' && (
-                        <SliderControl label="Logo Size" icon={ImageIcon} value={settings.logoScale} min={0.05} max={0.3} step={0.01}
+                        <SliderControl label={t('watermark.logoSize')} icon={ImageIcon} value={settings.logoScale} min={0.05} max={0.3} step={0.01}
                             displayValue={`${Math.round(settings.logoScale * 100)}%`} onChange={(v) => updateSettings({ logoScale: v })} />
                     )}
-                    <SliderControl label="Rotation" icon={RotateCcw} value={settings.rotation} min={-90} max={90} step={1}
+                    <SliderControl label={t('watermark.rotation')} icon={RotateCcw} value={settings.rotation} min={-90} max={90} step={1}
                         displayValue={`${settings.rotation}°`} onChange={(v) => updateSettings({ rotation: v })} />
                 </div>
             </div>
@@ -690,33 +715,33 @@ export default function WatermarkSettings() {
                     </span>
                     {lastFailedExportFormat && (
                         <button ref={retryButtonRef} onClick={handleRetryExport} disabled={isExportingAny}
-                            aria-label={`Retry failed ${lastFailedExportFormat.toUpperCase()} export`}
+                            aria-label={t('watermark.retryFailed', { format: lastFailedExportFormat.toUpperCase() })}
                             className="px-2.5 py-1 rounded-lg text-[9px] font-mono uppercase tracking-wider text-[#C9A84C] border border-[#C9A84C]/30 hover:bg-[#C9A84C]/10 hover:text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-wait flex items-center gap-1 shrink-0"
-                            title="Re-run the last failed export">
-                            <RotateCcw size={10} /> Retry
+                            title={t('watermark.rerunFailed')}>
+                            <RotateCcw size={10} /> {t('watermark.retry')}
                         </button>
                     )}
                     <button onClick={() => { setLastFailedExportFormat(null); setExportError(null); }}
-                        aria-label="Dismiss error"
+                        aria-label={t('watermark.dismiss')}
                         className="text-[10px] font-mono text-[#E8E0D5]/30 hover:text-white transition-colors cursor-pointer shrink-0"
-                        title="Dismiss">✕</button>
+                        title={t('watermark.dismiss')}>✕</button>
                 </div>
             )}
 
             {/* Footer — shows the resolved filename so the user knows what to expect */}
             <div className="flex items-center gap-3 pt-4 border-t border-white/5">
-                <span className="text-[9px] font-mono uppercase tracking-widest text-[#E8E0D5]/40">Test Export:</span>
+                <span className="text-[9px] font-mono uppercase tracking-widest text-[#E8E0D5]/40">{t('watermark.testExport')}</span>
                 <button onClick={handleExportSamplePNG} disabled={isExportingAny}
                     className="px-3 py-1.5 rounded-lg text-[9px] font-mono uppercase tracking-wider bg-[#C9A84C]/10 text-[#C9A84C] border border-[#C9A84C]/30 hover:bg-[#C9A84C]/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-wait flex items-center gap-1.5"
-                    title={isExportingAny ? 'Export in progress…' : 'Export a sample PNG of the current watermark'}>
+                    title={isExportingAny ? t('watermark.exportInProgress') : t('watermark.exportSamplePNG')}>
                     {isExportingPNG ? <span className="block w-3 h-3 rounded-full border-2 border-[#C9A84C] border-t-transparent animate-spin" /> : <FileImage size={11} />}
-                    {isExportingPNG ? 'Exporting…' : 'Export PNG'}
+                    {isExportingPNG ? t('watermark.exporting') : t('watermark.exportPNG')}
                 </button>
                 <button onClick={handleExportSamplePDF} disabled={isExportingAny}
                     className="px-3 py-1.5 rounded-lg text-[9px] font-mono uppercase tracking-wider bg-gradient-to-r from-[#C9A84C]/20 to-[#4FC3F7]/10 text-white border border-[#C9A84C]/40 hover:border-[#C9A84C]/60 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-wait flex items-center gap-1.5"
-                    title={isExportingAny ? 'Export in progress…' : 'Export a sample PDF of the current watermark'}>
+                    title={isExportingAny ? t('watermark.exportInProgress') : t('watermark.exportSamplePDF')}>
                     {isExportingPDF ? <span className="block w-3 h-3 rounded-full border-2 border-[#4FC3F7] border-t-transparent animate-spin" /> : <FileText size={11} />}
-                    {isExportingPDF ? 'Exporting…' : 'Export PDF'}
+                    {isExportingPDF ? t('watermark.exporting') : t('watermark.exportPDF')}
                 </button>
                 {/* Live filename preview */}
                 <div className="ml-auto flex items-center gap-1.5 text-[8px] font-mono text-[#E8E0D5]/40">

@@ -33,6 +33,7 @@ import {
 import type { ConnectionsData, ConnectionResponse } from '../types';
 import { CONNECTION_STATUS_STYLES } from '../constants';
 import { formatRelativeTime } from '@/features/notifications/utils/formatRelativeTime';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 
@@ -55,11 +56,12 @@ interface ConnectionsViewProps {
 // ─── Shared bits ─────────────────────────────────────────────────────────────
 
 function StatusChip({ status }: { status: keyof typeof CONNECTION_STATUS_STYLES }) {
+    const { t } = useLanguage();
     const style = CONNECTION_STATUS_STYLES[status];
     return (
         <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full border text-[8px] font-mono uppercase tracking-wider ${style.chip}`}>
             <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
-            {style.label}
+            {t(style.labelKey)}
         </span>
     );
 }
@@ -95,6 +97,8 @@ function FeedbackBanner({
     message: { kind: 'success' | 'error'; text: string };
     onDismiss: () => void;
 }) {
+    const { t } = useLanguage();
+
     return (
         <div
             role="status"
@@ -113,7 +117,7 @@ function FeedbackBanner({
             <button
                 onClick={onDismiss}
                 className="text-current/60 hover:text-current transition-colors cursor-pointer"
-                aria-label="Dismiss message"
+                aria-label={t('connections.dismissMessage')}
             >
                 <X size={13} />
             </button>
@@ -136,6 +140,7 @@ function CompanySide({
     onSend: (designerId: string, message: string) => Promise<{ ok: boolean; error?: string }>;
     onFeedback: (message: { kind: 'success' | 'error'; text: string }) => void;
 }) {
+    const { t, language } = useLanguage();
     const [composingFor, setComposingFor] = useState<string | null>(null);
     const [message, setMessage] = useState('');
 
@@ -150,16 +155,16 @@ function CompanySide({
     const handleSend = async (designerId: string) => {
         const trimmed = message.trim();
         if (!trimmed) {
-            onFeedback({ kind: 'error', text: 'Add a short note so the designer knows why you want to connect.' });
+            onFeedback({ kind: 'error', text: t('connections.sendErrorNote') });
             return;
         }
         const result = await onSend(designerId, trimmed);
         if (result.ok) {
             setComposingFor(null);
             setMessage('');
-            onFeedback({ kind: 'success', text: 'Connection request sent — the designer will see it instantly.' });
+            onFeedback({ kind: 'success', text: t('connections.sentSuccess') });
         } else {
-            onFeedback({ kind: 'error', text: result.error ?? 'Failed to send the request.' });
+            onFeedback({ kind: 'error', text: result.error ?? t('connections.sendFailed') });
         }
     };
 
@@ -172,7 +177,7 @@ function CompanySide({
                         <UserPlus size={14} />
                     </div>
                     <h2 className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold">
-                        Discover Designers ({data.designers.length})
+                        {t('connections.discoverDesigners', { count: data.designers.length })}
                     </h2>
                 </div>
 
@@ -195,16 +200,16 @@ function CompanySide({
                                 </div>
 
                                 <div className="flex items-center gap-4 text-[10px] text-[#E8E0D5]/50">
-                                    <span>{designer.portfolioCount} portfolio pieces</span>
+                                    <span>{t('connections.portfolioPieces', { count: designer.portfolioCount })}</span>
                                     <span className="flex items-center gap-1">
                                         <Star size={9} className="text-[#C9A84C]" /> {designer.rating.toFixed(1)}
                                     </span>
-                                    <span>{designer.approvedCount} approved</span>
+                                    <span>{t('connections.approved', { count: designer.approvedCount })}</span>
                                 </div>
 
                                 {designer.topPiece && (
                                     <p className="text-[9px] text-[#E8E0D5]/40 italic leading-relaxed">
-                                        Signature: “{designer.topPiece}”
+                                        {t('connections.signature', { piece: designer.topPiece })}
                                     </p>
                                 )}
 
@@ -215,7 +220,7 @@ function CompanySide({
                                                 value={message}
                                                 onChange={(e) => setMessage(e.target.value)}
                                                 rows={2}
-                                                placeholder="Why do you want to partner? (required)"
+                                                placeholder={t('connections.partnerNotePlaceholder')}
                                                 className="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-[11px] text-white outline-none focus:border-[#C9A84C] transition resize-none"
                                             />
                                             <div className="flex gap-2">
@@ -225,13 +230,13 @@ function CompanySide({
                                                     className="flex-1 py-2 rounded-lg bg-[#C9A84C] text-[#0A0F2C] text-[9px] font-mono font-bold uppercase tracking-widest hover:bg-[#D9BC63] transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-wait flex items-center justify-center gap-1.5"
                                                 >
                                                     <Send size={11} />
-                                                    {mutating ? 'Sending…' : 'Send Request'}
+                                                    {mutating ? t('connections.sending') : t('connections.sendRequest')}
                                                 </button>
                                                 <button
                                                     onClick={() => setComposingFor(null)}
                                                     className="px-3 py-2 rounded-lg border border-white/10 text-[9px] font-mono uppercase tracking-widest text-[#E8E0D5]/50 hover:text-white transition-all cursor-pointer"
                                                 >
-                                                    Cancel
+                                                    {t('common.cancel')}
                                                 </button>
                                             </div>
                                         </div>
@@ -244,14 +249,14 @@ function CompanySide({
                                             disabled={mutating}
                                             className="mt-1 self-start py-2 px-4 rounded-lg border border-[#C9A84C]/40 text-[#C9A84C] text-[9px] font-mono font-bold uppercase tracking-widest hover:bg-[#C9A84C]/10 transition-all duration-300 cursor-pointer disabled:opacity-50"
                                         >
-                                            Connect
+                                            {t('connections.connect')}
                                         </button>
                                     )
                                 ) : (
                                     <p className="mt-1 text-[9px] font-mono uppercase tracking-wider text-[#E8E0D5]/40">
                                         {request.status === 'pending'
-                                            ? 'Awaiting the designer’s response'
-                                            : 'Partnership active'}
+                                            ? t('connections.awaitingResponseShort')
+                                            : t('connections.partnershipActive')}
                                     </p>
                                 )}
                             </div>
@@ -267,16 +272,16 @@ function CompanySide({
                         <Handshake size={14} />
                     </div>
                     <h2 className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold">
-                        My Requests ({myRequests.length})
+                        {t('connections.myRequests', { count: myRequests.length })}
                     </h2>
                 </div>
 
                 {myRequests.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-14 rounded-2xl bg-[#0A0F2C]/40 border border-dashed border-white/10 text-center">
                         <Inbox size={26} className="text-[#C9A84C]/40 mb-3" />
-                        <p className="text-sm font-serif text-white">No requests yet</p>
+                        <p className="text-sm font-serif text-white">{t('connections.noRequestsYet')}</p>
                         <p className="text-[11px] text-slate-500 mt-1 max-w-sm">
-                            Connect with a designer above and your partnership requests will appear here.
+                            {t('connections.noRequestsHint')}
                         </p>
                     </div>
                 ) : (
@@ -297,8 +302,8 @@ function CompanySide({
                                         “{request.message}”
                                     </p>
                                     <p className="text-[9px] font-mono uppercase tracking-wider text-[#E8E0D5]/30 mt-1">
-                                        {formatRelativeTime(request.createdAt)}
-                                        {request.respondedAt && ` · responded ${formatRelativeTime(request.respondedAt)}`}
+                                        {formatRelativeTime(request.createdAt, language)}
+                                        {request.respondedAt && t('connections.respondedAt', { time: formatRelativeTime(request.respondedAt, language) })}
                                     </p>
                                 </div>
                                 <StatusChip status={request.status} />
@@ -326,6 +331,7 @@ function DesignerSide({
     onRespond: (id: string, response: ConnectionResponse) => Promise<{ ok: boolean; error?: string }>;
     onFeedback: (message: { kind: 'success' | 'error'; text: string }) => void;
 }) {
+    const { t, language } = useLanguage();
     const myRequests = useMemo(
         () => data.connections.filter((c) => c.designerId === userId),
         [data.connections, userId],
@@ -338,10 +344,10 @@ function DesignerSide({
         if (result.ok) {
             onFeedback({
                 kind: 'success',
-                text: response === 'accept' ? 'Partnership accepted — the company has been notified.' : 'Request declined.',
+                text: response === 'accept' ? t('connections.acceptedSuccess') : t('connections.declinedSuccess'),
             });
         } else {
-            onFeedback({ kind: 'error', text: result.error ?? 'Failed to update the request.' });
+            onFeedback({ kind: 'error', text: result.error ?? t('connections.updateFailed') });
         }
     };
 
@@ -354,16 +360,16 @@ function DesignerSide({
                         <Inbox size={14} />
                     </div>
                     <h2 className="text-[10px] font-mono uppercase tracking-widest text-[#A78BFA] font-bold">
-                        Incoming Requests ({pending.length})
+                        {t('connections.incomingRequests', { count: pending.length })}
                     </h2>
                 </div>
 
                 {pending.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-14 rounded-2xl bg-[#0A0F2C]/40 border border-dashed border-white/10 text-center">
                         <Inbox size={26} className="text-[#A78BFA]/40 mb-3" />
-                        <p className="text-sm font-serif text-white">No incoming requests</p>
+                        <p className="text-sm font-serif text-white">{t('connections.noIncoming')}</p>
                         <p className="text-[11px] text-slate-500 mt-1 max-w-sm">
-                            When a company wants to partner with you, their request will appear here.
+                            {t('connections.noIncomingHint')}
                         </p>
                     </div>
                 ) : (
@@ -383,7 +389,7 @@ function DesignerSide({
                                             </span>
                                         </div>
                                         <p className="text-[10px] font-mono uppercase tracking-wider text-[#E8E0D5]/30 mt-1">
-                                            {formatRelativeTime(request.createdAt)}
+                                            {formatRelativeTime(request.createdAt, language)}
                                         </p>
                                     </div>
                                     <StatusChip status={request.status} />
@@ -398,7 +404,7 @@ function DesignerSide({
                                         className="flex-1 py-2.5 rounded-lg bg-emerald-500 text-[#0A0F2C] text-[9px] font-mono font-bold uppercase tracking-widest hover:bg-emerald-400 transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-wait flex items-center justify-center gap-1.5"
                                     >
                                         <CheckCircle2 size={11} />
-                                        Accept
+                                        {t('connections.accept')}
                                     </button>
                                     <button
                                         onClick={() => handleRespond(request.id, 'decline')}
@@ -406,7 +412,7 @@ function DesignerSide({
                                         className="flex-1 py-2.5 rounded-lg border border-red-500/40 text-red-400 text-[9px] font-mono font-bold uppercase tracking-widest hover:bg-red-500/10 transition-all duration-300 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
                                     >
                                         <XCircle size={11} />
-                                        Decline
+                                        {t('connections.decline')}
                                     </button>
                                 </div>
                             </div>
@@ -422,13 +428,13 @@ function DesignerSide({
                         <Handshake size={14} />
                     </div>
                     <h2 className="text-[10px] font-mono uppercase tracking-widest text-[#A78BFA] font-bold">
-                        Active Partnerships ({active.length})
+                        {t('connections.activePartnershipsTitle', { count: active.length })}
                     </h2>
                 </div>
 
                 {active.length === 0 ? (
                     <p className="text-[11px] text-slate-500">
-                        No active partnerships yet — accept an incoming request to start collaborating.
+                        {t('connections.noActivePartnerships')}
                     </p>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -447,7 +453,7 @@ function DesignerSide({
                                 </p>
                                 {request.respondedAt && (
                                     <p className="text-[9px] font-mono uppercase tracking-wider text-[#E8E0D5]/30">
-                                        Partnered {formatRelativeTime(request.respondedAt)}
+                                        {t('connections.partnered', { time: formatRelativeTime(request.respondedAt, language) })}
                                     </p>
                                 )}
                             </div>
@@ -473,6 +479,7 @@ export default function ConnectionsView({
     onRespond,
     onRetry,
 }: ConnectionsViewProps) {
+    const { t } = useLanguage();
     const [feedback, setFeedback] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
 
     const myConnections = useMemo(
@@ -491,7 +498,7 @@ export default function ConnectionsView({
             <section className="px-6 md:px-10 py-10 border-b border-[#C9A84C]/10 bg-gradient-to-b from-[#0A0F2C] to-[#12103A]">
                 <div className="flex items-center gap-2 mb-3">
                     <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-[#C9A84C]">
-                        Designer & Company Connections
+                        {t('connections.kicker')}
                     </span>
                     <span
                         className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-[8px] font-mono uppercase tracking-wider ${
@@ -501,24 +508,22 @@ export default function ConnectionsView({
                         }`}
                     >
                         {wsLive ? <Wifi size={9} /> : <WifiOff size={9} />}
-                        {wsLive ? 'Live' : 'Polling'}
+                        {wsLive ? t('connections.live') : t('connections.polling')}
                     </span>
                 </div>
                 <h1 className="text-3xl md:text-4xl font-serif text-white uppercase tracking-tight">
                     {role === 'company' ? (
                         <>
-                            Find Your Next <span className="text-[#C9A84C] italic">Design Partner</span>
+                            {t('connections.title.companyPre')} <span className="text-[#C9A84C] italic">{t('connections.title.companyHighlight')}</span>
                         </>
                     ) : (
                         <>
-                            Brand <span className="text-[#A78BFA] italic">Partnerships</span>
+                            {t('connections.title.designerPre')} <span className="text-[#A78BFA] italic">{t('connections.title.designerHighlight')}</span>
                         </>
                     )}
                 </h1>
                 <p className="text-xs md:text-sm text-slate-400 max-w-2xl mt-2 leading-relaxed">
-                    {role === 'company'
-                        ? 'Discover SADAF designers, review their portfolios, and open a collaboration request in seconds.'
-                        : 'Receive collaboration requests from brands, review the brief, and accept the partnerships that fit your craft.'}
+                    {role === 'company' ? t('connections.subtitle.company') : t('connections.subtitle.designer')}
                 </p>
             </section>
 
@@ -532,7 +537,7 @@ export default function ConnectionsView({
                             onClick={onRetry}
                             className="text-[9px] font-mono uppercase tracking-wider text-[#C9A84C] border border-[#C9A84C]/30 rounded px-2 py-1 hover:bg-[#C9A84C]/10 transition-all cursor-pointer"
                         >
-                            Retry
+                            {t('connections.retry')}
                         </button>
                     </div>
                 )}
@@ -550,25 +555,25 @@ export default function ConnectionsView({
                 {data && (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <KpiCard
-                            label={role === 'company' ? 'Requests Sent' : 'Incoming'}
+                            label={role === 'company' ? t('connections.kpi.requestsSent') : t('connections.kpi.incoming')}
                             value={myConnections.length}
                             icon={Users}
                             accent="text-[#C9A84C]"
                         />
                         <KpiCard
-                            label="Awaiting Response"
+                            label={t('connections.kpi.awaitingResponse')}
                             value={pendingCount}
                             icon={Inbox}
                             accent="text-amber-400"
                         />
                         <KpiCard
-                            label="Active Partnerships"
+                            label={t('connections.kpi.activePartnerships')}
                             value={activeCount}
                             icon={Handshake}
                             accent="text-emerald-400"
                         />
                         <KpiCard
-                            label={role === 'company' ? 'Designers Available' : 'Companies on Platform'}
+                            label={role === 'company' ? t('connections.kpi.designersAvailable') : t('connections.kpi.companiesOnPlatform')}
                             value={role === 'company' ? data.designers.length : data.companies.length}
                             icon={UserPlus}
                             accent="text-[#A78BFA]"
