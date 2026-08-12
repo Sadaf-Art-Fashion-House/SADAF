@@ -16,7 +16,11 @@
 
 import type { AIClothingDesign, ArtPiece, Collection } from '@/shared/types';
 import type { FashionProduct } from '@/types';
-import { localizedFabricName, localizedPrintingName } from '@/features/i18n/productNames';
+import {
+    localizedClothingType,
+    localizedFabricName,
+    localizedPrintingName,
+} from '@/features/i18n/productNames';
 import type { DesignDraft, PublishResult } from '../types';
 import { useDesignDraftStore } from '../store/useDesignDraftStore';
 import { fashionDatabase, artDatabase } from '@/data';
@@ -50,15 +54,6 @@ const PRINTING_OPTION_TO_METHOD: Record<string, string> = {
     'Puff Print': 'Puff Multi-Texture Print',
 };
 
-/** Arabic labels for the AI clothing types (used in generated copy). */
-const CLOTHING_TYPE_AR: Record<string, string> = {
-    Abaya: 'عباية',
-    Hoodie: 'هودي',
-    'T-Shirt': 'تي شيرت',
-    Jacket: 'جاكيت',
-    Streetwear: 'ستريت وير',
-};
-
 function generateId(prefix: string): string {
     return `${prefix}-${Date.now()}`;
 }
@@ -74,8 +69,8 @@ function designToFashionProduct(design: AIClothingDesign, selectedFabric: string
         hoverImage: '',
         description: design.description || `An exclusive ${design.clothingType} designed through AI Studio.`,
         descriptionAr: design.patternNameAr
-            ? `تصميم حصري من نوع ${CLOTHING_TYPE_AR[design.clothingType] || design.clothingType} «${design.patternNameAr}» صُمم عبر استوديو الذكاء الاصطناعي.`
-            : `قطعة ${CLOTHING_TYPE_AR[design.clothingType] || design.clothingType} حصرية صُممت عبر استوديو الذكاء الاصطناعي.`,
+            ? `تصميم حصري من نوع ${localizedClothingType(design.clothingType, 'ar')} «${design.patternNameAr}» صُمم عبر استوديو الذكاء الاصطناعي.`
+            : `قطعة ${localizedClothingType(design.clothingType, 'ar')} حصرية صُممت عبر استوديو الذكاء الاصطناعي.`,
         fabric: selectedFabric || 'Premium Raw Silk',
         fabricAr: localizedFabricName(selectedFabric || 'Premium Raw Silk', 'ar'),
         sizes: ['S', 'M', 'L', 'XL'],

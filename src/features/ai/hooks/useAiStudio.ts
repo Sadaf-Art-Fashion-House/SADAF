@@ -37,14 +37,38 @@ const CLOTHING_TYPES: ClothingType[] = ['Abaya', 'Hoodie', 'T-Shirt', 'Jacket', 
 
 interface Preset {
     name: string;
+    /** Arabic display name (falls back to `name` when missing). */
+    nameAr?: string;
     text: string;
+    /** Arabic description (falls back to `text` when missing). */
+    textAr?: string;
 }
 
 const PRESETS: Preset[] = [
-    { name: 'Islamic Geometry', text: 'Classic Byzantine octagrams, intricate symmetric star grids, thin golden lines, interlocking medallions' },
-    { name: 'Cairo Art Deco', text: 'Gilded Egyptian Art Deco vertical grids, sandy ivory blocks, overlapping copper structures and stylized lilies' },
-    { name: 'Gilded Calligraphy', text: 'Sweeping Diwani calligraphic verses in 18k liquid gold ink brush strokes, flowing randomly on deep velvet' },
-    { name: 'Alexandrian Inlay', text: 'Geometric mother-of-pearl (Sadaf) mosaic triangles, saltwater shell textures, crystal blue iridescent lines' },
+    {
+        name: 'Islamic Geometry',
+        nameAr: 'الهندسة الإسلامية',
+        text: 'Classic Byzantine octagrams, intricate symmetric star grids, thin golden lines, interlocking medallions',
+        textAr: 'نجوم بيزنطية ثمانية الأضلاع، وشبكات نجمية متناظرة دقيقة، وخطوط ذهبية رفيعة، ومداليات متشابكة',
+    },
+    {
+        name: 'Cairo Art Deco',
+        nameAr: 'آرت ديكو القاهرة',
+        text: 'Gilded Egyptian Art Deco vertical grids, sandy ivory blocks, overlapping copper structures and stylized lilies',
+        textAr: 'شبكات رأسية مصرية مذهّبة على طراز آرت ديكو، وكتل عاجية رملية، وهياكل نحاسية متداخلة وزنابق منمّقة',
+    },
+    {
+        name: 'Gilded Calligraphy',
+        nameAr: 'الخط المذهّب',
+        text: 'Sweeping Diwani calligraphic verses in 18k liquid gold ink brush strokes, flowing randomly on deep velvet',
+        textAr: 'آيات خط ديواني منسابة بحبر ذهبي سائل عيار 18 بضربات فرشاة، تنساب عشوائيًا على مخمل عميق',
+    },
+    {
+        name: 'Alexandrian Inlay',
+        nameAr: 'ترصيع الإسكندرية',
+        text: 'Geometric mother-of-pearl (Sadaf) mosaic triangles, saltwater shell textures, crystal blue iridescent lines',
+        textAr: 'مثلثات فسيفسائية هندسية من الصدف الأم، وملمس أصداف البحر، وخطوط متقزحة زرقاء بلورية',
+    },
 ];
 
 interface UseAiStudioOptions {

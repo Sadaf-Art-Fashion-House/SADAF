@@ -8,7 +8,13 @@ import {
 import type { AIClothingDesign, MaqasaqRecommendation } from '@/shared/types';
 import { fabricsList, printingMethods } from '@/features/ai/data';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
-import { localizedDesignName, localizedFabricName, localizedFabricDescription, localizedPrintingName } from '@/features/i18n/productNames';
+import {
+    localizedClothingType,
+    localizedDesignName,
+    localizedFabricDescription,
+    localizedFabricName,
+    localizedPrintingName,
+} from '@/features/i18n/productNames';
 
 
 interface AiStudioViewProps {
@@ -41,10 +47,10 @@ interface AiStudioViewProps {
     setPosture: (v: string) => void;
     isCalculatingSize: boolean;
     sizeRecommendation: MaqasaqRecommendation;
-    presets: { name: string; text: string }[];
+    presets: Array<{ name: string; nameAr?: string; text: string; textAr?: string }>;
     clothingTypes: string[];
     handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    applyPreset: (preset: { name: string; text: string }) => void;
+    applyPreset: (preset: { name: string; nameAr?: string; text: string; textAr?: string }) => void;
     handleGenerateDesign: () => Promise<void>;
     handleCalculateSize: () => Promise<void>;
     dispatchToCoutureAtelier: () => void;
@@ -151,17 +157,17 @@ export default function AiStudioView({
                                         <Sparkles className="text-[#C9A84C]" size={20} /> {t('ai.baseSilhouette')}
                                     </h3>
                                     <div className="grid grid-cols-3 gap-2 mt-3">
-                                        {clothingTypes.map((t) => (
+                                        {clothingTypes.map((ct) => (
                                             <button
-                                                key={t}
-                                                onClick={() => setClothingType(t)}
+                                                key={ct}
+                                                onClick={() => setClothingType(ct)}
                                                 className={`py-3 rounded text-xs font-medium uppercase tracking-wider transition-all duration-350 cursor-pointer ${
-                                                    clothingType === t
+                                                    clothingType === ct
                                                         ? 'bg-[#1B2A6B] text-white border border-[#4FC3F7]/50'
                                                         : 'bg-[#0A0F2C] border border-white/5 text-gray-400 hover:text-white hover:bg-white/5'
                                                 }`}
                                             >
-                                                {t}
+                                                {localizedClothingType(ct, language)}
                                             </button>
                                         ))}
                                     </div>
@@ -183,8 +189,12 @@ export default function AiStudioView({
                                                         : 'bg-black/20 border-white/5 text-slate-400 hover:text-white hover:bg-white/5'
                                                 }`}
                                             >
-                                                <strong className="block text-[#C9A84C] font-serif mb-1">{pr.name}</strong>
-                                                <span className="text-[10px] text-gray-500 line-clamp-1">{pr.text}</span>
+                                                <strong className="block text-[#C9A84C] font-serif mb-1">
+                                                    {language === 'ar' && pr.nameAr ? pr.nameAr : pr.name}
+                                                </strong>
+                                                <span className="text-[10px] text-gray-500 line-clamp-1">
+                                                    {language === 'ar' && pr.textAr ? pr.textAr : pr.text}
+                                                </span>
                                             </button>
                                         ))}
                                     </div>
@@ -543,7 +553,7 @@ export default function AiStudioView({
                         </div>
 
                         <div className="absolute top-4 right-4 bg-white/5 text-[9px] text-[#C9A84C] px-2 py-1 rounded border border-white/5 font-mono tracking-wider">
-                            {clothingType.toUpperCase()} {t('ai.mockup')}
+                            {localizedClothingType(clothingType, language)} {t('ai.mockup')}
                         </div>
 
                         {/* Simulated 3D Garment Canvas */}
