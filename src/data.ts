@@ -286,15 +286,15 @@ export const lookbookItems: LookbookItem[] = [
 ];
 
 export const fabricsList = [
-    { name: 'Luxury Italian Velvet', priceOffset: 120, description: 'Dense, ultra-soft velvet with perfect weight and rich lustre.' },
-    { name: 'Raw Giza Cotton (500gsm)', priceOffset: 40, description: 'World-famous long-staple Egyptian cotton, heavy yet wonderfully breathable.' },
-    { name: 'Premium Mulberry Silk', priceOffset: 180, description: 'Highest-grade organic silk weave giving a flawless fluid flow.' },
-    { name: 'Super-140s Wool Canvas', priceOffset: 150, description: 'Elite structural tailored wool weave of outstanding drape.' },
+    { name: 'Luxury Italian Velvet', nameAr: 'مخمل إيطالي فاخر', priceOffset: 120, description: 'Dense, ultra-soft velvet with perfect weight and rich lustre.', descriptionAr: 'مخمل كثيف فائق النعومة بوزن مثالي ولمعان غني.' },
+    { name: 'Raw Giza Cotton (500gsm)', nameAr: 'قطن جيزة خام (500 غ/م²)', priceOffset: 40, description: 'World-famous long-staple Egyptian cotton, heavy yet wonderfully breathable.', descriptionAr: 'قطن مصري طويل التيلة عالمي الشهرة، ثقيل لكنه مريح ومهوّى بشكل رائع.' },
+    { name: 'Premium Mulberry Silk', nameAr: 'حرير توتي فاخر', priceOffset: 180, description: 'Highest-grade organic silk weave giving a flawless fluid flow.', descriptionAr: 'نسيج حرير عضوي من أعلى الدرجات يمنح انسيابية سلسة لا تشوبها شائبة.' },
+    { name: 'Super-140s Wool Canvas', nameAr: 'قماش صوف سوبر 140s', priceOffset: 150, description: 'Elite structural tailored wool weave of outstanding drape.', descriptionAr: 'نسيج صوف خياطة بنيوي فاخر بقماشية رائعة.' },
 ];
 
 export const printingMethods = [
-    { name: 'Embroidery (Gold Thread)', priceOffset: 150, description: '3D stitching with genuine thin metallic-alloy luxury yarn.' },
-    { name: 'Puff Multi-Texture Print', priceOffset: 45, description: 'High-rising, velvet-like embossed ink that shifts in light.' },
-    { name: 'Direct-to-Garment Micro-spray', priceOffset: 25, description: 'High-detail direct pigment spray printing onto natural fibers.' },
-    { name: 'Artisanal Screen Printing', priceOffset: 60, description: 'Layered handcrafted solid metallic ink screens applied individually.' },
+    { name: 'Embroidery (Gold Thread)', nameAr: 'تطريز (خيط ذهبي)', priceOffset: 150, description: '3D stitching with genuine thin metallic-alloy luxury yarn.', descriptionAr: 'غرز ثلاثية الأبعاد بخيوط معدنية رفيعة حقيقية فاخرة.' },
+    { name: 'Puff Multi-Texture Print', nameAr: 'طباعة بارزة متعددة الملمس', priceOffset: 45, description: 'High-rising, velvet-like embossed ink that shifts in light.', descriptionAr: 'حبر منقوش عالي الارتفاع يشبه المخمل يتغير مع الضوء.' },
+    { name: 'Direct-to-Garment Micro-spray', nameAr: 'رش مباشر دقيق على القماش', priceOffset: 25, description: 'High-detail direct pigment spray printing onto natural fibers.', descriptionAr: 'طباعة رذاذ صبغي مباشرة عالية التفاصيل على الألياف الطبيعية.' },
+    { name: 'Artisanal Screen Printing', nameAr: 'طباعة سلك سكرين حرفية', priceOffset: 60, description: 'Layered handcrafted solid metallic ink screens applied individually.', descriptionAr: 'شاشات حبر معدني مصمتة تُرصّف يدويًا وتُطبع كل واحدة على حدة.' },
 ];

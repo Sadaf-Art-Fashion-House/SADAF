@@ -14,7 +14,7 @@
 
 import type { AIClothingDesign, ArtPiece, FashionProduct } from '@/shared/types';
 import type { SiteLanguage } from '@/features/settings/store/usePreferencesStore';
-import { artDatabase, fashionDatabase } from '@/data';
+import { artDatabase, fashionDatabase, fabricsList, printingMethods } from '@/data';
 import type { OrderItem } from '@/features/orders/types';
 
 /** The display name of a product for the active language. */
@@ -45,6 +45,41 @@ export function localizedArtTitle(art: ArtPiece, language: SiteLanguage): string
 /** The display name of an AI Studio design for the active language. */
 export function localizedDesignName(design: AIClothingDesign, language: SiteLanguage): string {
     return language === 'ar' && design.patternNameAr ? design.patternNameAr : design.patternName;
+}
+
+/**
+ * The display name of a fabric option for the active language. Falls back to
+ * the stored English name when the value is not a known catalog fabric (e.g.
+ * an AI-suggested fabric returned by the model).
+ */
+export function localizedFabricName(fabric: string, language: SiteLanguage): string {
+    if (language !== 'ar') return fabric;
+    const match = fabricsList.find((f) => f.name === fabric);
+    return match?.nameAr ?? fabric;
+}
+
+/** The fabric description for the active language (falls back to English). */
+export function localizedFabricDescription(fabric: string, language: SiteLanguage): string {
+    if (language !== 'ar') return fabric;
+    const match = fabricsList.find((f) => f.name === fabric);
+    return match?.descriptionAr ?? fabric;
+}
+
+/**
+ * The display name of a printing method for the active language. Falls back
+ * to the stored English name when the value is not a known method.
+ */
+export function localizedPrintingName(printing: string, language: SiteLanguage): string {
+    if (language !== 'ar') return printing;
+    const match = printingMethods.find((p) => p.name === printing);
+    return match?.nameAr ?? printing;
+}
+
+/** The printing description for the active language (falls back to English). */
+export function localizedPrintingDescription(printing: string, language: SiteLanguage): string {
+    if (language !== 'ar') return printing;
+    const match = printingMethods.find((p) => p.name === printing);
+    return match?.descriptionAr ?? printing;
 }
 
 /** Human-readable name for an AI custom item in cart/checkout lists. */
