@@ -18,6 +18,7 @@ import {
 import SuccessToast from '@/shared/components/SuccessToast';
 import type { CartItem } from '@/shared/types';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
+import type { TranslationKey } from '@/features/i18n/dictionaries';
 import { localizedAiItemName, localizedArtTitle, localizedProductName, localizedFabricName, localizedPrintingName } from '@/features/i18n/productNames';
 
 interface CartViewProps {
@@ -68,24 +69,19 @@ function CartItemThumbnail({ item }: { item: CartItem }) {
 }
 
 /** Returns a human-readable item name regardless of item type (catalog products use the localized name). */
-function getItemName(item: CartItem, language: 'en' | 'ar'): string {
+function getItemName(item: CartItem, language: 'en' | 'ar', t: (key: TranslationKey, vars?: Record<string, string | number>) => string): string {
     if (item.product) return localizedProductName(item.product, language);
     if (item.artPiece) return localizedArtTitle(item.artPiece, language);
     if (item.aiCustomDesign) return localizedAiItemName(item.aiCustomDesign.clothingType, language);
-    return 'Unknown Item';
+    return t('store.cart.unknownItem');
 }
 
-/** Returns a human-readable category label. */
-function getItemCategory(item: CartItem): string {
-    switch (item.itemType) {
-        case 'product':
-            return 'Fashion';
-        case 'art':
-            return 'Fine Art';
-        case 'aiCustomDesign':
-            return 'AI Studio Design';
-    }
-}
+/** Dictionary key for each item-type category badge. */
+const ITEM_CATEGORY_KEY: Record<CartItem['itemType'], TranslationKey> = {
+    product: 'store.cart.catFashion',
+    art: 'store.cart.catArt',
+    aiCustomDesign: 'store.cart.catAi',
+};
 
 /** Icon for each item type badge. */
 function ItemTypeIcon({ type }: { type: CartItem['itemType'] }) {
@@ -105,7 +101,7 @@ export default function CartView({
     onRemoveFromCart,
     onClearCart,
 }: CartViewProps) {
-    const { language } = useLanguage();
+    const { language, t } = useLanguage();
     const subtotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
     const isEmpty = items.length === 0;
 
@@ -135,11 +131,11 @@ export default function CartView({
                         </span>
                         <h1 className="text-3xl md:text-4xl font-serif text-white tracking-tight flex items-center gap-3">
                             <ShoppingBag size={28} className="text-[#C9A84C]" />
-                            Your Shopping Bag
+                            {t('store.cart.title')}
                         </h1>
                         {!isEmpty && (
                             <p className="text-xs text-[#E8E0D5]/50 font-mono mt-1">
-                                {items.length} {items.length === 1 ? 'item' : 'items'}
+                                {items.length} {items.length === 1 ? t('checkout.itemWord') : t('checkout.itemsWord')}
                             </p>
                         )}
                     </div>
@@ -149,7 +145,7 @@ export default function CartView({
                         className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] hover:text-[#4FC3F7] transition-colors duration-300"
                     >
                         <ArrowLeft size={12} />
-                        Continue Shopping
+                        {t('orders.continueShopping')}
                     </Link>
                 </div>
             </section>
@@ -165,17 +161,16 @@ export default function CartView({
                         <div className="inline-flex p-6 rounded-full bg-[#C9A84C]/10 border border-[#C9A84C]/20 mb-6">
                             <ShoppingBag size={40} className="text-[#C9A84C]/60" />
                         </div>
-                        <h2 className="text-2xl font-serif text-white mb-3">Your bag is empty</h2>
+                        <h2 className="text-2xl font-serif text-white mb-3">{t('store.cart.emptyTitle')}</h2>
                         <p className="text-sm text-[#E8E0D5]/60 max-w-md mx-auto mb-8 leading-relaxed">
-                            Explore our boutique store for ready-to-wear luxury pieces, browse fine
-                            artworks, or design your own bespoke creation in the AI Studio.
+                            {t('store.cart.emptyBody')}
                         </p>
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                             <Link
                                 href="/store"
                                 className="px-6 py-3 rounded-full bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/90 text-[#0A0F2C] text-xs font-mono font-bold uppercase tracking-widest transition-all duration-300 hover:scale-105"
                             >
-                                Browse Store
+                                {t('store.cart.browseStore')}
                             </Link>
                             <Link
                                 href="/ai"
@@ -214,19 +209,19 @@ export default function CartView({
                                                     <div className="flex justify-between items-start gap-2">
                                                         <div className="min-w-0">
                                                             <h3 className="font-serif text-sm md:text-base text-white truncate">
-                                                                {getItemName(item, language)}
+                                                                {getItemName(item, language, t)}
                                                             </h3>
                                                             <div className="flex items-center gap-2 mt-1">
                                                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-mono uppercase tracking-wider bg-[#C9A84C]/10 text-[#C9A84C] border border-[#C9A84C]/20">
                                                                     <ItemTypeIcon type={item.itemType} />
-                                                                    {getItemCategory(item)}
+                                                                    {t(ITEM_CATEGORY_KEY[item.itemType])}
                                                                 </span>
                                                             </div>
                                                         </div>
                                                         <button
                                                             onClick={() => onRemoveFromCart(item.id)}
                                                             className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-950/30 transition-all duration-300 shrink-0 cursor-pointer"
-                                                            title="Remove item"
+                                                            title={t('store.cart.removeItem')}
                                                         >
                                                             <Trash2 size={14} />
                                                         </button>
@@ -234,15 +229,15 @@ export default function CartView({
 
                                                     {/* Attributes */}
                                                     <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-[10px] font-mono text-[#E8E0D5]/50">
-                                                        <span>Size: {item.selectedSize}</span>
+                                                        <span>{t('store.cart.size')}: {item.selectedSize}</span>
                                                         {item.selectedColor && (
-                                                            <span>Color: {item.selectedColor}</span>
+                                                            <span>{t('store.cart.colorLabel')}: {item.selectedColor}</span>
                                                         )}
                                                         {item.selectedFabric && (
-                                                            <span>Fabric: {localizedFabricName(item.selectedFabric, language)}</span>
+                                                            <span>{t('store.cart.fabricLabel')}: {localizedFabricName(item.selectedFabric, language)}</span>
                                                         )}
                                                         {item.selectedPrinting && (
-                                                            <span>Print: {localizedPrintingName(item.selectedPrinting, language)}</span>
+                                                            <span>{t('store.cart.printLabel')}: {localizedPrintingName(item.selectedPrinting, language)}</span>
                                                         )}
                                                     </div>
                                                 </div>
@@ -251,7 +246,7 @@ export default function CartView({
                                                     {/* Quantity controls */}
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-[10px] font-mono uppercase text-[#E8E0D5]/40 mr-1">
-                                                            Qty
+                                                            {t('store.cart.qty')}
                                                         </span>
                                                         <button
                                                             onClick={() =>
@@ -278,7 +273,7 @@ export default function CartView({
                                                     {/* Price */}
                                                     <div className="text-right">
                                                         <span className="text-xs text-[#E8E0D5]/40 font-mono block">
-                                                            Total
+                                                            {t('store.cart.total')}
                                                         </span>
                                                         <span className="text-sm font-mono text-[#C9A84C] font-bold">
                                                             ${item.totalPrice.toLocaleString()}
@@ -296,25 +291,25 @@ export default function CartView({
                         <div className="lg:col-span-4">
                             <div className="sticky top-28 p-6 rounded-xl bg-[#0A0F2C]/80 border border-[#C9A84C]/10">
                                 <h3 className="font-serif text-lg text-white mb-4 pb-4 border-b border-[#C9A84C]/10">
-                                    Order Summary
+                                    {t('checkout.orderSummary')}
                                 </h3>
 
                                 <div className="space-y-3 text-xs font-mono">
                                     <div className="flex justify-between text-[#E8E0D5]/70">
-                                        <span>Subtotal</span>
+                                        <span>{t('store.cart.subtotal')}</span>
                                         <span className="text-white">${subtotal.toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between text-[#E8E0D5]/70">
-                                        <span>Shipping</span>
+                                        <span>{t('checkout.shipping')}</span>
                                         <span className="text-[#C9A84C]">
-                                            {subtotal >= 500 ? 'FREE' : 'Calculated at checkout'}
+                                            {subtotal >= 500 ? t('checkout.free') : t('store.cart.calculated')}
                                         </span>
                                     </div>
                                 </div>
 
                                 <div className="mt-4 pt-4 border-t border-[#C9A84C]/10">
                                     <div className="flex justify-between items-center text-sm font-mono">
-                                        <span className="text-white font-bold uppercase">Total</span>
+                                        <span className="text-white font-bold uppercase">{t('store.cart.total')}</span>
                                         <span className="text-[#C9A84C] text-lg font-bold">
                                             ${subtotal.toLocaleString()}
                                         </span>
@@ -328,26 +323,26 @@ export default function CartView({
                                         className="w-full py-3 rounded bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/90 text-[#0A0F2C] text-xs font-mono font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] active:scale-98"
                                     >
                                         <CreditCard size={14} />
-                                        Proceed to Checkout
+                                        {t('store.cart.checkout')}
                                     </Link>
 
                                     {confirmClear ? (
                                         <div className="p-3 rounded-lg bg-red-950/30 border border-red-500/30">
                                             <p className="text-[10px] text-red-300 font-mono text-center mb-3">
-                                                Remove all {items.length} item{items.length === 1 ? '' : 's'} from your bag?
+                                                {t('store.cart.clearConfirm', { count: items.length })}
                                             </p>
                                             <div className="flex gap-2">
                                                 <button
                                                     onClick={handleClear}
                                                     className="flex-1 py-2 rounded bg-red-500/20 border border-red-500/40 text-red-300 text-[10px] font-mono uppercase tracking-wider hover:bg-red-500/30 transition-all duration-300 cursor-pointer"
                                                 >
-                                                    Yes, Clear Bag
+                                                    {t('store.cart.yesClear')}
                                                 </button>
                                                 <button
                                                     onClick={() => setConfirmClear(false)}
                                                     className="flex-1 py-2 rounded bg-white/5 border border-white/10 text-slate-400 text-[10px] font-mono uppercase tracking-wider hover:text-white transition-all duration-300 cursor-pointer"
                                                 >
-                                                    Cancel
+                                                    {t('common.cancel')}
                                                 </button>
                                             </div>
                                         </div>
@@ -357,15 +352,14 @@ export default function CartView({
                                             className="w-full py-2.5 rounded border border-red-500/20 text-red-400 text-[10px] font-mono uppercase tracking-wider hover:bg-red-950/30 transition-all duration-300 cursor-pointer flex items-center justify-center gap-1.5"
                                         >
                                             <Trash2 size={12} />
-                                            Clear Bag
+                                            {t('store.cart.clearBag')}
                                         </button>
                                     )}
                                 </div>
 
                                 <div className="mt-6 p-3 rounded-lg bg-[#C9A84C]/5 border border-[#C9A84C]/10">
                                     <p className="text-[9px] text-[#E8E0D5]/50 font-mono leading-relaxed">
-                                        Free international shipping on orders over $500.
-                                        All pieces are bespoke-made and ship within 14–21 business days.
+                                        {t('store.cart.shippingNote')}
                                     </p>
                                 </div>
                             </div>
@@ -383,7 +377,7 @@ export default function CartView({
                             className="text-[#C9A84C] hover:text-[#4FC3F7] transition-colors duration-300 flex items-center gap-1.5"
                         >
                             <ArrowLeft size={11} />
-                            Continue Shopping
+                            {t('orders.continueShopping')}
                         </Link>
                         <span className="text-[#C9A84C]/30">&bull;</span>
                         <Link
@@ -391,7 +385,7 @@ export default function CartView({
                             className="text-[#C9A84C] hover:text-[#4FC3F7] transition-colors duration-300 flex items-center gap-1.5"
                         >
                             <Palette size={11} />
-                            Browse Fine Art
+                            {t('store.cart.browseFineArt')}
                         </Link>
                         <span className="text-[#C9A84C]/30">&bull;</span>
                         <Link
@@ -408,8 +402,8 @@ export default function CartView({
             {/* Cleared-bag confirmation toast — shared SuccessToast shell. */}
             <SuccessToast
                 visible={showClearedToast}
-                title="Bag cleared"
-                message="Your bag has been cleared."
+                title={t('store.cart.bagCleared')}
+                message={t('store.cart.bagClearedMsg')}
                 onDismiss={() => setShowClearedToast(false)}
                 position="bottom-right"
             />
