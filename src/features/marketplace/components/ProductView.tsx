@@ -79,7 +79,7 @@ export default function ProductView({
     onAddToCart,
     onToggleWishlist,
 }: ProductViewProps) {
-    const { language } = useLanguage();
+    const { t, language } = useLanguage();
 
     const [selectedSize, setSelectedSize] = useState<string>(product.sizes[0] ?? '');
     const [selectedColor, setSelectedColor] = useState<string>(product.colors[0]?.name ?? '');
@@ -123,9 +123,9 @@ export default function ProductView({
         <div className="min-h-screen bg-[#0A0F2C] pb-20">
             <div className="max-w-7xl mx-auto px-4 md:px-8 pt-8">
                 {/* Breadcrumb */}
-                <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-500 mb-8">
+                <nav aria-label={t('pdp.breadcrumbAria')} className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-500 mb-8">
                     <Link href={ROUTES.STORE} className="hover:text-[#C9A84C] transition-colors">
-                        Store
+                        {t('pdp.breadcrumb')}
                     </Link>
                     <ChevronRight size={11} />
                     <span className="text-[#E8E0D5]/60">{product.category}</span>
@@ -146,7 +146,7 @@ export default function ProductView({
                         {product.hoverImage && (
                             <Image
                                 src={product.hoverImage}
-                                alt={`${localizedProductName(product, language)} alternative view`}
+                                alt={t('pdp.altView', { name: localizedProductName(product, language) })}
                                 fill
                                 className="object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
                             />
@@ -157,7 +157,7 @@ export default function ProductView({
                     <div className="flex flex-col gap-6">
                         <div>
                             <span className="text-[9px] uppercase font-mono text-[#4FC3F7] tracking-[0.25em]">
-                                {product.category} Label
+                                {product.category} {t('pdp.label')}
                             </span>
                             <h1 className="font-serif text-2xl md:text-3xl text-white uppercase tracking-tight mt-2 leading-tight">
                                 {localizedProductName(product, language)}
@@ -168,8 +168,8 @@ export default function ProductView({
                                 </span>
                                 <span className="text-[9px] font-mono text-slate-500">
                                     {ratingSummary
-                                        ? `${ratingSummary.count} review${ratingSummary.count === 1 ? '' : 's'} · from customers`
-                                        : 'Editor\'s rating'}
+                                        ? t('pdp.reviewCount', { count: ratingSummary.count, s: ratingSummary.count === 1 ? '' : 's' })
+                                        : t('pdp.editorRating')}
                                 </span>
                                 <span className="text-[10px] font-mono text-slate-500">
                                     {localizedProductFabric(product, language)}
@@ -208,14 +208,14 @@ export default function ProductView({
                                             ))}
                                         </div>
                                         <span className="text-[10px] text-slate-500 font-mono">
-                                            {ratingSummary.count} review{ratingSummary.count === 1 ? '' : 's'} · from customers
+                                            {t('pdp.reviewCount', { count: ratingSummary.count, s: ratingSummary.count === 1 ? '' : 's' })}
                                         </span>
                                     </div>
                                     <Link
                                         href={ROUTES.REVIEWS}
                                         className="ml-auto inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-wider text-[#4FC3F7] hover:text-[#C9A84C] transition-colors"
                                     >
-                                        View all <ChevronRight size={10} />
+                                        {t('pdp.viewAll')} <ChevronRight size={10} />
                                     </Link>
                                 </div>
 
@@ -234,7 +234,7 @@ export default function ProductView({
                                                     setExactStarFilter((prev) => (prev === star ? null : star))
                                                 }
                                                 aria-pressed={active}
-                                                title={active ? 'Clear this star filter' : `Show only ${star}-star reviews`}
+                                                title={active ? t('pdp.filterClear') : t('pdp.filterShow', { star })}
                                                 className={`flex items-center gap-3 text-xs w-full rounded-lg px-1.5 py-0.5 transition-all duration-300 cursor-pointer ${
                                                     active ? 'bg-[#C9A84C]/10 ring-1 ring-[#C9A84C]/40' : 'hover:bg-white/5'
                                                 }`}
@@ -273,12 +273,12 @@ export default function ProductView({
                                 {/* Latest reviews */}
                                 <div className="flex items-center justify-between mb-1">
                                     <span className="text-[9px] font-mono uppercase tracking-widest text-[#C9A84C]/80 font-bold">
-                                        Latest Reviews
+                                        {t('pdp.latestReviews')}
                                     </span>
                                     {hasReviewedProduct ? (
                                         <span className="flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-wider text-emerald-400">
                                             <CheckCircle2 size={11} />
-                                            You reviewed this piece
+                                            {t('pdp.youReviewed')}
                                         </span>
                                     ) : !showReviewForm ? (
                                         <button
@@ -286,7 +286,7 @@ export default function ProductView({
                                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#C9A84C]/10 border border-[#C9A84C]/30 text-[#C9A84C] text-[9px] font-mono uppercase tracking-wider hover:bg-[#C9A84C]/20 transition-all duration-300 cursor-pointer"
                                         >
                                             <PenLine size={10} />
-                                            Write a Review
+                                            {t('pdp.writeReview')}
                                         </button>
                                     ) : null}
                                 </div>
@@ -298,7 +298,7 @@ export default function ProductView({
                                             {exactStarFilter}★ only ({filteredReviews.length})
                                             <button
                                                 onClick={() => setExactStarFilter(null)}
-                                                aria-label="Clear star filter"
+                                                aria-label={t('pdp.clearStarFilter')}
                                                 className="hover:text-white transition-colors cursor-pointer"
                                             >
                                                 <X size={9} />
@@ -312,7 +312,9 @@ export default function ProductView({
                                             onClick={() => setShowAllReviews((v) => !v)}
                                             className="flex items-center gap-1 text-[9px] font-mono uppercase tracking-wider text-[#4FC3F7] hover:text-[#C9A84C] transition-colors cursor-pointer"
                                         >
-                                            {showAllReviews ? 'Show fewer' : `Show all reviews (${reviews.length})`}
+                                            {showAllReviews
+                                                ? t('pdp.showFewer')
+                                                : t('pdp.showAllReviews', { count: reviews.length })}
                                             <ChevronRight
                                                 size={10}
                                                 className={`transition-transform duration-300 ${showAllReviews ? 'rotate-90' : ''}`}
@@ -327,7 +329,7 @@ export default function ProductView({
                                     <div className="pt-3 border-t border-white/5">
                                         <div className="flex items-center justify-between mb-1.5">
                                             <span className="text-[9px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold">
-                                                Your Review
+                                                {t('pdp.yourReview')}
                                             </span>
                                             <div className="flex items-center gap-1.5">
                                                 <button
@@ -335,21 +337,21 @@ export default function ProductView({
                                                     className="flex items-center gap-1 px-2 py-1 rounded-md bg-white/5 border border-white/10 text-[9px] font-mono uppercase tracking-wider text-slate-300 hover:text-[#C9A84C] hover:border-[#C9A84C]/40 transition-all duration-300 cursor-pointer"
                                                 >
                                                     <Pencil size={9} />
-                                                    Edit
+                                                    {t('pdp.edit')}
                                                 </button>
                                                 <button
                                                     onClick={() => setShowDeleteConfirm(true)}
                                                     className="flex items-center gap-1 px-2 py-1 rounded-md bg-red-500/5 border border-red-500/20 text-[9px] font-mono uppercase tracking-wider text-red-400/80 hover:text-red-400 hover:border-red-500/50 transition-all duration-300 cursor-pointer"
                                                 >
                                                     <Trash2 size={9} />
-                                                    Delete
+                                                    {t('pdp.delete')}
                                                 </button>
                                             </div>
                                         </div>
                                         {showDeleteConfirm ? (
                                             <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-3">
                                                 <p className="text-[11px] font-medium text-red-300 mb-2">
-                                                    Remove your review? This can&apos;t be undone.
+                                                    {t('pdp.deleteConfirm')}
                                                 </p>
                                                 <div className="flex items-center gap-2">
                                                     <button
@@ -357,13 +359,13 @@ export default function ProductView({
                                                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/15 border border-red-500/40 text-red-300 text-[9px] font-mono uppercase tracking-wider hover:bg-red-500/25 transition-all duration-300 cursor-pointer"
                                                     >
                                                         <Trash2 size={10} />
-                                                        Remove Review
+                                                        {t('pdp.removeReview')}
                                                     </button>
                                                     <button
                                                         onClick={() => setShowDeleteConfirm(false)}
                                                         className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[9px] font-mono uppercase tracking-wider text-slate-300 hover:text-white hover:border-white/25 transition-all duration-300 cursor-pointer"
                                                     >
-                                                        Cancel
+                                                        {t('pdp.cancel')}
                                                     </button>
                                                 </div>
                                             </div>
@@ -389,7 +391,7 @@ export default function ProductView({
                                                             day: 'numeric',
                                                         })}
                                                         {myReview.editedAt && (
-                                                            <span className="text-[#C9A84C]/70"> · Edited</span>
+                                                            <span className="text-[#C9A84C]/70">{t('pdp.edited')}</span>
                                                         )}
                                                     </span>
                                                 </div>
@@ -409,8 +411,8 @@ export default function ProductView({
                                         productName={localizedProductName(product, language)}
                                         initialRating={myReview.rating}
                                         initialComment={myReview.comment}
-                                        title={`Edit your review — ${localizedProductName(product, language)}`}
-                                        submitLabel="Update Review"
+                                        title={t('pdp.editReviewTitle', { name: localizedProductName(product, language) })}
+                                        submitLabel={t('pdp.updateReview')}
                                         onSubmit={async (rating, comment) => {
                                             const result = await onUpdateReview(rating, comment);
                                             if (result.ok) {
@@ -439,7 +441,7 @@ export default function ProductView({
                                 <div className="flex flex-col gap-3">
                                     {filteredReviews.length === 0 ? (
                                         <p className="pt-3 border-t border-white/5 text-[11px] text-slate-500">
-                                            No {exactStarFilter}-star reviews yet.
+                                            {t('pdp.noStarReviews', { star: exactStarFilter ?? 0 })}
                                         </p>
                                     ) : (
                                         displayedReviews.map((review) => (
@@ -488,7 +490,7 @@ export default function ProductView({
                                                 </span>
                                                 {review.verified && (
                                                     <span className="px-1.5 py-0.5 rounded bg-[#C9A84C]/10 text-[#C9A84C] text-[8px] font-mono uppercase tracking-wider">
-                                                        Verified
+                                                        {t('pdp.verified')}
                                                     </span>
                                                 )}
                                             </div>
@@ -512,7 +514,7 @@ export default function ProductView({
                         {/* Size selector */}
                         <div>
                             <span className="text-[9px] uppercase tracking-wider text-slate-400 block mb-2">
-                                Select Size
+                                {t('pdp.selectSize')}
                             </span>
                             <div className="flex flex-wrap gap-2">
                                 {product.sizes.map((size) => (
@@ -535,7 +537,7 @@ export default function ProductView({
                         {/* Color selector */}
                         <div>
                             <span className="text-[9px] uppercase tracking-wider text-slate-400 block mb-2">
-                                Color — <span className="text-[#E8E0D5]/80">{selectedColor}</span>
+                                {t('pdp.color')} <span className="text-[#E8E0D5]/80">{selectedColor}</span>
                             </span>
                             <div className="flex gap-2">
                                 {product.colors.map((color) => (
@@ -562,7 +564,7 @@ export default function ProductView({
                                 <button
                                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                                     className="p-2.5 text-[#E8E0D5]/70 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
-                                    aria-label="Decrease quantity"
+                                    aria-label={t('pdp.decreaseQty')}
                                 >
                                     <Minus size={13} />
                                 </button>
@@ -570,7 +572,7 @@ export default function ProductView({
                                 <button
                                     onClick={() => setQuantity((q) => Math.min(99, q + 1))}
                                     className="p-2.5 text-[#E8E0D5]/70 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
-                                    aria-label="Increase quantity"
+                                    aria-label={t('pdp.increaseQty')}
                                 >
                                     <Plus size={13} />
                                 </button>
@@ -581,13 +583,13 @@ export default function ProductView({
                                 className="flex-1 min-w-[200px] py-3.5 rounded-xl bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/90 text-[#0A0F2C] text-xs font-mono font-bold uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-[#C9A84C]/10"
                             >
                                 <ShoppingBag size={14} />
-                                Add to Cart — ${(product.price * quantity).toLocaleString()}
+                                {t('pdp.addToCart', { price: `$${(product.price * quantity).toLocaleString()}` })}
                             </button>
 
                             <button
                                 onClick={onToggleWishlist}
                                 aria-pressed={isWishlisted}
-                                title={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                                title={isWishlisted ? t('pdp.removeWishlist') : t('pdp.addWishlist')}
                                 className={`p-3.5 rounded-xl border transition-all duration-300 cursor-pointer ${
                                     isWishlisted
                                         ? 'bg-red-500/10 border-red-500/40 text-red-400'
@@ -602,9 +604,9 @@ export default function ProductView({
                         {addedToCart && (
                             <div role="status" className="flex items-center gap-2 p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-emerald-300 text-xs">
                                 <Check size={14} className="shrink-0" />
-                                Added to cart —{' '}
+                                {t('pdp.addedToCart')}{' '}
                                 <Link href={ROUTES.CART} className="underline underline-offset-2 hover:text-white transition-colors">
-                                    View cart
+                                    {t('pdp.viewCart')}
                                 </Link>
                             </div>
                         )}
@@ -615,7 +617,7 @@ export default function ProductView({
                 {relatedProducts.length > 0 && (
                     <section className="mt-16">
                         <h2 className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold mb-5">
-                            You May Also Like
+                            {t('pdp.youMayAlsoLike')}
                         </h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                             {relatedProducts.map((related) => (
@@ -645,7 +647,7 @@ export default function ProductView({
                                             </h3>
                                         </div>
                                         <span className="text-[9px] font-mono text-[#4FC3F7] uppercase tracking-wider mt-2">
-                                            View Details
+                                            {t('pdp.viewDetails')}
                                         </span>
                                     </div>
                                 </Link>
@@ -676,8 +678,8 @@ export default function ProductView({
                             <AlertTriangle size={15} className="shrink-0" />
                         )}
                         {deleteToast === 'removed'
-                            ? 'Your review has been removed.'
-                            : 'Could not remove your review.'}
+                            ? t('pdp.reviewRemoved')
+                            : t('pdp.reviewRemovalFailed')}
                     </motion.div>
                 )}
             </AnimatePresence>
