@@ -140,7 +140,7 @@ const LANGUAGE_STATUS: Record<TtsLang, { name: string; tooltip: string; noVoiceN
     ar: {
         name: 'عربي',
         tooltip: 'سيتم تشغيل القصة باللغة العربية مع الصوت المتاح.',
-        noVoiceNote: 'Your system has no Arabic voice installed. The browser will still attempt Arabic pronunciation with the selected voice. For better quality, install the Arabic language pack in Windows Settings → Time & Language → Speech.',
+        noVoiceNote: 'نظامك لا يحتوي على أصوات عربية مثبتة. سيبذل المتصفح محاولة نطق عربية بالصوت المحدد. للحصول على جودة أفضل، ثبّت حزمة اللغة العربية من إعدادات Windows → الوقت واللغة → الكلام.',
     },
     fr: {
         name: 'Français',
@@ -445,7 +445,7 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                     <div className="bg-[#05081A]/95 border border-white/5 rounded-2xl p-4 sm:p-5 text-left flex flex-col justify-between">
                         <div>
                             <span className="text-[8px] sm:text-[9px] tracking-widest font-mono text-[#C9A84C] block font-bold uppercase">
-                                Metaverse Floor Plan &bull; خريطة المعرض
+                                {t('exh.floorPlan')}
                             </span>
                             <h3 className="font-serif text-white text-sm sm:text-base font-semibold mt-0.5 mb-3 uppercase">{t('exh.galleryMap')}</h3>
                         </div>
@@ -462,8 +462,8 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                             : 'bg-black/40 border-white/15 text-slate-400 hover:border-white/30'
                                     }`}
                                 >
-                                    <span>ROOM {idx + 1}</span>
-                                    <span className="truncate">{idx === 0 ? 'Fatimid Geometry' : 'Calligraphy Pavilion'}</span>
+                                    <span>{t('exh.room', { n: idx + 1 })}</span>
+                                    <span className="truncate">{language === 'ar' ? rm.arabicName : rm.name}</span>
                                 </div>
                             ))}
                             <div
@@ -602,7 +602,7 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                                     {tts.voiceSource === 'google-tts' && (
                                                         <span
                                                             className="ml-auto text-[7px] px-1.5 py-0.5 rounded-full bg-green-900/50 text-green-400 border border-green-500/30 font-mono"
-                                                            title="Using Google Cloud Text-to-Speech for high-quality Arabic audio"
+                                                            title={t('exh.googleTtsTitle')}
                                                         >
                                                             ☁️ Google TTS
                                                         </span>
