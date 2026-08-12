@@ -33,7 +33,7 @@ export default function FriendRequestToast({
     onDecline,
     onDismiss,
 }: FriendRequestToastProps) {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
 
     // Rendered through a portal to document.body: the badge lives inside the
     // sticky glass header (backdrop-blur), which would otherwise become the
@@ -66,7 +66,10 @@ export default function FriendRequestToast({
                                     : `· ${t('community.friend')}`}
                             </span>
                         </p>
-                        {request.message && (
+                        {/* The raw WS message is English-only; in Arabic it would
+                            duplicate the translated line above (name + wantsToJoin
+                            + relationship), so it is shown for English only. */}
+                        {language === 'en' && request.message && (
                             <p className="text-[9px] text-[#E8E0D5]/45 mt-0.5 italic line-clamp-1">
                                 “{request.message}”
                             </p>

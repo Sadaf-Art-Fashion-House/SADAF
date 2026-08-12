@@ -9,7 +9,9 @@ import {
     RefreshCw,
 } from 'lucide-react';
 import type { Order, OrderStatus, OrderStatusEvent } from '../types';
+import type { TranslationKey } from '@/features/i18n/dictionaries';
 import { formatEventTime } from '@/utils/formatEventTime';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 
 interface LiveOrderStatusProps {
     /** The customer's orders (statuses may be overridden by live events). */
@@ -26,11 +28,27 @@ interface LiveOrderStatusProps {
 
 const STATUS_FLOW: OrderStatus[] = ['Pending', 'Tailoring', 'Shipped', 'Delivered'];
 
-const STATUS_STYLES: Record<OrderStatus, { color: string; dot: string; label: string }> = {
-    Pending: { color: 'text-yellow-400 border-yellow-500/30', dot: 'bg-yellow-400', label: 'Pending' },
-    Tailoring: { color: 'text-[#4FC3F7] border-[#4FC3F7]/30', dot: 'bg-[#4FC3F7]', label: 'Tailoring' },
-    Shipped: { color: 'text-purple-400 border-purple-500/30', dot: 'bg-purple-400', label: 'Shipped' },
-    Delivered: { color: 'text-emerald-400 border-emerald-500/30', dot: 'bg-emerald-400', label: 'Delivered' },
+/**
+ * The live transport (WS/API) sends English-only transition messages as data.
+ * Map the known templates to translation keys so the feed renders in the
+ * active language; unknown messages fall back to their raw text.
+ */
+const FEED_MESSAGE_KEYS: Readonly<Record<string, TranslationKey>> = {
+    'Your piece has entered the atelier — our artisans are sewing it by hand.': 'orders.feed.tailoring',
+    'Your order has shipped from the atelier and is on its way.': 'orders.feed.shipped',
+    'Delivered! We hope your piece brings you joy.': 'orders.feed.delivered',
+};
+
+function localizeEventMessage(message: string, t: (key: TranslationKey) => string): string {
+    const key = FEED_MESSAGE_KEYS[message];
+    return key ? t(key) : message;
+}
+
+const STATUS_STYLES: Record<OrderStatus, { color: string; dot: string; labelKey: TranslationKey }> = {
+    Pending: { color: 'text-yellow-400 border-yellow-500/30', dot: 'bg-yellow-400', labelKey: 'orders.status.pending' },
+    Tailoring: { color: 'text-[#4FC3F7] border-[#4FC3F7]/30', dot: 'bg-[#4FC3F7]', labelKey: 'orders.status.tailoring' },
+    Shipped: { color: 'text-purple-400 border-purple-500/30', dot: 'bg-purple-400', labelKey: 'orders.status.shipped' },
+    Delivered: { color: 'text-emerald-400 border-emerald-500/30', dot: 'bg-emerald-400', labelKey: 'orders.status.delivered' },
 };
 
 /**
@@ -47,6 +65,8 @@ export default function LiveOrderStatus({
     isLive,
     loading = false,
 }: LiveOrderStatusProps) {
+    const { t, language } = useLanguage();
+
     // Resolve each order's effective status (live events win over initial data).
     const effectiveOrders = orders.map((order) => ({
         ...order,
@@ -62,18 +82,18 @@ export default function LiveOrderStatus({
                         <Package size={14} />
                     </div>
                     <h3 className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold">
-                        Live Order Status &bull; تتبع طلبك
+                        {t('orders.liveTitle')}
                     </h3>
                     <span className={`inline-flex items-center gap-1 text-[8px] font-mono uppercase tracking-widest ${
                         isLive ? 'text-green-400' : 'text-amber-400/80'
                     }`}>
                         {isLive ? <Wifi size={9} /> : <WifiOff size={9} />}
-                        {isLive ? 'Live' : 'Polling'}
+                        {isLive ? t('orders.live') : t('orders.polling')}
                     </span>
                 </div>
                 {events.length > 0 && (
                     <span className="text-[9px] font-mono text-[#E8E0D5]/30">
-                        {events.length} updates
+                        {t('orders.updates', { count: events.length })}
                     </span>
                 )}
             </div>
@@ -83,7 +103,7 @@ export default function LiveOrderStatus({
                 <div className="lg:col-span-3 flex flex-col gap-4">
                     {effectiveOrders.length === 0 ? (
                         <p className="text-[9px] font-mono text-[#E8E0D5]/30 italic px-2 py-4">
-                            No orders to track yet — place your first order to see live status updates here.
+                            {t('orders.noOrdersToTrack')}
                         </p>
                     ) : (
                         effectiveOrders.map((order, index) => {
@@ -101,7 +121,7 @@ export default function LiveOrderStatus({
                                     <div className="flex items-center justify-between mb-4">
                                         <span className="text-[10px] font-mono font-bold text-[#C9A84C]">{order.id}</span>
                                         <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-mono border font-bold ${style.color}`}>
-                                            {style.label}
+                                            {t(style.labelKey)}
                                         </span>
                                     </div>
 
@@ -125,7 +145,7 @@ export default function LiveOrderStatus({
                                                         <span className={`text-[8px] font-mono uppercase tracking-wider ${
                                                             stepIdx === statusIdx ? 'text-white font-bold' : 'text-[#E8E0D5]/35'
                                                         }`}>
-                                                            {step}
+                                                            {t(STATUS_STYLES[step].labelKey)}
                                                         </span>
                                                     </div>
                                                 );
@@ -143,7 +163,7 @@ export default function LiveOrderStatus({
                     <div className="flex items-center gap-2 mb-3">
                         <Activity size={11} className="text-[#C9A84C]" />
                         <h4 className="text-[9px] font-mono uppercase tracking-widest text-[#E8E0D5]/60 font-bold">
-                            Recent Updates
+                            {t('orders.recentUpdates')}
                         </h4>
                     </div>
 
@@ -151,11 +171,11 @@ export default function LiveOrderStatus({
                         {events.length === 0 && loading ? (
                             <p className="text-[9px] font-mono text-[#E8E0D5]/40 italic px-2 py-2 flex items-center gap-2">
                                 <span className="w-3 h-3 rounded-full border-2 border-[#C9A84C] border-t-transparent animate-spin" />
-                                Connecting to your order stream…
+                                {t('orders.connecting')}
                             </p>
                         ) : events.length === 0 ? (
                             <p className="text-[9px] font-mono text-[#E8E0D5]/30 italic px-2 py-2">
-                                Status updates will stream here as your order moves through the atelier.
+                                {t('orders.streamHint')}
                             </p>
                         ) : (
                             <AnimatePresence initial={false}>
@@ -179,20 +199,20 @@ export default function LiveOrderStatus({
                                             <div className="flex items-center justify-between gap-2 mb-1">
                                                 <span className="text-[10px] font-mono text-[#C9A84C] truncate">{event.orderId}</span>
                                                 <span className="text-[8px] font-mono text-[#E8E0D5]/35 shrink-0">
-                                                    {formatEventTime(event.timestamp)}
+                                                    {formatEventTime(event.timestamp, language)}
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-1.5 mb-1">
                                                 <span className={`text-[8px] font-mono uppercase border px-1.5 py-px rounded ${prevStyle.color}`}>
-                                                    {event.previousStatus}
+                                                    {t(prevStyle.labelKey)}
                                                 </span>
                                                 <RefreshCw size={8} className="text-[#E8E0D5]/40 shrink-0" />
                                                 <span className={`text-[8px] font-mono uppercase border px-1.5 py-px rounded ${nextStyle.color}`}>
-                                                    {event.status}
+                                                    {t(nextStyle.labelKey)}
                                                 </span>
                                             </div>
                                             <p className="text-[8px] text-[#E8E0D5]/50 leading-relaxed">
-                                                {event.message}
+                                                {localizeEventMessage(event.message, t)}
                                             </p>
                                         </motion.div>
                                     );

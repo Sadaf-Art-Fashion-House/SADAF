@@ -26,6 +26,7 @@ import type { UserProfile } from '@/shared/types';
 import { isCustomerRole, isAdminRole } from '@/shared/types';
 import { ROLE_BADGES, ROLE_BADGE_COLORS } from '@/features/auth/types';
 import { ROUTES } from '@/config/routes';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 import { useWishlistStore } from '@/features/wishlist/store/useWishlistStore';
 import { useOrdersStore } from '@/features/orders/store/useOrdersStore';
 import { fileToResizedDataUrl } from '@/shared/utils/fileToResizedDataUrl';
@@ -38,6 +39,8 @@ interface ProfileViewProps {
 }
 
 export default function ProfileView({ user, onLogout, onUpdateProfile }: ProfileViewProps) {
+    const { t } = useLanguage();
+
     // ── Profile state ──
     const [fullName, setFullName] = useState(user.fullName || '');
     const [bio, setBio] = useState('Passionate about authentic Cairo heritage calligraphies and fine jacquard abayas.');
@@ -60,45 +63,45 @@ export default function ProfileView({ user, onLogout, onUpdateProfile }: Profile
             try {
                 const dataUrl = await fileToResizedDataUrl(file);
                 onUpdateProfile({ avatarUrl: dataUrl });
-                setSuccessMsg('Profile picture updated.');
+                setSuccessMsg(t('profile.msg.avatarUpdated'));
                 setTimeout(() => setSuccessMsg(null), 2500);
             } catch (err: unknown) {
-                setSuccessMsg(err instanceof Error ? err.message : 'Could not upload the image.');
+                setSuccessMsg(err instanceof Error ? err.message : t('profile.msg.avatarFailed'));
                 setTimeout(() => setSuccessMsg(null), 3500);
             } finally {
                 // Allow re-selecting the same file after a failed/again pick.
                 e.target.value = '';
             }
         },
-        [onUpdateProfile],
+        [onUpdateProfile, t],
     );
 
     const handleRemoveAvatar = useCallback(() => {
         onUpdateProfile({ avatarUrl: undefined });
-        setSuccessMsg('Profile picture removed.');
+        setSuccessMsg(t('profile.msg.avatarRemoved'));
         setTimeout(() => setSuccessMsg(null), 2500);
-    }, [onUpdateProfile]);
+    }, [onUpdateProfile, t]);
 
     const handleUpdateProfile = useCallback((e: React.FormEvent) => {
         e.preventDefault();
         onUpdateProfile({ fullName: fullName.trim() });
-        setSuccessMsg('Your profile has been updated successfully.');
+        setSuccessMsg(t('profile.msg.profileUpdated'));
         setTimeout(() => setSuccessMsg(null), 3000);
-    }, [fullName, onUpdateProfile]);
+    }, [fullName, onUpdateProfile, t]);
 
     const handleCopyReferral = useCallback(() => {
         if (user.referralCode) {
             navigator.clipboard.writeText(user.referralCode)
                 .then(() => {
-                    setSuccessMsg('Referral code copied to clipboard!');
+                    setSuccessMsg(t('profile.msg.referralCopied'));
                     setTimeout(() => setSuccessMsg(null), 2000);
                 })
                 .catch(() => {
-                    setSuccessMsg('Could not copy. Please select the code manually.');
+                    setSuccessMsg(t('profile.msg.copyFailed'));
                     setTimeout(() => setSuccessMsg(null), 2000);
                 });
         }
-    }, [user.referralCode]);
+    }, [user.referralCode, t]);
 
     return (
         <div className="relative w-full min-h-screen pb-20">
@@ -120,7 +123,7 @@ export default function ProfileView({ user, onLogout, onUpdateProfile }: Profile
                             <button
                                 onClick={() => fileInputRef.current?.click()}
                                 className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden bg-gradient-to-br from-[#C9A84C] to-[#4FC3F7] flex items-center justify-center text-3xl font-serif text-white shadow-lg shadow-[#C9A84C]/20 cursor-pointer group relative"
-                                title="Upload profile picture"
+                                title={t('profile.uploadTitle')}
                             >
                                 {user.avatarUrl ? (
                                     <img src={user.avatarUrl} alt={fullName} className="w-full h-full object-cover" />
@@ -136,8 +139,8 @@ export default function ProfileView({ user, onLogout, onUpdateProfile }: Profile
                                 <button
                                     onClick={handleRemoveAvatar}
                                     className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-red-500/15 border border-red-500/40 text-red-400 flex items-center justify-center hover:bg-red-500/25 transition-all cursor-pointer"
-                                    title="Remove profile picture"
-                                    aria-label="Remove profile picture"
+                                    title={t('profile.removeAvatar')}
+                                    aria-label={t('profile.removeAvatar')}
                                 >
                                     <X size={12} />
                                 </button>
@@ -159,28 +162,28 @@ export default function ProfileView({ user, onLogout, onUpdateProfile }: Profile
                             {user.referralCode && (
                                 <button onClick={handleCopyReferral}
                                     className="flex items-center gap-1.5 text-[10px] font-mono text-[#4FC3F7] hover:text-[#C9A84C] transition-colors cursor-pointer mb-3"
-                                    title="Copy referral code"
+                                    title={t('profile.copyReferralTitle')}
                                 >
-                                    <Shield size={11} /> Referral: <strong>{user.referralCode}</strong>
+                                    <Shield size={11} /> {t('profile.referralLabel')} <strong>{user.referralCode}</strong>
                                     <Copy size={10} className="opacity-60" />
                                 </button>
                             )}
 
                             <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-2">
-                                <Link href="/dashboard"
+                                <Link href={ROUTES.DASHBOARD}
                                     className="px-4 py-1.5 rounded-full text-[10px] font-mono uppercase tracking-wider border border-[#C9A84C]/30 text-[#C9A84C] hover:bg-[#C9A84C]/10 transition-all duration-300 flex items-center gap-1.5"
                                 >
-                                    <LayoutDashboard size={11} /> Dashboard Home
+                                    <LayoutDashboard size={11} /> {t('profile.dashboardHome')}
                                 </Link>
                                 {user.hasDesignerAccess && (
                                     <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider border border-violet-500/30 text-violet-400 bg-violet-500/10 font-semibold">
-                                        + Designer Access
+                                        {t('profile.designerAccess')}
                                     </span>
                                 )}
                                 <button onClick={onLogout}
                                     className="px-4 py-1.5 rounded-full text-[10px] font-mono uppercase tracking-wider border border-red-500/30 text-red-400 hover:bg-red-950/30 transition-all duration-300 flex items-center gap-1.5 cursor-pointer"
                                 >
-                                    <LogOut size={11} /> Sign Out
+                                    <LogOut size={11} /> {t('common.signOut')}
                                 </button>
                             </div>
                         </div>
@@ -210,17 +213,17 @@ export default function ProfileView({ user, onLogout, onUpdateProfile }: Profile
                     <div className="lg:col-span-4 space-y-4">
                         {/* Quick Links */}
                         <div className="p-5 bg-[#05081A]/80 border border-[#C9A84C]/10 rounded-2xl">
-                            <h3 className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] mb-4 font-bold">Quick Links</h3>
+                            <h3 className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] mb-4 font-bold">{t('profile.quickLinks')}</h3>
                             <nav className="space-y-1">
                                 {[
-                                    { href: '/dashboard', label: 'Dashboard Home', icon: LayoutDashboard },
-                                    { href: '/orders', label: 'Orders', icon: ShoppingBag },
-                                    { href: '/wishlist', label: 'Wishlist', icon: Heart },
-                                    { href: '/store', label: 'Continue Shopping', icon: ShoppingBag },
-                                    { href: '/cart', label: 'View Cart', icon: ShoppingBag },
-                                    { href: '/ai', label: 'AI Studio', icon: Sparkles },
-                                    ...(isAdminRole(user.role) ? [{ href: '/dashboard/admin', label: 'Admin Panel', icon: Shield }] : []),
-                                    ...(user.role === 'founder' ? [{ href: '/dashboard/founder', label: 'Founder Panel', icon: Shield }] : []),
+                                    { href: ROUTES.DASHBOARD, label: t('profile.dashboardHome'), icon: LayoutDashboard },
+                                    { href: ROUTES.ORDERS, label: t('profile.orders'), icon: ShoppingBag },
+                                    { href: ROUTES.WISHLIST, label: t('profile.wishlist'), icon: Heart },
+                                    { href: ROUTES.STORE, label: t('orders.continueShopping'), icon: ShoppingBag },
+                                    { href: ROUTES.CART, label: t('profile.viewCart'), icon: ShoppingBag },
+                                    { href: ROUTES.AI_STUDIO, label: t('nav.aiStudio'), icon: Sparkles },
+                                    ...(isAdminRole(user.role) ? [{ href: ROUTES.DASHBOARD_ADMIN, label: t('profile.adminPanel'), icon: Shield }] : []),
+                                    ...(user.role === 'founder' ? [{ href: ROUTES.DASHBOARD_FOUNDER, label: t('profile.founderPanel'), icon: Shield }] : []),
                                 ].map((link) => (
                                     <Link key={link.href} href={link.href}
                                         className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs text-[#E8E0D5]/70 hover:text-white hover:bg-white/5 transition-all duration-200 group"
@@ -234,26 +237,26 @@ export default function ProfileView({ user, onLogout, onUpdateProfile }: Profile
 
                         {/* Account Details */}
                         <div className="p-5 bg-[#05081A]/80 border border-[#C9A84C]/10 rounded-2xl">
-                            <h3 className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] mb-4 font-bold">Account Details</h3>
+                            <h3 className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] mb-4 font-bold">{t('profile.accountDetails')}</h3>
                             <div className="space-y-3 text-xs text-[#E8E0D5]/70">
                                 <div className="flex items-center gap-2.5">
                                     <Calendar size={12} className="text-[#C9A84C]/60 shrink-0" />
                                     <div>
-                                        <span className="block text-[9px] font-mono uppercase text-[#E8E0D5]/40">Member Since</span>
+                                        <span className="block text-[9px] font-mono uppercase text-[#E8E0D5]/40">{t('profile.memberSince')}</span>
                                         {new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2.5">
                                     <Shield size={12} className="text-[#C9A84C]/60 shrink-0" />
                                     <div>
-                                        <span className="block text-[9px] font-mono uppercase text-[#E8E0D5]/40">Account ID</span>
+                                        <span className="block text-[9px] font-mono uppercase text-[#E8E0D5]/40">{t('profile.accountId')}</span>
                                         <span className="font-mono text-[10px] text-[#C9A84C]/80 break-all">{user.id}</span>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2.5">
                                     <Compass size={12} className="text-[#C9A84C]/60 shrink-0" />
                                     <div>
-                                        <span className="block text-[9px] font-mono uppercase text-[#E8E0D5]/40">Role</span>
+                                        <span className="block text-[9px] font-mono uppercase text-[#E8E0D5]/40">{t('profile.role')}</span>
                                         <span className="text-[#C9A84C]">{badgeText}</span>
                                     </div>
                                 </div>
@@ -264,7 +267,7 @@ export default function ProfileView({ user, onLogout, onUpdateProfile }: Profile
                         {isCustomerRole(user.role) && (
                             <div className="p-5 bg-[#05081A]/80 border border-[#C9A84C]/10 rounded-2xl">
                                 <h3 className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] mb-4 font-bold flex items-center gap-2">
-                                    <User size={12} /> My Network
+                                    <User size={12} /> {t('profile.myNetwork')}
                                 </h3>
                                 {user.connections && user.connections.length > 0 ? (
                                     <div className="space-y-2">
@@ -274,7 +277,7 @@ export default function ProfileView({ user, onLogout, onUpdateProfile }: Profile
                                                     {connId.charAt(0).toUpperCase()}
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <p className="text-xs text-[#E8E0D5]/80 font-medium truncate">Connection</p>
+                                                    <p className="text-xs text-[#E8E0D5]/80 font-medium truncate">{t('profile.connection')}</p>
                                                     <p className="text-[9px] text-[#E8E0D5]/40 font-mono truncate">{connId}</p>
                                                 </div>
                                             </div>
@@ -282,13 +285,13 @@ export default function ProfileView({ user, onLogout, onUpdateProfile }: Profile
                                     </div>
                                 ) : (
                                     <div className="text-center py-4">
-                                        <p className="text-xs text-[#E8E0D5]/60 mb-1">Your network is growing</p>
-                                        <p className="text-[10px] text-[#E8E0D5]/40 mb-3">Invite family and friends to join SADAF.</p>
+                                        <p className="text-xs text-[#E8E0D5]/60 mb-1">{t('profile.networkGrowing')}</p>
+                                        <p className="text-[10px] text-[#E8E0D5]/40 mb-3">{t('profile.networkInviteHint')}</p>
                                         <Link
                                             href={`${ROUTES.DASHBOARD_COMMUNITY}?invite=1`}
                                             className="inline-block px-4 py-2 bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/80 text-[#0A0F2C] text-[9px] font-mono font-bold uppercase tracking-wider rounded-lg transition-all duration-300 hover:scale-105 cursor-pointer"
                                         >
-                                            Invite Connections
+                                            {t('profile.inviteConnections')}
                                         </Link>
                                     </div>
                                 )}
@@ -299,52 +302,51 @@ export default function ProfileView({ user, onLogout, onUpdateProfile }: Profile
                     {/* Main panel — Profile Settings */}
                     <div className="lg:col-span-8">
                         <div className="bg-[#05081A]/90 border border-white/5 rounded-3xl p-6 md:p-8">
-                            <div className="space-y-6">
-                                <div className="flex items-center gap-2.5 mb-4">
-                                    <div className="p-2 rounded-lg bg-[#C9A84C]/10 text-[#C9A84C]"><Edit3 size={16} /></div>
-                                    <div>
-                                        <h2 className="text-lg font-serif text-[#C9A84C] font-semibold uppercase tracking-wider">Profile Settings</h2>
-                                        <p className="text-[11px] text-slate-400">Manage your personal information and shipping details.</p>
+                            <div className="space-y-6">                                    <div className="flex items-center gap-2.5 mb-4">
+                                        <div className="p-2 rounded-lg bg-[#C9A84C]/10 text-[#C9A84C]"><Edit3 size={16} /></div>
+                                        <div>
+                                            <h2 className="text-lg font-serif text-[#C9A84C] font-semibold uppercase tracking-wider">{t('profile.profileSettings')}</h2>
+                                            <p className="text-[11px] text-slate-400">{t('profile.profileSettingsHint')}</p>
+                                        </div>
                                     </div>
-                                </div>
 
                                 <form onSubmit={handleUpdateProfile} className="space-y-5">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                         <div>
                                             <label className="block text-[10px] font-mono uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-1.5">
-                                                <PenLine size={11} /> Full Name
+                                                <PenLine size={11} /> {t('profile.fullName')}
                                             </label>
                                             <input type="text" required value={fullName} onChange={(e) => setFullName(e.target.value)}
                                                 className="w-full bg-black/40 border border-white/10 text-xs text-white rounded-xl p-3 outline-none focus:border-[#C9A84C] transition placeholder-slate-600"
-                                                placeholder="Your full name" />
+                                                placeholder={t('profile.fullNamePlaceholder')} />
                                         </div>
                                         <div>
                                             <label className="block text-[10px] font-mono uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-1.5">
-                                                <Mail size={11} /> Email
+                                                <Mail size={11} /> {t('profile.email')}
                                             </label>
                                             <input type="email" disabled value={user.email}
                                                 className="w-full bg-black/10 border border-white/5 text-xs text-slate-500 rounded-xl p-3 outline-none cursor-not-allowed" />
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-mono uppercase tracking-widest text-slate-400 mb-2">Personal Bio</label>
+                                        <label className="block text-[10px] font-mono uppercase tracking-widest text-slate-400 mb-2">{t('profile.personalBio')}</label>
                                         <textarea rows={3} value={bio} onChange={(e) => setBio(e.target.value)}
                                             className="w-full bg-black/40 border border-white/10 text-xs text-white rounded-xl p-3 outline-none focus:border-[#C9A84C] transition resize-none placeholder-slate-600"
-                                            placeholder="Tell us about yourself..." />
+                                            placeholder={t('profile.bioPlaceholder')} />
                                     </div>
                                     <div>
                                         <label className="block text-[10px] font-mono uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-1.5">
-                                            <MapPin size={11} /> Shipping Address
+                                            <MapPin size={11} /> {t('profile.shippingAddress')}
                                         </label>
                                         <input type="text" required value={shippingAddress} onChange={(e) => setShippingAddress(e.target.value)}
                                             className="w-full bg-black/40 border border-white/10 text-xs text-white rounded-xl p-3 outline-none focus:border-[#C9A84C] transition placeholder-slate-600"
-                                            placeholder="Your shipping address" />
+                                            placeholder={t('profile.addressPlaceholder')} />
                                     </div>
                                     <div className="pt-4 border-t border-white/5 flex justify-end">
                                         <button type="submit"
                                             className="px-6 py-3 bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/80 text-[#0A0F2C] text-xs font-mono font-bold uppercase tracking-widest rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-2"
                                         >
-                                            <CheckCircle size={13} /> Save Changes
+                                            <CheckCircle size={13} /> {t('profile.saveChanges')}
                                         </button>
                                     </div>
                                 </form>
@@ -355,16 +357,16 @@ export default function ProfileView({ user, onLogout, onUpdateProfile }: Profile
                                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-16 h-[2px] bg-gradient-to-r from-transparent via-[#C9A84C] to-transparent" />
 
                                     <h3 className="text-center text-[10px] font-mono uppercase tracking-[0.35em] text-[#C9A84C]/70 mb-8 font-bold">
-                                        ✦ Quick Overview ✦
+                                        {t('profile.quickOverview')}
                                     </h3>
 
                                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                                         {[
-                                            { label: 'Orders', value: String(ordersCount), icon: ShoppingBag, href: '/orders', color: 'text-[#4FC3F7] bg-[#4FC3F7]/10' },
-                                            { label: 'Wishlist', value: String(wishlistCount), icon: Heart, href: '/wishlist', color: 'text-red-400 bg-red-500/10' },
-                                            { label: 'Connections', value: String(user.connections?.length || 0), icon: User, color: 'text-[#4FC3F7] bg-[#4FC3F7]/10' },
-                                            { label: 'Member Since', value: new Date(user.createdAt).getFullYear().toString(), icon: Calendar, color: 'text-[#C9A84C] bg-[#C9A84C]/10' },
-                                            { label: 'Role', value: badgeText, icon: Shield, color: 'text-slate-400 bg-slate-500/10' },
+                                            { label: t('profile.orders'), value: String(ordersCount), icon: ShoppingBag, href: ROUTES.ORDERS, color: 'text-[#4FC3F7] bg-[#4FC3F7]/10' },
+                                            { label: t('profile.wishlist'), value: String(wishlistCount), icon: Heart, href: ROUTES.WISHLIST, color: 'text-red-400 bg-red-500/10' },
+                                            { label: t('profile.connections'), value: String(user.connections?.length || 0), icon: User, color: 'text-[#4FC3F7] bg-[#4FC3F7]/10' },
+                                            { label: t('profile.memberSince'), value: new Date(user.createdAt).getFullYear().toString(), icon: Calendar, color: 'text-[#C9A84C] bg-[#C9A84C]/10' },
+                                            { label: t('profile.role'), value: badgeText, icon: Shield, color: 'text-slate-400 bg-slate-500/10' },
                                         ].map((stat) => (
                                             stat.href ? (
                                                 <Link key={stat.label} href={stat.href}
@@ -380,7 +382,7 @@ export default function ProfileView({ user, onLogout, onUpdateProfile }: Profile
                                                     </p>
                                                     {/* Hover indicator */}
                                                     <span className="absolute bottom-2 right-3 text-[7px] font-mono uppercase tracking-widest text-[#C9A84C]/0 group-hover:text-[#C9A84C]/50 transition-all duration-300">
-                                                        View →
+                                                        {t('profile.viewHint')} →
                                                     </span>
                                                 </Link>
                                             ) : (
