@@ -22,7 +22,10 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: "Inter", "Segoe UI", "Noto Sans Arabic", "Tahoma", system-ui, sans-serif;
-  --font-mono: "SF Mono", "Monaco", "Cascadia Code", "Consolas", monospace;
+  /* Mono stack must end with Arabic-capable fonts: SF Mono/Monaco/Consolas
+     only cover Latin, so any Arabic glyph inside a `font-mono` element would
+     otherwise fall back to a broken generic monospace and get clipped. */
+  --font-mono: "SF Mono", "Monaco", "Cascadia Code", "Consolas", "Noto Sans Arabic", "Tahoma", "Segoe UI", monospace;
 }
 
 ::-webkit-scrollbar {
@@ -59,11 +62,27 @@ body {
 }
 
 /* Arabic is a connected script — letter-spacing (tracking) disconnects the
-   glyphs and widens text past its container, clipping it from the sides in
-   RTL. Keep a whisper of air (0.02em) so the design stays airy without
-   breaking letterforms. */
+   glyphs and widens text past its container, clipping the final letter from
+   the sides in RTL. Zero it out entirely for RTL: any tracking on Arabic
+   breaks the joining of letterforms, and the latin labels inside RTL pages
+   keep their airy look via the parent's own spacing. */
 [dir="rtl"] [class*="tracking-"] {
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
+}
+
+/* RTL safety net: never clip the last letter of a wrapped line — Arabic
+   glyphs join the following one, so a hard clip (overflow/nowrap) reads as
+   a missing character. Allow wrapping everywhere Arabic can appear. */
+[dir="rtl"] * {
+  overflow-wrap: anywhere;
+}
+
+/* `truncate` (nowrap + ellipsis) clips the tail of Arabic words — in RTL
+   the meaningful end of the word sits on the left, so truncation hides it.
+   Soften it to wrapping so labels never lose a letter. */
+[dir="rtl"] .truncate {
+  white-space: normal;
+  text-overflow: clip;
 }
 
 .text-gold-gradient {
