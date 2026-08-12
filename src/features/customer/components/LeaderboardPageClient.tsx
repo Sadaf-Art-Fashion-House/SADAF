@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 import { useLeaderboard } from '../hooks/useLeaderboard';
 import LeaderboardView from './LeaderboardView';
 import type { LeaderboardKind } from '../types';
@@ -32,7 +33,8 @@ export default function LeaderboardPageClient({
     initialCity = 'All',
 }: LeaderboardPageClientProps) {
     const { user } = useAuth();
-    const memberName = user?.fullName?.split(' ')[0] || 'Member';
+    const { t } = useLanguage();
+    const memberName = user?.fullName?.split(' ')[0] || t('lb.member');
 
     const [activeKind, setActiveKind] = useState<LeaderboardKind>(initialKind);
     const { data, loading, error, wsLive, overtake } = useLeaderboard(user?.id ?? null, 100, activeKind);
@@ -43,13 +45,13 @@ export default function LeaderboardPageClient({
             <div className="min-h-[60vh] flex items-center justify-center">
                 <div className="text-center">
                     <p className="text-sm text-[#E8E0D5]/60 mb-4">
-                        You need to sign in to view the leaderboard.
+                        {t('lb.needSignIn')}
                     </p>
                     <Link
                         href="/auth"
                         className="inline-block px-6 py-3 bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/80 text-[#0A0F2C] text-xs font-mono font-bold uppercase tracking-widest rounded-xl transition-all duration-300 hover:scale-105"
                     >
-                        Sign In
+                        {t('common.signIn')}
                     </Link>
                 </div>
             </div>
