@@ -11,6 +11,7 @@
 import { useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 import SignedInToast from '@/shared/components/SignedInToast';
 import { useDesignerData } from '../hooks/useDesignerData';
 import DesignerDashboardView from './DesignerDashboardView';
@@ -18,6 +19,7 @@ import type { NewDesignSubmission } from '../types';
 
 export default function DesignerDashboardPageClient() {
     const { user } = useAuth();
+    const { t } = useLanguage();
     const { data, loading, error, wsLive, refetch, submitDesign, submitting } = useDesignerData();
 
     // Hooks rules: all hooks called unconditionally, BEFORE any early return. ✅
@@ -31,13 +33,13 @@ export default function DesignerDashboardPageClient() {
             <div className="min-h-[60vh] flex items-center justify-center">
                 <div className="text-center">
                     <p className="text-sm text-[#E8E0D5]/60 mb-4">
-                        You need to sign in to access the designer dashboard.
+                        {t('designer.needSignIn')}
                     </p>
                     <Link
                         href="/auth"
                         className="inline-block px-6 py-3 bg-gradient-to-r from-[#A78BFA] to-[#4FC3F7] text-[#0A0F2C] text-xs font-mono font-bold uppercase tracking-widest rounded-xl transition-all duration-300 hover:scale-105"
                     >
-                        Sign In
+                        {t('common.signIn')}
                     </Link>
                 </div>
             </div>

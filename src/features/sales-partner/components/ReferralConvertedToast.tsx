@@ -1,6 +1,7 @@
 'use client';
 
 import SuccessToast from '@/shared/components/SuccessToast';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 import type { ReferralRecord } from '../types';
 
 /**
@@ -33,24 +34,24 @@ export default function ReferralConvertedToast({
     referral,
     onDismiss,
 }: ReferralConvertedToastProps) {
+    const { t } = useLanguage();
     return (
         <SuccessToast
             visible={!!referral}
             animationKey={referral?.id}
-            title="Referral converted!"
+            title={t('sales.toast.title')}
             onDismiss={onDismiss}
             message={
                 referral && (
                     <>
                         <span className="font-medium text-emerald-400">{referral.name}</span>{' '}
-                        <span className="text-[#E8E0D5]/50">({referral.city})</span> placed a
-                        paying order
+                        <span className="text-[#E8E0D5]/50">{t('sales.toast.placed', { city: referral.city })}</span>
                         <div className="flex items-center gap-3 mt-1.5">
                             <span className="text-[9px] font-mono text-[#E8E0D5]/50">
-                                Order ${referral.orderValue?.toLocaleString()}
+                                {t('sales.toast.order', { amount: referral.orderValue?.toLocaleString() ?? '0' })}
                             </span>
                             <span className="text-[10px] font-mono font-semibold text-emerald-400">
-                                +${referral.commission?.toLocaleString()} commission
+                                {t('sales.toast.commission', { amount: referral.commission?.toLocaleString() ?? '0' })}
                             </span>
                         </div>
                     </>

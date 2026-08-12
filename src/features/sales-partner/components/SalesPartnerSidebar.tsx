@@ -27,22 +27,24 @@ import {
     Settings,
 } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 import SignOutButton from '@/shared/components/SignOutButton';
 
 export default function SalesPartnerSidebar() {
     const pathname = usePathname();
+    const { t } = useLanguage();
     const [mobileOpen, setMobileOpen] = useState(false);
 
     const isActive = (href: string) => pathname.startsWith(href);
 
     const links: Array<{ href: string; label: string; icon: LucideIcon }> = [
-        { href: ROUTES.DASHBOARD_SALES_PARTNER, label: 'Partner Dashboard', icon: LayoutDashboard },
-        { href: ROUTES.DASHBOARD_SALES_PARTNER_COMMISSIONS, label: 'Commissions', icon: Wallet },
-        { href: ROUTES.STORE, label: 'Store', icon: Store },
-        { href: ROUTES.AI_STUDIO, label: 'AI Studio', icon: Cpu },
-        { href: ROUTES.ATELIER, label: 'Atelier', icon: Brush },
-        { href: ROUTES.ARTWORKS, label: 'Artworks', icon: Shirt },
-        { href: ROUTES.DASHBOARD_SALES_PARTNER_SETTINGS, label: 'Settings', icon: Settings },
+        { href: ROUTES.DASHBOARD_SALES_PARTNER, label: t('sales.sidebar.dashboard'), icon: LayoutDashboard },
+        { href: ROUTES.DASHBOARD_SALES_PARTNER_COMMISSIONS, label: t('sales.sidebar.commissions'), icon: Wallet },
+        { href: ROUTES.STORE, label: t('nav.store'), icon: Store },
+        { href: ROUTES.AI_STUDIO, label: t('nav.aiStudio'), icon: Cpu },
+        { href: ROUTES.ATELIER, label: t('nav.atelier'), icon: Brush },
+        { href: ROUTES.ARTWORKS, label: t('nav.arts'), icon: Shirt },
+        { href: ROUTES.DASHBOARD_SALES_PARTNER_SETTINGS, label: t('sales.sidebar.settings'), icon: Settings },
     ];
 
     const sidebarContent = (
@@ -54,7 +56,7 @@ export default function SalesPartnerSidebar() {
                     </div>
                 </span>
                 <span className="text-[9px] font-mono font-bold text-emerald-400 uppercase tracking-widest truncate opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    Sales Partner
+                    {t('sales.role')}
                 </span>
             </div>
 
@@ -118,7 +120,7 @@ export default function SalesPartnerSidebar() {
             <button
                 onClick={() => setMobileOpen(true)}
                 className="md:hidden fixed bottom-5 right-5 w-12 h-12 rounded-full bg-emerald-400 text-[#0A0F2C] flex items-center justify-center shadow-lg shadow-emerald-500/30 z-50 hover:scale-105 transition-transform"
-                aria-label="Open navigation menu"
+                aria-label={t('common.openMenu')}
             >
                 <Menu size={20} />
             </button>
@@ -144,7 +146,7 @@ export default function SalesPartnerSidebar() {
                             <button
                                 onClick={() => setMobileOpen(false)}
                                 className="self-end p-1.5 rounded-lg text-[#E8E0D5]/60 hover:text-white hover:bg-white/5 transition-all"
-                                aria-label="Close menu"
+                                aria-label={t('common.closeMenu')}
                             >
                                 <X size={18} />
                             </button>
@@ -153,7 +155,7 @@ export default function SalesPartnerSidebar() {
                                     <div className="w-8 h-8 shrink-0 rounded-full bg-gradient-to-br from-emerald-400 to-[#4FC3F7] flex items-center justify-center">
                                         <Handshake size={14} className="text-[#0A0F2C]" />
                                     </div>
-                                    <span className="text-[9px] font-mono font-bold text-emerald-400 uppercase tracking-widest">Sales Partner</span>
+                                    <span className="text-[9px] font-mono font-bold text-emerald-400 uppercase tracking-widest">{t('sales.role')}</span>
                                 </div>
                                 <nav className="flex flex-col gap-1 w-full">
                                     {links.map(mobileLink)}

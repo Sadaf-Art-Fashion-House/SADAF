@@ -19,6 +19,7 @@ import {
     Sparkles,
 } from 'lucide-react';
 import type { CommissionHistory, CommissionKind, CommissionStatus } from '../types';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 import { collectMonthKeys, monthKeyFor, monthLabel } from '../utils/months';
 import WithdrawPanel from './WithdrawPanel';
 
@@ -74,6 +75,8 @@ export default function CommissionHistoryView({
     error,
     onRetry,
 }: CommissionHistoryViewProps) {
+    const { t, language } = useLanguage();
+    const locale = language === 'ar' ? 'ar-EG' : 'en-US';
     const [monthFilter, setMonthFilter] = useState<'all' | string>('all');
     const [statusFilter, setStatusFilter] = useState<'all' | CommissionStatus>('all');
 
@@ -91,16 +94,19 @@ export default function CommissionHistoryView({
     }, [data, statusFilter, monthFilter]);
 
     const statusFilters: { id: 'all' | CommissionStatus; label: string }[] = [
-        { id: 'all', label: 'All' },
-        { id: 'paid', label: 'Paid' },
-        { id: 'pending', label: 'Pending' },
+        { id: 'all', label: t('commissionHistory.status.all') },
+        { id: 'paid', label: t('commissionHistory.status.paid') },
+        { id: 'pending', label: t('commissionHistory.status.pending') },
     ];
 
-    const title = kind === 'designer' ? 'Design Commissions' : 'Referral Commissions';
+    const title =
+        kind === 'designer'
+            ? t('commissionHistory.titleDesigner')
+            : t('commissionHistory.titleReferral');
     const subtitle =
         kind === 'designer'
-            ? 'Your 10% atelier pools — pending until each piece sells, settled once production completes.'
-            : 'Your 8% referral commissions — settled after each converted customer pays.';
+            ? t('commissionHistory.subtitleDesigner')
+            : t('commissionHistory.subtitleReferral');
 
     return (
         <div className="relative w-full min-h-screen pb-20">
@@ -108,11 +114,13 @@ export default function CommissionHistoryView({
             <section className="px-6 md:px-10 py-10 border-b border-[#C9A84C]/10 bg-gradient-to-b from-[#0A0F2C] to-[#1A1228]">
                 <div className="flex items-center gap-2 mb-3">
                     <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-[#C9A84C]">
-                        {kind === 'designer' ? 'Designer Workspace' : 'Sales Partner Workspace'}
+                        {kind === 'designer'
+                            ? t('commissionHistory.eyebrowDesigner')
+                            : t('commissionHistory.eyebrowReferral')}
                     </span>
                 </div>
                 <h1 className="text-3xl md:text-4xl font-serif text-white uppercase tracking-tight">
-                    Commission <span className="text-[#C9A84C] italic">History</span>
+                    {t('commissionHistory.title')} <span className="text-[#C9A84C] italic">{t('commissionHistory.titleAccent')}</span>
                 </h1>
                 <p className="text-xs md:text-sm text-slate-400 max-w-2xl mt-2 leading-relaxed">
                     {subtitle}
@@ -129,7 +137,7 @@ export default function CommissionHistoryView({
                             onClick={onRetry}
                             className="text-[9px] font-mono uppercase tracking-wider text-[#C9A84C] border border-[#C9A84C]/30 rounded px-2 py-1 hover:bg-[#C9A84C]/10 transition-all cursor-pointer"
                         >
-                            Retry
+                            {t('commissionHistory.retry')}
                         </button>
                     </div>
                 )}
@@ -146,9 +154,9 @@ export default function CommissionHistoryView({
                 {/* KPIs */}
                 {data && (
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <KpiCard label="Total Paid" value={`$${data.stats.totalPaid.toLocaleString()}`} icon={BadgeCheck} accent="text-emerald-400" />
-                        <KpiCard label="Pending" value={`$${data.stats.totalPending.toLocaleString()}`} icon={Clock} accent="text-amber-400" />
-                        <KpiCard label="Months" value={String(data.stats.monthCount)} icon={CalendarRange} accent="text-[#C9A84C]" />
+                        <KpiCard label={t('commissionHistory.kpi.totalPaid')} value={`$${data.stats.totalPaid.toLocaleString()}`} icon={BadgeCheck} accent="text-emerald-400" />
+                        <KpiCard label={t('commissionHistory.kpi.pending')} value={`$${data.stats.totalPending.toLocaleString()}`} icon={Clock} accent="text-amber-400" />
+                        <KpiCard label={t('commissionHistory.kpi.months')} value={String(data.stats.monthCount)} icon={CalendarRange} accent="text-[#C9A84C]" />
                     </div>
                 )}
 
@@ -177,13 +185,13 @@ export default function CommissionHistoryView({
                                     <select
                                         value={monthFilter}
                                         onChange={(e) => setMonthFilter(e.target.value)}
-                                        aria-label="Filter by month"
+                                        aria-label={t('commissionHistory.filterMonth')}
                                         className="bg-[#0A0F2C] border border-white/10 rounded-lg px-2.5 py-1.5 text-[9px] font-mono uppercase tracking-wider text-[#E8E0D5]/70 outline-none focus:border-[#C9A84C]/50 transition cursor-pointer"
                                     >
-                                        <option value="all">All months</option>
+                                        <option value="all">{t('commissionHistory.allMonths')}</option>
                                         {monthOptions.map((key) => (
                                             <option key={key} value={key}>
-                                                {monthLabel(key)}
+                                                {monthLabel(key, language)}
                                             </option>
                                         ))}
                                     </select>
@@ -212,11 +220,17 @@ export default function CommissionHistoryView({
                         {filtered.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-14 text-center">
                                 <Sparkles size={24} className="text-[#C9A84C]/30 mb-3" />
-                                <p className="text-sm font-serif text-white">No commissions found</p>
+                                <p className="text-sm font-serif text-white">{t('commissionHistory.empty')}</p>
                                 <p className="text-[11px] text-slate-500 mt-1">
                                     {monthFilter !== 'all'
-                                        ? `No ${statusFilter === 'all' ? '' : statusFilter + ' '}commissions in ${monthLabel(monthFilter)}.`
-                                        : 'No records match this view yet.'}
+                                        ? t('commissionHistory.emptyMonth', {
+                                              status:
+                                                  statusFilter === 'all'
+                                                      ? ''
+                                                      : `${t(`commissionHistory.status.${statusFilter}`)} `,
+                                              month: monthLabel(monthFilter, language),
+                                          })
+                                        : t('commissionHistory.emptyNone')}
                                 </p>
                             </div>
                         ) : (
@@ -224,11 +238,11 @@ export default function CommissionHistoryView({
                                 <table className="w-full text-left">
                                     <thead>
                                         <tr className="text-[8px] font-mono uppercase tracking-widest text-[#E8E0D5]/30 border-b border-white/5">
-                                            <th className="px-6 py-3 font-medium">Source</th>
-                                            <th className="px-4 py-3 font-medium">Type</th>
-                                            <th className="px-4 py-3 font-medium">Credited</th>
-                                            <th className="px-4 py-3 font-medium">Status</th>
-                                            <th className="px-6 py-3 font-medium text-right">Amount</th>
+                                            <th className="px-6 py-3 font-medium">{t('commissionHistory.table.source')}</th>
+                                            <th className="px-4 py-3 font-medium">{t('commissionHistory.table.type')}</th>
+                                            <th className="px-4 py-3 font-medium">{t('commissionHistory.table.credited')}</th>
+                                            <th className="px-4 py-3 font-medium">{t('commissionHistory.table.status')}</th>
+                                            <th className="px-6 py-3 font-medium text-right">{t('commissionHistory.table.amount')}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -248,7 +262,7 @@ export default function CommissionHistoryView({
                                                         {record.category}
                                                     </td>
                                                     <td className="px-4 py-3.5 text-[11px] text-[#E8E0D5]/50">
-                                                        {new Date(record.creditedAt).toLocaleDateString('en-US', {
+                                                        {new Date(record.creditedAt).toLocaleDateString(locale, {
                                                             month: 'short',
                                                             day: 'numeric',
                                                             year: 'numeric',
@@ -257,10 +271,10 @@ export default function CommissionHistoryView({
                                                     <td className="px-4 py-3.5">
                                                         <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full border text-[8px] font-mono uppercase tracking-wider ${style.chip}`}>
                                                             <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
-                                                            {style.label}
+                                                            {t(`commissionHistory.status.${record.status}`)}
                                                             {record.paidAt && (
                                                                 <span className="text-[#E8E0D5]/35">
-                                                                    · {new Date(record.paidAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                                                    · {new Date(record.paidAt).toLocaleDateString(locale, { month: 'short', day: 'numeric' })}
                                                                 </span>
                                                             )}
                                                         </span>

@@ -24,10 +24,21 @@ import {
     CheckCircle2,
 } from 'lucide-react';
 import type { DesignCollaborator, DesignSubmission } from '../types';
+import type { TranslationKey } from '@/features/i18n/dictionaries';
 import { DESIGN_STATUS_STYLES, COLLABORATOR_PRESETS } from '../constants';
 import { COMMISSION_POOL_RATE, computeCommissionSplit, participantsFor } from '../utils/commissionSplit';
 import { formatRelativeTime } from '@/features/notifications/utils/formatRelativeTime';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 import { ROUTES } from '@/config/routes';
+
+/** Translation key per pipeline status (same map as the admin atelier tab). */
+const STATUS_KEYS: Record<DesignSubmission['status'], TranslationKey> = {
+    draft: 'atelierAdmin.status.draft',
+    under_review: 'atelierAdmin.status.underReview',
+    approved: 'atelierAdmin.status.approved',
+    in_production: 'atelierAdmin.status.inProduction',
+    rejected: 'atelierAdmin.status.rejected',
+};
 
 interface DesignerPortfolioDetailViewProps {
     submission: DesignSubmission | null;
@@ -48,6 +59,7 @@ export default function DesignerPortfolioDetailView({
     addingCollaborator = false,
     onAddCollaborator,
 }: DesignerPortfolioDetailViewProps) {
+    const { t, language } = useLanguage();
     if (!submission) {
         return (
             <div className="min-h-[60vh] flex items-center justify-center px-4">
@@ -55,15 +67,15 @@ export default function DesignerPortfolioDetailView({
                     <div className="inline-flex p-4 rounded-full bg-[#A78BFA]/5 border border-[#A78BFA]/10 mb-4">
                         <User size={24} className="text-[#A78BFA]/60" />
                     </div>
-                    <h2 className="text-lg font-serif text-white mb-2">Project not found</h2>
+                    <h2 className="text-lg font-serif text-white mb-2">{t('designer.detail.notFound')}</h2>
                     <p className="text-sm text-slate-400 leading-relaxed mb-6">
-                        {error ?? 'This project does not exist or was removed from your portfolio.'}
+                        {error ?? t('designer.detail.notFoundHint')}
                     </p>
                     <Link
                         href={ROUTES.DASHBOARD_DESIGNER}
                         className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#A78BFA] to-[#4FC3F7] text-[#0A0F2C] text-xs font-mono font-bold uppercase tracking-widest transition-all duration-300 hover:scale-105"
                     >
-                        <ArrowLeft size={13} /> Back to Dashboard
+                        <ArrowLeft size={13} /> {t('designer.detail.backDashboard')}
                     </Link>
                 </div>
             </div>
@@ -104,7 +116,7 @@ export default function DesignerPortfolioDetailView({
         setAddError(null);
         setAddedOk(false);
         if (!selectedPreset || !roleInput.trim()) {
-            setAddError('Pick a collaborator and give them a role.');
+            setAddError(t('designer.detail.err.role'));
             return;
         }
         if (!onAddCollaborator) return;
@@ -120,13 +132,13 @@ export default function DesignerPortfolioDetailView({
             setSelectedPresetId('');
             setRoleInput('');
         } else {
-            setAddError(result.error ?? 'Could not add the collaborator.');
+            setAddError(result.error ?? t('designer.detail.err.add'));
         }
     };
 
     // Multi-image gallery: main view first, then hover/alternate + sketches.
     const gallery = [
-        ...(submission.imageUrl ? [{ url: submission.imageUrl, label: 'Main View' }] : []),
+        ...(submission.imageUrl ? [{ url: submission.imageUrl, label: t('designer.detail.mainView') }] : []),
         ...(submission.galleryImages ?? []),
     ];
     const [activeImage, setActiveImage] = useState(gallery[0] ?? null);
@@ -139,7 +151,7 @@ export default function DesignerPortfolioDetailView({
                     href={ROUTES.DASHBOARD_DESIGNER}
                     className="inline-flex items-center gap-2 text-[10px] font-mono uppercase tracking-wider text-[#A78BFA] hover:text-white transition-colors mb-6"
                 >
-                    <ArrowLeft size={12} /> Back to Portfolio
+                    <ArrowLeft size={12} /> {t('designer.detail.backPortfolio')}
                 </Link>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -162,7 +174,7 @@ export default function DesignerPortfolioDetailView({
                             )}
                             <span className={`absolute top-4 left-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[9px] font-mono uppercase tracking-wider ${style.chip}`}>
                                 <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
-                                {style.label}
+                                {t(STATUS_KEYS[submission.status])}
                             </span>
                             {activeImage && gallery.length > 1 && (
                                 <span className="absolute bottom-4 left-4 px-2.5 py-1 rounded-full bg-[#0A0F2C]/80 backdrop-blur-sm border border-white/10 text-[9px] font-mono uppercase tracking-wider text-[#A78BFA]">
@@ -210,7 +222,7 @@ export default function DesignerPortfolioDetailView({
                             <div className="flex flex-wrap items-center gap-4 mt-3 text-[10px] font-mono text-slate-500">
                                 <span className="flex items-center gap-1.5">
                                     <Calendar size={11} className="text-[#A78BFA]/70" />
-                                    Submitted {formatRelativeTime(submission.submittedAt)}
+                                    {t('designer.detail.submitted', { time: formatRelativeTime(submission.submittedAt, language) })}
                                 </span>
                                 <span className="flex items-center gap-1.5">
                                     <Tag size={11} className="text-[#A78BFA]/70" />
@@ -226,7 +238,7 @@ export default function DesignerPortfolioDetailView({
                         {/* Full description */}
                         <div>
                             <h2 className="text-[10px] font-mono uppercase tracking-widest text-[#A78BFA] font-bold mb-2">
-                                Design Concept
+                                {t('designer.detail.concept')}
                             </h2>
                             <p className="text-sm text-[#E8E0D5]/75 leading-relaxed">
                                 {submission.description}
@@ -237,7 +249,7 @@ export default function DesignerPortfolioDetailView({
                         {submission.adminNote && (
                             <div className="p-4 rounded-2xl bg-[#0F1535] border border-white/5">
                                 <p className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold mb-2">
-                                    <MessageSquareQuote size={12} /> Atelier Feedback
+                                    <MessageSquareQuote size={12} /> {t('designer.detail.feedback')}
                                 </p>
                                 <p className="text-xs text-[#E8E0D5]/70 italic leading-relaxed">
                                     “{submission.adminNote}”
@@ -250,14 +262,16 @@ export default function DesignerPortfolioDetailView({
                             <div className="flex items-center justify-between gap-3 mb-3">
                                 <p className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-[#A78BFA] font-bold">
                                     {isTeam ? <Users size={12} /> : <User size={12} />}
-                                    {isTeam ? `Team Project · ${participants.length} Members` : 'Individual Project'}
+                                    {isTeam
+                                        ? t('designer.detail.teamProject', { count: participants.length })
+                                        : t('designer.detail.individual')}
                                 </p>
                                 {isOwner && !showAddForm && (
                                     <button
                                         onClick={() => setShowAddForm(true)}
                                         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#A78BFA]/10 border border-[#A78BFA]/30 text-[#A78BFA] text-[9px] font-mono uppercase tracking-wider hover:bg-[#A78BFA]/20 transition-all duration-300 cursor-pointer"
                                     >
-                                        <UserPlus size={10} /> Add Collaborator
+                                        <UserPlus size={10} /> {t('designer.detail.addCollaborator')}
                                     </button>
                                 )}
                             </div>
@@ -268,11 +282,11 @@ export default function DesignerPortfolioDetailView({
                                 <div className="mb-4 p-3 rounded-xl bg-[#0A0F2C]/80 border border-[#A78BFA]/20 flex flex-col gap-2.5">
                                     <div className="flex items-center justify-between">
                                         <span className="text-[9px] font-mono uppercase tracking-widest text-[#A78BFA] font-bold">
-                                            Credit a collaborator
+                                            {t('designer.detail.creditTitle')}
                                         </span>
                                         <button
                                             onClick={() => setShowAddForm(false)}
-                                            aria-label="Close add collaborator form"
+                                            aria-label={t('designer.detail.closeForm')}
                                             className="text-slate-500 hover:text-white transition-colors cursor-pointer"
                                         >
                                             <X size={12} />
@@ -284,7 +298,7 @@ export default function DesignerPortfolioDetailView({
                                             onChange={(e) => setSelectedPresetId(e.target.value)}
                                             className="bg-black/40 border border-white/10 rounded-lg px-2 py-2 text-[10px] text-white outline-none focus:border-[#A78BFA]/50 transition"
                                         >
-                                            <option value="">Select person…</option>
+                                            <option value="">{t('designer.detail.selectPerson')}</option>
                                             {COLLABORATOR_PRESETS.map((preset) => (
                                                 <option key={preset.id} value={preset.id}>
                                                     {preset.name} — {preset.role}
@@ -294,7 +308,7 @@ export default function DesignerPortfolioDetailView({
                                         <input
                                             value={roleInput}
                                             onChange={(e) => setRoleInput(e.target.value)}
-                                            placeholder="Role on this piece (e.g. Embroidery Artisan)"
+                                            placeholder={t('designer.detail.rolePlaceholder')}
                                             className="bg-black/40 border border-white/10 rounded-lg px-2 py-2 text-[10px] text-white placeholder:text-slate-600 outline-none focus:border-[#A78BFA]/50 transition"
                                         />
                                     </div>
@@ -305,7 +319,7 @@ export default function DesignerPortfolioDetailView({
                                     )}
                                     {addedOk && (
                                         <p className="flex items-center gap-1.5 text-[10px] text-emerald-400">
-                                            <CheckCircle2 size={11} /> Collaborator credited — thank you!
+                                            <CheckCircle2 size={11} /> {t('designer.detail.creditedOk')}
                                         </p>
                                     )}
                                     <button
@@ -314,7 +328,7 @@ export default function DesignerPortfolioDetailView({
                                         className="self-end flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#A78BFA] text-[#0A0F2C] text-[9px] font-mono font-bold uppercase tracking-widest hover:bg-[#C4B5FD] transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-wait"
                                     >
                                         <UserPlus size={10} />
-                                        {addingCollaborator ? 'Adding…' : 'Credit Collaborator'}
+                                        {addingCollaborator ? t('designer.detail.adding') : t('designer.detail.creditBtn')}
                                     </button>
                                 </div>
                             )}
@@ -347,7 +361,7 @@ export default function DesignerPortfolioDetailView({
                                                         {member.name}
                                                         {member.id === ownerId && (
                                                             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#C9A84C]/15 text-[#C9A84C] text-[8px] font-mono uppercase tracking-wider border border-[#C9A84C]/40 font-bold">
-                                                                <Crown size={8} /> Owner
+                                                                <Crown size={8} /> {t('designer.detail.owner')}
                                                             </span>
                                                         )}
                                                     </p>
@@ -356,11 +370,12 @@ export default function DesignerPortfolioDetailView({
                                                     </p>
                                                     {member.creditedAt && (
                                                         <p className="text-[9px] text-slate-500 font-mono">
-                                                            Credited on{' '}
-                                                            {new Date(member.creditedAt).toLocaleDateString('en-US', {
-                                                                year: 'numeric',
-                                                                month: 'short',
-                                                                day: 'numeric',
+                                                            {t('designer.detail.creditedOn', {
+                                                                date: new Date(member.creditedAt).toLocaleDateString('en-US', {
+                                                                    year: 'numeric',
+                                                                    month: 'short',
+                                                                    day: 'numeric',
+                                                                }),
                                                             })}
                                                         </p>
                                                     )}
@@ -371,7 +386,7 @@ export default function DesignerPortfolioDetailView({
                                                             {share.percent}%
                                                         </p>
                                                         <p className="text-[8px] font-mono text-slate-500">
-                                                            ${share.amount.toLocaleString()} / unit
+                                                            {t('designer.detail.perUnit', { amount: share.amount.toLocaleString() })}
                                                         </p>
                                                     </div>
                                                 )}
@@ -381,8 +396,7 @@ export default function DesignerPortfolioDetailView({
                                 </div>
                             ) : (
                                 <p className="text-xs text-[#E8E0D5]/60 leading-relaxed">
-                                    Designed and submitted by a single designer — no collaborators
-                                    on this project. The owner can credit collaborators at any time.
+                                    {t('designer.detail.soloDesc')}
                                 </p>
                             )}
                         </div>
@@ -392,12 +406,14 @@ export default function DesignerPortfolioDetailView({
                         {isTeam && paidStage && (
                             <div className="p-4 rounded-2xl bg-[#0F1535] border border-[#C9A84C]/20">
                                 <p className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold mb-2">
-                                    Projected Commission Split
+                                    {t('designer.detail.splitTitle')}
                                 </p>
                                 <p className="text-[10px] text-slate-400 leading-relaxed mb-3">
-                                    Atelier commission pool: {Math.round(COMMISSION_POOL_RATE * 100)}%
-                                    of retail (${commissionPool.toLocaleString()} per unit) — split
-                                    equally across the {participants.length} credited collaborators.
+                                    {t('designer.detail.poolDesc', {
+                                        pct: Math.round(COMMISSION_POOL_RATE * 100),
+                                        pool: commissionPool.toLocaleString(),
+                                        count: participants.length,
+                                    })}
                                 </p>
                                 <div className="flex flex-col gap-1.5">
                                     {commissionShares.map((share) => {
@@ -412,7 +428,7 @@ export default function DesignerPortfolioDetailView({
                                                     {member.name}
                                                     {member.id === ownerId && (
                                                         <span className="ml-1.5 text-[8px] font-mono uppercase text-[#C9A84C]/80">
-                                                            (owner)
+                                                            {t('designer.detail.ownerTag')}
                                                         </span>
                                                     )}
                                                 </span>
