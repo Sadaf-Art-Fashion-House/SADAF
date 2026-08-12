@@ -82,10 +82,29 @@ export function localizedPrintingDescription(printing: string, language: SiteLan
     return match?.descriptionAr ?? printing;
 }
 
+/**
+ * Arabic labels for the AI clothing types. Single source of truth — the AI
+ * Studio buttons, the generated atelier copy and any other consumer all
+ * resolve through `localizedClothingType` below.
+ */
+const CLOTHING_TYPE_AR: Record<string, string> = {
+    Abaya: 'عباية',
+    Hoodie: 'هودي',
+    'T-Shirt': 'تي شيرت',
+    Jacket: 'جاكيت',
+    Streetwear: 'ستريت وير',
+};
+
+/** The clothing-type label for the active language (falls back to English). */
+export function localizedClothingType(type: string, language: SiteLanguage): string {
+    if (language !== 'ar') return type;
+    return CLOTHING_TYPE_AR[type] ?? type;
+}
+
 /** Human-readable name for an AI custom item in cart/checkout lists. */
 export function localizedAiItemName(clothingType: string, language: SiteLanguage): string {
     const suffix = language === 'ar' ? 'تصميم ذكاء اصطناعي' : 'AI Custom';
-    return `${clothingType} — ${suffix}`;
+    return `${localizedClothingType(clothingType, language)} — ${suffix}`;
 }
 
 /**
