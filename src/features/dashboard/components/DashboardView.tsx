@@ -20,6 +20,8 @@ import {
 import type { UserProfile } from '@/shared/types';
 import { isCustomerRole, isAdminRole, getRoleCategory } from '@/shared/types';
 import { ROLE_BADGES, ROLE_BADGE_COLORS } from '@/features/auth/types';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
+import type { TranslationKey } from '@/features/i18n/dictionaries';
 import { ROUTES } from '@/config/routes';
 import { fileToResizedDataUrl } from '@/shared/utils/fileToResizedDataUrl';
 import type { CustomerSpendingPoint } from '@/features/customer/types';
@@ -36,65 +38,52 @@ interface DashboardViewProps {
     monthlyPerformanceError: string | null;
 }
 
-const quickLinks = [
-    { href: '/store', label: 'Continue Shopping', icon: Store },
-    { href: '/artworks', label: 'Browse Artworks', icon: Palette },
-    { href: '/fashion', label: 'Fashion Collection', icon: Shirt },
-    { href: '/gallery', label: 'Virtual Gallery', icon: ImageIcon },
-    { href: '/ai', label: 'AI Studio', icon: Bot },
-];
-
-/** Map a section title to the correct dashboard sub-route based on the user's role. */
-function getSectionLink(title: string): string {
-    if (title === 'Admin Panel') return '/dashboard/admin';
-    if (title === 'Founder Controls') return '/dashboard/founder';
-    // Customer/Designer modules -> the user profile dashboard
-    if (title === 'My Orders' || title === 'Wishlist' || title === 'My Network' || title === 'My Collections') {
-        return '/dashboard/profile';
-    }
-    if (title === 'Design Studio') return '/ai';
-    if (title === 'Commission Dashboard' || title === 'Referral Network') return '/dashboard/profile';
-    if (title === 'Bulk Orders') return '/dashboard/profile';
-    return '/dashboard';
+/** Map a section id to the correct dashboard sub-route based on the user's role. */
+function getSectionLink(id: string): string {
+    if (id === 'admin') return '/dashboard/admin';
+    if (id === 'founder') return '/dashboard/founder';
+    if (id === 'designStudio') return '/ai';
+    // Customer/Designer/Company modules -> the user profile dashboard
+    return '/dashboard/profile';
 }
 
 function getRoleSpecificSections(role: UserProfile['role']) {
     const cat = getRoleCategory(role);
-    const sections = [];
+    const sections: Array<{ id: string; titleKey: TranslationKey; descKey: TranslationKey; icon: typeof Store }> = [];
 
     if (cat === 'customer' || cat === 'designer') {
         sections.push(
-            { title: 'My Orders', desc: 'View your purchase history', icon: ShoppingBag },
-            { title: 'Wishlist', desc: 'Saved items', icon: Heart },
-            { title: 'My Network', desc: 'Family members & friends in SADAF', icon: User },
+            { id: 'orders', titleKey: 'dashboardHome.section.orders', descKey: 'dashboardHome.section.ordersDesc', icon: ShoppingBag },
+            { id: 'wishlist', titleKey: 'dashboardHome.section.wishlist', descKey: 'dashboardHome.section.wishlistDesc', icon: Heart },
+            { id: 'network', titleKey: 'dashboardHome.section.network', descKey: 'dashboardHome.section.networkDesc', icon: User },
         );
     }
     if (cat === 'company') {
         sections.push(
-            { title: 'My Collections', desc: 'Designs created via AI Studio', icon: Sparkles },
-            { title: 'Bulk Orders', desc: 'Order history & production tracking', icon: ShoppingBag },
+            { id: 'collections', titleKey: 'dashboardHome.section.collections', descKey: 'dashboardHome.section.collectionsDesc', icon: Sparkles },
+            { id: 'bulkOrders', titleKey: 'dashboardHome.section.bulkOrders', descKey: 'dashboardHome.section.bulkOrdersDesc', icon: ShoppingBag },
         );
     }
     if (cat === 'designer') {
         sections.push(
-            { title: 'Design Studio', desc: 'Your AI-powered design tools', icon: Sparkles },
+            { id: 'designStudio', titleKey: 'dashboardHome.section.designStudio', descKey: 'dashboardHome.section.designStudioDesc', icon: Sparkles },
         );
     }
     if (cat === 'sales_partner') {
         sections.push(
-            { title: 'Commission Dashboard', desc: 'Track your sales & earnings', icon: ShoppingBag },
-            { title: 'Referral Network', desc: 'Customers you brought to SADAF', icon: User },
+            { id: 'commission', titleKey: 'dashboardHome.section.commission', descKey: 'dashboardHome.section.commissionDesc', icon: ShoppingBag },
+            { id: 'referral', titleKey: 'dashboardHome.section.referral', descKey: 'dashboardHome.section.referralDesc', icon: User },
         );
     }
     if (isAdminRole(role)) {
         sections.push(
-            { title: 'Admin Panel', desc: 'Platform administration tools', icon: LayoutDashboard },
+            { id: 'admin', titleKey: 'dashboardHome.section.admin', descKey: 'dashboardHome.section.adminDesc', icon: LayoutDashboard },
         );
     }
     if (cat === 'founder') {
         sections.push(
-            { title: 'Founder Controls', desc: 'Platform oversight & analytics', icon: Sparkles },
-            { title: 'Admin Panel', desc: 'Manage inventory & orders', icon: LayoutDashboard },
+            { id: 'founder', titleKey: 'dashboardHome.section.founder', descKey: 'dashboardHome.section.founderDesc', icon: Sparkles },
+            { id: 'admin', titleKey: 'dashboardHome.section.admin', descKey: 'dashboardHome.section.inventory', icon: LayoutDashboard },
         );
     }
 
@@ -109,7 +98,16 @@ export default function DashboardView({
     monthlyPerformanceLoading,
     monthlyPerformanceError,
 }: DashboardViewProps) {
+    const { t, language } = useLanguage();
+    const locale = language === 'ar' ? 'ar-EG' : 'en-US';
     const availableSections = getRoleSpecificSections(user.role);
+    const quickLinks = [
+        { href: '/store', label: t('dashboardHome.quick.shopping'), icon: Store },
+        { href: '/artworks', label: t('dashboardHome.quick.artworks'), icon: Palette },
+        { href: '/fashion', label: t('dashboardHome.quick.fashion'), icon: Shirt },
+        { href: '/gallery', label: t('dashboardHome.quick.gallery'), icon: ImageIcon },
+        { href: '/ai', label: t('dashboardHome.quick.ai'), icon: Bot },
+    ];
     const badgeText = ROLE_BADGES[user.role] || user.role;
     const badgeColor = ROLE_BADGE_COLORS[user.role] || 'bg-slate-500/10 text-slate-400 border-slate-500/30';
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -152,7 +150,7 @@ export default function DashboardView({
                             <button
                                 onClick={() => fileInputRef.current?.click()}
                                 className="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-[#C9A84C] to-[#4FC3F7] flex items-center justify-center text-2xl font-serif text-white shadow-lg shadow-[#C9A84C]/20 cursor-pointer group relative"
-                                title="Upload profile picture"
+                                title={t('dashboardHome.uploadPicture')}
                             >
                                 {user.avatarUrl ? (
                                     <img
@@ -182,7 +180,7 @@ export default function DashboardView({
                         {/* Info */}
                         <div className="flex-1 text-center md:text-left">
                             <h1 className="text-2xl md:text-3xl font-serif text-white mb-1">
-                                Welcome, {user.fullName}
+                                {t('dashboardHome.welcome', { name: user.fullName })}
                             </h1>
                             <p className="text-sm text-[#E8E0D5]/60 mb-3">{user.email}</p>
 
@@ -193,7 +191,7 @@ export default function DashboardView({
 
                                 {user.hasDesignerAccess && (
                                     <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider border border-violet-500/30 text-violet-400 bg-violet-500/10 font-semibold">
-                                        + Designer Access
+                                        {t('dashboardHome.designerAccess')}
                                     </span>
                                 )}
 
@@ -202,7 +200,7 @@ export default function DashboardView({
                                     className="px-4 py-1.5 rounded-full text-[10px] font-mono uppercase tracking-wider border border-[#C9A84C]/30 text-[#C9A84C] hover:bg-[#C9A84C]/10 transition-all duration-300 flex items-center gap-1.5"
                                 >
                                     <LayoutDashboard size={11} />
-                                    Full Dashboard
+                                    {t('dashboardHome.fullDashboard')}
                                 </Link>
 
                                 <button
@@ -230,7 +228,7 @@ export default function DashboardView({
             {/* Quick Links */}
             <section className="py-10 px-4 md:px-8 max-w-5xl mx-auto">
                 <h2 className="text-xs font-mono uppercase tracking-[0.25em] text-[#C9A84C] mb-5">
-                    Quick Navigation
+                    {t('dashboardHome.quickNav')}
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {quickLinks.map((link) => (
@@ -255,7 +253,7 @@ export default function DashboardView({
             {isCustomerRole(user.role) && (
                 <section className="py-6 px-4 md:px-8 max-w-5xl mx-auto">
                     <h2 className="text-xs font-mono uppercase tracking-[0.25em] text-[#C9A84C] mb-5">
-                        My Network
+                        {t('dashboardHome.network')}
                     </h2>
                     <div className="rounded-xl bg-[#0A0F2C]/60 border border-[#C9A84C]/10 p-6">
                         {user.connections && user.connections.length > 0 ? (
@@ -266,7 +264,7 @@ export default function DashboardView({
                                             {connId.charAt(0).toUpperCase()}
                                         </div>
                                         <div>
-                                            <p className="text-xs text-[#E8E0D5]/80 font-medium">Connection #{connId}</p>
+                                            <p className="text-xs text-[#E8E0D5]/80 font-medium">{t('dashboardHome.connection', { id: connId })}</p>
                                             <p className="text-[10px] text-[#E8E0D5]/40 font-mono">{connId}</p>
                                         </div>
                                     </div>
@@ -275,15 +273,15 @@ export default function DashboardView({
                         ) : (
                             <div className="text-center py-6">
                                 <User size={24} className="mx-auto text-[#C9A84C]/40 mb-3" />
-                                <p className="text-sm text-[#E8E0D5]/60 mb-1">Your network is growing</p>
+                                <p className="text-sm text-[#E8E0D5]/60 mb-1">{t('dashboardHome.networkGrowing')}</p>
                                 <p className="text-[11px] text-[#E8E0D5]/40">
-                                    Invite your family and friends to join SADAF and earn exclusive rewards.
+                                    {t('dashboardHome.networkHint')}
                                 </p>
                                 <Link
                                     href={`${ROUTES.DASHBOARD_COMMUNITY}?invite=1`}
                                     className="mt-4 inline-block px-5 py-2 bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/80 text-[#0A0F2C] text-[10px] font-mono font-bold uppercase tracking-wider rounded-lg transition-all duration-300 hover:scale-105 cursor-pointer"
                                 >
-                                    Invite Connections
+                                    {t('dashboardHome.invite')}
                                 </Link>
                             </div>
                         )}
@@ -294,13 +292,13 @@ export default function DashboardView({
             {/* Role-based sections */}
             <section className="py-6 px-4 md:px-8 max-w-5xl mx-auto">
                 <h2 className="text-xs font-mono uppercase tracking-[0.25em] text-[#C9A84C] mb-5">
-                    Dashboard Modules
+                    {t('dashboardHome.modules')}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {availableSections.map((section) => (
                         <Link
-                            key={section.title}
-                            href={getSectionLink(section.title)}
+                            key={section.id}
+                            href={getSectionLink(section.id)}
                             className="block p-6 rounded-xl bg-[#0A0F2C]/60 border border-[#C9A84C]/10 hover:border-[#C9A84C]/30 transition-all duration-300 group"
                         >
                             <div className="flex items-center gap-3 mb-2">
@@ -308,13 +306,13 @@ export default function DashboardView({
                                     size={18}
                                     className="text-[#C9A84C] group-hover:text-[#4FC3F7] transition-colors"
                                 />
-                                <h3 className="text-sm font-serif text-white">{section.title}</h3>
+                                <h3 className="text-sm font-serif text-white">{t(section.titleKey)}</h3>
                             </div>
                             <p className="text-[11px] text-[#E8E0D5]/50 leading-relaxed">
-                                {section.desc}
+                                {t(section.descKey)}
                             </p>
                             <div className="mt-3 text-[9px] font-mono uppercase tracking-wider text-[#C9A84C]/60 group-hover:text-[#C9A84C] transition-colors">
-                                Open Panel &rarr;
+                                {t('dashboardHome.openPanel')}
                             </div>
                         </Link>
                     ))}
@@ -325,14 +323,14 @@ export default function DashboardView({
             <section className="py-10 px-4 md:px-8 max-w-5xl mx-auto">
                 <div className="rounded-xl bg-[#0A0F2C]/40 border border-[#C9A84C]/10 p-6">
                     <h2 className="text-xs font-mono uppercase tracking-[0.25em] text-[#C9A84C] mb-4">
-                        Account Details
+                        {t('dashboardHome.accountDetails')}
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-[#E8E0D5]/70">
                         <div>
                             <span className="block text-[10px] font-mono uppercase text-[#E8E0D5]/40 mb-1">
-                                Member Since
+                                {t('dashboardHome.memberSince')}
                             </span>
-                            {new Date(user.createdAt).toLocaleDateString('en-US', {
+                            {new Date(user.createdAt).toLocaleDateString(locale, {
                                 year: 'numeric',
                                 month: 'long',
                                 day: 'numeric',
@@ -340,7 +338,7 @@ export default function DashboardView({
                         </div>
                         <div>
                             <span className="block text-[10px] font-mono uppercase text-[#E8E0D5]/40 mb-1">
-                                Account ID
+                                {t('dashboardHome.accountId')}
                             </span>
                             <span className="font-mono text-[10px] text-[#C9A84C]/80">
                                 {user.id}
