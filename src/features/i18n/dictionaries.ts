@@ -614,6 +614,22 @@ export const en = {
     'ai.mockup': 'MOCKUP',
     'ai.selectedWeave': 'Selected Weave',
     'ai.selectedPrinting': 'Selected Printing',
+    'ai.promptPlaceholder': 'e.g. Damascus geometric floral meshes in Gilded wire embroidery...',
+    'ai.saved.header': 'Saved Designs',
+    'ai.saved.summary': '{drafts} draft{s} • {published} published',
+    'ai.saved.empty': 'No saved designs yet',
+    'ai.saved.emptyHint': 'Generate a design in the Studio, then hit Save to keep it here.',
+    'ai.saved.edit': 'Edit',
+    'ai.saved.editTitle': '🚧 Edit not connected yet — AI rendering pipeline pending',
+    'ai.saved.order': 'Order',
+    'ai.saved.orderTitle': '🚧 Order not connected yet — AI rendering pipeline pending',
+    'ai.saved.fit': 'Fit',
+    'ai.saved.fitTitle': '🚧 AI fitting room not connected yet',
+    'ai.saved.review': 'Review',
+    'ai.saved.deleteTitle': 'Delete draft',
+    'ai.saved.statusDraft': 'Draft',
+    'ai.saved.statusPublished': 'Published',
+    'ai.saved.adminPanel': 'Open Admin Panel to Review & Publish Designs',
 
     // ── Exhibition ──────────────────────────────────────────────────────────
     'exh.speechUnsupported.title': 'Speech Not Supported',
@@ -656,6 +672,8 @@ export const en = {
     'exh.inspectBody': 'Click the artwork above or tap the eye icon to zoom, play live voice narratives, and acquire pieces.',
     'exh.inspectTitle': 'Click to inspect the current artwork',
     'exh.voicesAvailable': '{count} voice{s} available',
+    'exh.floorPlan': 'Metaverse Floor Plan',
+    'exh.googleTtsTitle': 'Using Google Cloud Text-to-Speech for high-quality Arabic audio',
 
     // ── Leaderboard ─────────────────────────────────────────────────────────
     'lb.title': 'Leaderboard',
@@ -2280,6 +2298,22 @@ export const ar: Record<TranslationKey, string> = {
     'ai.mockup': 'نموذج',
     'ai.selectedWeave': 'النسيج المختار',
     'ai.selectedPrinting': 'الطباعة المختارة',
+    'ai.promptPlaceholder': 'مثال: شبكات نباتية هندسية دمشقية بتطريز سلكي مذهّب...',
+    'ai.saved.header': 'التصاميم المحفوظة',
+    'ai.saved.summary': '{drafts} مسودة{s} • {published} منشور',
+    'ai.saved.empty': 'لا توجد تصاميم محفوظة بعد',
+    'ai.saved.emptyHint': 'ولّد تصميمًا في الاستوديو ثم اضغط «حفظ» ليبقى هنا.',
+    'ai.saved.edit': 'تعديل',
+    'ai.saved.editTitle': '🚧 التعديل غير متصل بعد — خط إنتاج العرض قيد الانتظار',
+    'ai.saved.order': 'طلب',
+    'ai.saved.orderTitle': '🚧 الطلب غير متصل بعد — خط إنتاج العرض قيد الانتظار',
+    'ai.saved.fit': 'قياس',
+    'ai.saved.fitTitle': '🚧 غرفة القياس الذكية غير متصلة بعد',
+    'ai.saved.review': 'مراجعة',
+    'ai.saved.deleteTitle': 'حذف المسودة',
+    'ai.saved.statusDraft': 'مسودة',
+    'ai.saved.statusPublished': 'منشور',
+    'ai.saved.adminPanel': 'افتح لوحة الأدمن لمراجعة التصاميم ونشرها',
 
     // ── Exhibition ──────────────────────────────────────────────────────────
     'exh.speechUnsupported.title': 'النطق غير مدعوم',
@@ -2322,6 +2356,8 @@ export const ar: Record<TranslationKey, string> = {
     'exh.inspectBody': 'انقر على العمل الفني بالأعلى أو اضغط على أيقونة العين للتكبير وتشغيل السرد الصوتي واقتناء القطع.',
     'exh.inspectTitle': 'انقر لفحص العمل الفني الحالي',
     'exh.voicesAvailable': '{count} صوت متاح',
+    'exh.floorPlan': 'خريطة المعرض التفاعلية',
+    'exh.googleTtsTitle': 'يستخدم خدمة تحويل النص إلى كلام من Google Cloud لجودة صوت عربي عالية',
 
     // ── Leaderboard ─────────────────────────────────────────────────────────
     'lb.title': 'لوحة المتصدرين',
