@@ -8,14 +8,20 @@ that day; update this file whenever the deploy state changes.
 
 | Version | Tag(s) | Branch | Commit | What it is |
 |---|---|---|---|---|
-| **v0.3.0** (current) | `v0.3.0` | `main` | `057cf66` | Next.js app: real-time layer, role dashboards, Arabic i18n, commissions/withdrawals, share links |
+| **v0.3.0** (current) | `v0.3.0` | `main` | `f7ba370` | Next.js app: real-time layer, role dashboards, Arabic i18n (incl. admin/analytics dashboards + charts, sidebars, cart/wishlist), commissions/withdrawals, share links |
 | **v0.2.0** | `v0.2.0` | `release/0.2.0` | `1dfe78e` | Next.js 15 migration (3-layer, storefront, AI Studio, exhibition TTS, analytics, error logging) |
 | **v0.1.0** | `v0.1.0`, `v1` (alias) | `vite-original` | `ccc9946` | Vite legacy app (pre-Next.js) — baseline archive |
 
 Other refs: `nextjs-clean` (locked/archived at `0d7a585`), `archive/nextjs-clean`,
 `archive/pre-split-1195b98` (read-only).
 
-## Link status (verified 2026-08-11)
+## Link status (verified 2026-08-12)
+
+- 2026-08-12: **redeployed v3 to `sadaf-nu`** — `./redeploy.sh v3` (main at `f7ba370`).
+  Arabic translations for the admin/founder dashboards and analytics charts,
+  the customer/company sidebars + shared sign-out menu, cart/wishlist, and
+  analytics channel names are all live on `sadaf-nu.vercel.app` (verified in
+  the deployed JS bundle).
 
 | Link | Version | Status | Content |
 |---|---|---|---|
