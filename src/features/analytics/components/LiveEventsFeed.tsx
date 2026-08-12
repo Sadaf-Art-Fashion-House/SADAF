@@ -38,6 +38,46 @@ const EVENT_STYLES: Record<LiveEvent['type'], { icon: typeof ShoppingBag; color:
 const MAX_FEED_EVENTS = 30;
 
 /**
+ * The analytics payload ships English-only event titles/messages as data.
+ * Map the known templates to translation keys (dynamic parts via regex) so
+ * the feed renders in the active language; unknown text falls back to the
+ * raw payload.
+ */
+const EVENT_TITLE_KEYS: Record<string, TranslationKey> = {
+    'New order received': 'analytics.feed.title.order',
+    'New customer joined': 'analytics.feed.title.signup',
+    'AI design generated': 'analytics.feed.title.ai',
+    'New review posted': 'analytics.feed.title.review',
+    'Promotion claimed': 'analytics.feed.title.promotion',
+};
+
+const ORDER_MSG_RE = /^Order #SADAF-(\d+) · \$([\d,]+) — new atelier piece$/;
+const REVIEW_MSG_RE = /^A customer left a ([45])-star review on a recent piece$/;
+
+function localizeEventTitle(title: string, t: (key: TranslationKey) => string): string {
+    const key = EVENT_TITLE_KEYS[title];
+    return key ? t(key) : title;
+}
+
+function localizeEventMessage(message: string, t: (key: TranslationKey, vars?: Record<string, string | number>) => string): string {
+    const orderMatch = message.match(ORDER_MSG_RE);
+    if (orderMatch) {
+        return t('analytics.feed.msg.order', { id: orderMatch[1], amount: orderMatch[2] });
+    }
+    const reviewMatch = message.match(REVIEW_MSG_RE);
+    if (reviewMatch) {
+        return t('analytics.feed.msg.review', { stars: reviewMatch[1] });
+    }
+    const staticKeys: Record<string, TranslationKey> = {
+        'A new customer registered via referral program': 'analytics.feed.msg.signup',
+        'User rendered a new couture concept in AI Studio': 'analytics.feed.msg.ai',
+        'A limited-time offer was claimed by a customer': 'analytics.feed.msg.promotion',
+    };
+    const key = staticKeys[message];
+    return key ? t(key) : message;
+}
+
+/**
  * Live Events Feed — streams real-time activity (orders, signups, AI
  * generations, reviews, promotions) from the analytics payload.
  *
@@ -163,14 +203,14 @@ export default function LiveEventsFeed({ events, isLive }: LiveEventsFeedProps) 
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between gap-2">
                                             <span className="text-[10px] font-semibold text-white truncate">
-                                                {event.title}
+                                                {localizeEventTitle(event.title, t)}
                                             </span>
                                             <span className="text-[8px] font-mono text-[#E8E0D5]/40 shrink-0 whitespace-nowrap">
                                                 {formatEventTime(event.timestamp, language)}
                                             </span>
                                         </div>
                                         <p className="text-[9px] text-[#E8E0D5]/50 leading-relaxed truncate">
-                                            {event.message}
+                                            {localizeEventMessage(event.message, t)}
                                         </p>
                                     </div>
                                     <span className="text-[7px] font-mono uppercase tracking-wider text-[#E8E0D5]/25 shrink-0 mt-0.5">
