@@ -2,6 +2,7 @@
 
 import { TrendingUp } from 'lucide-react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 import AnalyticsDashboard from './AnalyticsDashboard';
 import Link from 'next/link';
 
@@ -10,6 +11,7 @@ interface AnalyticsPageClientProps {
 }
 
 export default function AnalyticsPageClient({ role = 'admin' }: AnalyticsPageClientProps) {
+    const { t } = useLanguage();
     const { user } = useAuth();
 
     if (!user) {
@@ -17,13 +19,13 @@ export default function AnalyticsPageClient({ role = 'admin' }: AnalyticsPageCli
             <div className="min-h-[60vh] flex items-center justify-center">
                 <div className="text-center">
                     <p className="text-sm text-[#E8E0D5]/60 mb-4">
-                        You need to sign in to access analytics.
+                        {t('analytics.needSignIn')}
                     </p>
                     <Link
                         href="/auth"
                         className="inline-block px-6 py-3 bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/80 text-[#0A0F2C] text-xs font-mono font-bold uppercase tracking-widest rounded-xl transition-all duration-300 hover:scale-105"
                     >
-                        Sign In
+                        {t('common.signIn')}
                     </Link>
                 </div>
             </div>
@@ -42,12 +44,12 @@ export default function AnalyticsPageClient({ role = 'admin' }: AnalyticsPageCli
                             </div>
                             <div>
                                 <h1 className="text-xl md:text-2xl font-serif text-white font-bold tracking-tight">
-                                    Analytics Dashboard
+                                    {t('analytics.title')}
                                 </h1>
                                 <p className="text-xs text-[#E8E0D5]/60 mt-0.5">
                                     {role === 'founder'
-                                        ? 'Executive metrics — revenue, growth, and platform performance'
-                                        : 'Platform analytics — sales, products, and user growth'}
+                                        ? t('analytics.subtitle.founder')
+                                        : t('analytics.subtitle.admin')}
                                 </p>
                             </div>
                         </div>
@@ -55,7 +57,7 @@ export default function AnalyticsPageClient({ role = 'admin' }: AnalyticsPageCli
                             href={role === 'founder' ? '/dashboard/founder' : '/dashboard/admin'}
                             className="px-4 py-2 border border-[#C9A84C]/30 text-[#C9A84C] text-[10px] font-mono uppercase tracking-wider rounded-xl hover:bg-[#C9A84C]/10 transition-all duration-300"
                         >
-                            Back to {role === 'founder' ? 'Founder' : 'Admin'} Dashboard
+                            {t('analytics.backTo', { role: role === 'founder' ? t('admin.sidebar.roleFounder') : t('admin.sidebar.roleAdmin') })}
                         </Link>
                     </div>
                 </div>

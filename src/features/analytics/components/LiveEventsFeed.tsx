@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import type { LiveEvent } from '../types';
 import { formatEventTime } from '@/utils/formatEventTime';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
+import type { TranslationKey } from '@/features/i18n/dictionaries';
 
 interface LiveEventsFeedProps {
     /** Latest events from the analytics payload (most recent first). */
@@ -24,12 +26,12 @@ interface LiveEventsFeedProps {
     isLive: boolean;
 }
 
-const EVENT_STYLES: Record<LiveEvent['type'], { icon: typeof ShoppingBag; color: string; label: string }> = {
-    order: { icon: ShoppingBag, color: 'text-[#4FC3F7] bg-[#4FC3F7]/10', label: 'Order' },
-    signup: { icon: UserPlus, color: 'text-emerald-400 bg-emerald-400/10', label: 'Signup' },
-    ai: { icon: Cpu, color: 'text-[#C9A84C] bg-[#C9A84C]/10', label: 'AI' },
-    review: { icon: MessageSquare, color: 'text-purple-400 bg-purple-400/10', label: 'Review' },
-    promotion: { icon: Tag, color: 'text-pink-400 bg-pink-400/10', label: 'Promo' },
+const EVENT_STYLES: Record<LiveEvent['type'], { icon: typeof ShoppingBag; color: string; labelKey: TranslationKey }> = {
+    order: { icon: ShoppingBag, color: 'text-[#4FC3F7] bg-[#4FC3F7]/10', labelKey: 'analytics.feed.type.order' },
+    signup: { icon: UserPlus, color: 'text-emerald-400 bg-emerald-400/10', labelKey: 'analytics.feed.type.signup' },
+    ai: { icon: Cpu, color: 'text-[#C9A84C] bg-[#C9A84C]/10', labelKey: 'analytics.feed.type.ai' },
+    review: { icon: MessageSquare, color: 'text-purple-400 bg-purple-400/10', labelKey: 'analytics.feed.type.review' },
+    promotion: { icon: Tag, color: 'text-pink-400 bg-pink-400/10', labelKey: 'analytics.feed.type.promotion' },
 };
 
 /** Cap on how many events stay in the feed list. */
@@ -45,6 +47,7 @@ const MAX_FEED_EVENTS = 30;
  * animates each new row so the feed feels live.
  */
 export default function LiveEventsFeed({ events, isLive }: LiveEventsFeedProps) {
+    const { t, language } = useLanguage();
     const [feed, setFeed] = useState<LiveEvent[]>(() => events.slice(0, MAX_FEED_EVENTS));
     const [isAutoScroll, setIsAutoScroll] = useState(true);
     const seenIdsRef = useRef<Set<string>>(new Set());
@@ -86,13 +89,13 @@ export default function LiveEventsFeed({ events, isLive }: LiveEventsFeedProps) 
                 <div className="flex items-center gap-2">
                     <div className="p-1.5 rounded-lg bg-[#C9A84C]/10 text-[#C9A84C]"><Activity size={12} /></div>
                     <h3 className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold">
-                        Live Events
+                        {t('analytics.feed.title')}
                     </h3>
                     <span className={`inline-flex items-center gap-1 text-[8px] font-mono uppercase tracking-widest ${
                         isLive ? 'text-green-400' : 'text-amber-400/80'
                     }`}>
                         {isLive ? <Wifi size={9} /> : <WifiOff size={9} />}
-                        {isLive ? 'Live' : 'Polling'}
+                        {isLive ? t('analytics.feed.live') : t('analytics.feed.polling')}
                     </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -100,12 +103,12 @@ export default function LiveEventsFeed({ events, isLive }: LiveEventsFeedProps) 
                         <button
                             onClick={handleClear}
                             className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-mono text-[#E8E0D5]/40 hover:text-red-400 border border-white/10 hover:border-red-500/30 transition-all cursor-pointer"
-                            title="Clear event feed"
+                            title={t('analytics.feed.clearTitle')}
                         >
-                            <Trash2 size={9} /> Clear
+                            <Trash2 size={9} /> {t('analytics.feed.clear')}
                         </button>
                     )}
-                    <span className="text-[9px] font-mono text-[#E8E0D5]/30">{feed.length} events</span>
+                    <span className="text-[9px] font-mono text-[#E8E0D5]/30">{t('analytics.feed.events', { count: feed.length })}</span>
                 </div>
             </div>
 
@@ -116,10 +119,10 @@ export default function LiveEventsFeed({ events, isLive }: LiveEventsFeedProps) 
                     className={`flex items-center gap-1 mb-2 text-[8px] font-mono uppercase tracking-wider transition-all cursor-pointer ${
                         isAutoScroll ? 'text-[#4FC3F7]/70 hover:text-[#4FC3F7]' : 'text-[#E8E0D5]/40 hover:text-white'
                     }`}
-                    title={isAutoScroll ? 'Auto-scroll to newest events is ON' : 'Auto-scroll is OFF'}
+                    title={isAutoScroll ? t('analytics.feed.autoscrollOnTitle') : t('analytics.feed.autoscrollOffTitle')}
                 >
                     <ArrowDown size={9} className={isAutoScroll ? 'animate-bounce' : ''} />
-                    {isAutoScroll ? 'Auto-scroll on' : 'Auto-scroll off'}
+                    {isAutoScroll ? t('analytics.feed.autoscrollOn') : t('analytics.feed.autoscrollOff')}
                 </button>
             )}
 
@@ -135,7 +138,7 @@ export default function LiveEventsFeed({ events, isLive }: LiveEventsFeedProps) 
             >
                 {feed.length === 0 ? (
                     <p className="text-[9px] font-mono text-[#E8E0D5]/30 italic px-2 py-1.5">
-                        No events yet — orders, signups, and AI generations will stream here in real time.
+                        {t('analytics.feed.empty')}
                     </p>
                 ) : (
                     <AnimatePresence initial={false}>
@@ -163,7 +166,7 @@ export default function LiveEventsFeed({ events, isLive }: LiveEventsFeedProps) 
                                                 {event.title}
                                             </span>
                                             <span className="text-[8px] font-mono text-[#E8E0D5]/40 shrink-0 whitespace-nowrap">
-                                                {formatEventTime(event.timestamp)}
+                                                {formatEventTime(event.timestamp, language)}
                                             </span>
                                         </div>
                                         <p className="text-[9px] text-[#E8E0D5]/50 leading-relaxed truncate">
@@ -171,7 +174,7 @@ export default function LiveEventsFeed({ events, isLive }: LiveEventsFeedProps) 
                                         </p>
                                     </div>
                                     <span className="text-[7px] font-mono uppercase tracking-wider text-[#E8E0D5]/25 shrink-0 mt-0.5">
-                                        {style.label}
+                                        {t(style.labelKey)}
                                     </span>
                                 </motion.div>
                             );

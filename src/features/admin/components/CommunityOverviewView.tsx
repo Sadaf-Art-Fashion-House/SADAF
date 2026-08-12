@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import type { CommunityOverviewData, PlatformPendingRequest, ReferredMember } from '../types';
 import { useCityFilter } from '@/features/customer/hooks/useCityFilter';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
+import type { TranslationKey } from '@/features/i18n/dictionaries';
 import AdminActionToast, { type AdminActionToastData } from './AdminActionToast';
 
 /**
@@ -49,31 +51,31 @@ interface CommunityOverviewViewProps {
     initialReferrer?: string;
 }
 
-const DATE_FILTERS = [
-    { value: 'all', label: 'All dates' },
-    { value: 'today', label: 'Today' },
-    { value: '7d', label: 'Last 7 days' },
-    { value: '30d', label: 'Last 30 days' },
+const DATE_FILTERS: Array<{ value: string; labelKey: 'communityOverview.date.all' | 'communityOverview.date.today' | 'communityOverview.date.7d' | 'communityOverview.date.30d' }> = [
+    { value: 'all', labelKey: 'communityOverview.date.all' },
+    { value: 'today', labelKey: 'communityOverview.date.today' },
+    { value: '7d', labelKey: 'communityOverview.date.7d' },
+    { value: '30d', labelKey: 'communityOverview.date.30d' },
 ];
 
 const RANK_MEDALS = ['text-[#FFD700]', 'text-slate-300', 'text-amber-600'];
 
 const REFERRER_PERIODS = [
-    { value: 'all', label: 'All' },
-    { value: '90d', label: '90d' },
-    { value: '30d', label: '30d' },
+    { value: 'all', labelKey: 'communityOverview.periodAll' as const },
+    { value: '90d', labelKey: 'communityOverview.period90d' as const },
+    { value: '30d', labelKey: 'communityOverview.period30d' as const },
 ] as const;
 
 type ReferrerPeriod = (typeof REFERRER_PERIODS)[number]['value'];
 
 /** Compact "5d ago / 3w ago / 4mo ago" label for a member join date. */
-function daysAgoLabel(iso: string): string {
+function daysAgoLabel(iso: string, t: (key: TranslationKey, vars?: Record<string, string | number>) => string, _language: string): string {
     const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
-    if (days <= 0) return 'today';
-    if (days === 1) return '1d ago';
-    if (days < 30) return `${days}d ago`;
-    if (days < 60) return `${Math.floor(days / 7)}w ago`;
-    return `${Math.floor(days / 30)}mo ago`;
+    if (days <= 0) return t('communityOverview.today');
+    if (days === 1) return t('communityOverview.oneDayAgo');
+    if (days < 30) return t('communityOverview.daysAgo', { count: days });
+    if (days < 60) return t('communityOverview.weeksAgo', { count: Math.floor(days / 7) });
+    return t('communityOverview.monthsAgo', { count: Math.floor(days / 30) });
 }
 
 export default function CommunityOverviewView({
@@ -86,6 +88,7 @@ export default function CommunityOverviewView({
     resolvingId = null,
     initialReferrer,
 }: CommunityOverviewViewProps) {
+    const { t, language } = useLanguage();
     const router = useRouter();
     const pathname = usePathname();
     const maxGrowth = useMemo(
@@ -158,11 +161,13 @@ export default function CommunityOverviewView({
             if (outcome?.ok) {
                 showToast(
                     action === 'accept' ? 'success' : 'decline',
-                    action === 'accept' ? 'Request accepted' : 'Request declined',
-                    `${request.name} was ${action === 'accept' ? 'added to' : 'removed from'} the pending list`,
+                    action === 'accept' ? t('communityOverview.requestAccepted') : t('communityOverview.requestDeclined'),
+                    action === 'accept'
+                        ? t('communityOverview.requestAdded', { name: request.name })
+                        : t('communityOverview.requestRemoved', { name: request.name }),
                 );
             } else {
-                showToast('error', 'Could not resolve request', outcome?.error ?? 'Unknown error');
+                showToast('error', t('communityOverview.couldNotResolve'), outcome?.error ?? t('communityOverview.unknownError'));
             }
         },
         [onResolve, showToast],
@@ -236,10 +241,10 @@ export default function CommunityOverviewView({
                             </div>
                             <div>
                                 <h1 className="text-xl md:text-2xl font-serif text-white font-bold tracking-tight">
-                                    Community Overview
+                                    {t('communityOverview.title')}
                                 </h1>
                                 <p className="text-xs text-[#E8E0D5]/60 mt-0.5">
-                                    Referral network, growth & pending connections across SADAF
+                                    {t('communityOverview.subtitle')}
                                 </p>
                             </div>
                         </div>
@@ -252,14 +257,14 @@ export default function CommunityOverviewView({
                                     : 'text-amber-400/80 border-amber-400/20 bg-amber-400/5'
                             }`}>
                                 {isLive ? <Wifi size={10} /> : <WifiOff size={10} />}
-                                {isLive ? 'Live' : 'Polling'}
+                                {isLive ? t('communityOverview.live') : t('communityOverview.polling')}
                             </span>
                             <button
                                 onClick={onRefresh}
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-mono uppercase tracking-widest border border-[#C9A84C]/30 text-[#C9A84C] hover:bg-[#C9A84C]/10 transition-all cursor-pointer"
                             >
                                 <RefreshCw size={10} className={loading ? 'animate-spin' : ''} />
-                                Refresh
+                                {t('communityOverview.refresh')}
                             </button>
                         </div>
                     </motion.div>
@@ -269,19 +274,19 @@ export default function CommunityOverviewView({
             <section className="py-6 px-4 md:px-8 max-w-7xl mx-auto">
                 {error && (
                     <div className="mb-4 px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[10px] font-mono text-amber-400">
-                        {error} — showing last values
+                        {error}{t('communityOverview.errorSuffix')}
                     </div>
                 )}
 
                 {loading && !data ? (
                     <div className="py-16 flex items-center justify-center">
                         <div className="w-6 h-6 rounded-full border-2 border-[#C9A84C] border-t-transparent animate-spin" />
-                        <p className="ml-3 text-[10px] font-mono text-[#E8E0D5]/50">Loading community overview…</p>
+                        <p className="ml-3 text-[10px] font-mono text-[#E8E0D5]/50">{t('communityOverview.loading')}</p>
                     </div>
                 ) : !data ? (
                     <div className="py-16 text-center">
                         <Users size={32} className="mx-auto text-[#E8E0D5]/20 mb-3" />
-                        <p className="text-sm text-[#E8E0D5]/60">Community overview is not available yet</p>
+                        <p className="text-sm text-[#E8E0D5]/60">{t('communityOverview.notAvailable')}</p>
                     </div>
                 ) : (
                     <>
@@ -314,7 +319,7 @@ export default function CommunityOverviewView({
                                 <div className="p-5 bg-[#05081A]/90 border border-[#C9A84C]/10 rounded-2xl">
                                     <div className="flex items-center justify-between gap-3 mb-4">
                                         <h3 className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold flex items-center gap-2">
-                                            <Gift size={12} /> Top Referrers
+                                            <Gift size={12} /> {t('communityOverview.topReferrers')}
                                         </h3>
                                         {/* Period filter — narrows the recent-referrals detail under each row */}
                                         <div className="flex items-center gap-1">
@@ -329,7 +334,7 @@ export default function CommunityOverviewView({
                                                             : 'text-[#E8E0D5]/40 border-white/[0.08] hover:text-white'
                                                     }`}
                                                 >
-                                                    {period.label}
+                                                    {t(period.labelKey)}
                                                 </button>
                                             ))}
                                         </div>
@@ -349,8 +354,8 @@ export default function CommunityOverviewView({
                                                             openReferrer(referrer.id);
                                                         }
                                                     }}
-                                                    aria-label={`View network snapshot of ${referrer.name}`}
-                                                    title="View network snapshot"
+                                                    aria-label={t('communityOverview.viewSnapshotOf', { name: referrer.name })}
+                                                    title={t('communityOverview.viewSnapshot')}
                                                     className="group/referrer p-3 bg-[#0A0F2C]/40 border border-white/[0.05] rounded-xl transition-all cursor-pointer hover:border-[#C9A84C]/40 hover:bg-[#0A0F2C]/60"
                                                 >
                                                     {/* Header row: rank + avatar + name/code + all-time totals */}
@@ -402,15 +407,14 @@ export default function CommunityOverviewView({
                                                                     <span className="shrink-0 inline-flex items-center gap-0.5 text-[8px] font-mono text-[#E8E0D5]/40">
                                                                         <MapPin size={7} /> {member.city}
                                                                     </span>
-                                                                    <span className="shrink-0 w-14 text-right text-[8px] font-mono text-[#E8E0D5]/35">
-                                                                        {daysAgoLabel(member.joinedAt)}
-                                                                    </span>
+                                                                    <span className="shrink-0 w-14 text-right text-[8px] font-mono text-[#E8E0D5]/35">                                        {daysAgoLabel(member.joinedAt, t, language)}
+                                    </span>
                                                                 </div>
                                                             ))}
                                                         </div>
                                                     ) : (
                                                         <p className="mt-2 pt-2 border-t border-white/[0.05] pl-11 text-[8px] font-mono text-[#E8E0D5]/30">
-                                                            No referrals in the {referrerPeriod === 'all' ? 'selected period' : `last ${referrerPeriod}`}
+                                                            {referrerPeriod === 'all' ? t('communityOverview.noReferralsPeriod') : t('communityOverview.noReferralsLast', { period: referrerPeriod })}
                                                         </p>
                                                     )}
                                                 </div>
@@ -421,7 +425,7 @@ export default function CommunityOverviewView({
 
                                 <div className="p-5 bg-[#05081A]/90 border border-[#C9A84C]/10 rounded-2xl">
                                     <h3 className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold flex items-center gap-2 mb-4">
-                                        <Users size={12} /> Member Roles
+                                        <Users size={12} /> {t('communityOverview.memberRoles')}
                                     </h3>
                                     <div className="space-y-2.5">
                                         {data.roleDistribution.map((entry) => {
@@ -454,10 +458,10 @@ export default function CommunityOverviewView({
                                 <div className="p-5 bg-[#05081A]/90 border border-[#C9A84C]/10 rounded-2xl">
                                     <div className="flex items-center justify-between mb-4">
                                         <h3 className="text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold flex items-center gap-2">
-                                            <TrendingUp size={12} /> Network Growth
+                                            <TrendingUp size={12} /> {t('communityOverview.networkGrowth')}
                                         </h3>
                                         <span className="text-[8px] font-mono text-[#E8E0D5]/35">
-                                            {totalReferralShare}% via referrals
+                                            {t('communityOverview.viaReferrals', { share: totalReferralShare })}
                                         </span>
                                     </div>
                                     <div className="flex items-end gap-2 h-36">
@@ -491,17 +495,17 @@ export default function CommunityOverviewView({
                                     </div>
                                     <div className="flex items-center gap-4 mt-3 pt-3 border-t border-white/[0.05]">
                                         <span className="flex items-center gap-1.5 text-[8px] font-mono uppercase tracking-wider text-[#E8E0D5]/40">
-                                            <span className="w-2 h-2 rounded-sm bg-[#E8E0D5]/15" /> All members
+                                            <span className="w-2 h-2 rounded-sm bg-[#E8E0D5]/15" /> {t('communityOverview.allMembers')}
                                         </span>
                                         <span className="flex items-center gap-1.5 text-[8px] font-mono uppercase tracking-wider text-[#E8E0D5]/40">
-                                            <span className="w-2 h-2 rounded-sm bg-[#C9A84C]" /> Via referrals
+                                            <span className="w-2 h-2 rounded-sm bg-[#C9A84C]" /> {t('communityOverview.viaReferralsShort')}
                                         </span>
                                     </div>
                                 </div>
 
                                 <div className="p-5 bg-[#05081A]/90 border border-orange-500/20 rounded-2xl">
                                     <h3 className="text-[10px] font-mono uppercase tracking-widest text-orange-400 font-bold flex items-center gap-2 mb-3">
-                                        <Clock size={12} /> Pending Requests ({filteredRequests.length})
+                                        <Clock size={12} /> {t('communityOverview.pendingRequests', { count: filteredRequests.length })}
                                     </h3>
 
                                     {/* Filters — city dropdown (full CITIES list) + date range */}
@@ -511,10 +515,10 @@ export default function CommunityOverviewView({
                                             <select
                                                 value={cityFilter}
                                                 onChange={(e) => setCityFilter(e.target.value)}
-                                                aria-label="Filter pending requests by city"
+                                                aria-label={t('communityOverview.filterByCity')}
                                                 className="w-full appearance-none bg-[#0A0F2C]/60 border border-white/[0.08] text-[10px] text-white rounded-lg pl-8 pr-7 py-2 outline-none focus:border-orange-500/40 transition cursor-pointer"
                                             >
-                                                <option value="All" className="bg-[#0A0F2C]">All cities · {data.pendingRequests.length}</option>
+                                                <option value="All" className="bg-[#0A0F2C]">{t('communityOverview.allCities', { count: data.pendingRequests.length })}</option>
                                                 {cityOptions.map(({ city, count }) => (
                                                     <option key={city} value={city} className="bg-[#0A0F2C]">
                                                         {city} · {count}
@@ -527,12 +531,12 @@ export default function CommunityOverviewView({
                                             <select
                                                 value={dateFilter}
                                                 onChange={(e) => setDateFilter(e.target.value)}
-                                                aria-label="Filter pending requests by date"
+                                                aria-label={t('communityOverview.filterByDate')}
                                                 className="w-full appearance-none bg-[#0A0F2C]/60 border border-white/[0.08] text-[10px] text-white rounded-lg pl-8 pr-7 py-2 outline-none focus:border-orange-500/40 transition cursor-pointer"
                                             >
                                                 {DATE_FILTERS.map((option) => (
                                                     <option key={option.value} value={option.value} className="bg-[#0A0F2C]">
-                                                        {option.label}
+                                                        {t(option.labelKey)}
                                                     </option>
                                                 ))}
                                             </select>
@@ -542,7 +546,7 @@ export default function CommunityOverviewView({
                                                 onClick={clearPendingFilters}
                                                 className="shrink-0 inline-flex items-center justify-center gap-1 px-3 py-2 rounded-lg text-[9px] font-mono uppercase tracking-widest border border-white/[0.08] text-[#E8E0D5]/60 hover:text-white hover:border-orange-500/30 transition-all cursor-pointer"
                                             >
-                                                <X size={10} /> Clear
+                                                <X size={10} /> {t('communityOverview.clear')}
                                             </button>
                                         )}
                                     </div>
@@ -552,15 +556,15 @@ export default function CommunityOverviewView({
                                             <Inbox size={24} className="mx-auto text-[#E8E0D5]/20 mb-2" />
                                             <p className="text-xs text-[#E8E0D5]/60">
                                                 {selectedCityHasNoMembers
-                                                    ? `No members in ${cityFilter} yet`
-                                                    : 'No pending requests match the current filters'}
+                                                    ? t('communityOverview.noMembersCity', { city: cityFilter })
+                                                    : t('communityOverview.noPendingMatch')}
                                             </p>
                                             {(cityFilter !== 'All' || dateFilter !== 'all') && (
                                                 <button
                                                     onClick={clearPendingFilters}
                                                     className="mt-3 text-[9px] font-mono uppercase tracking-widest text-orange-400 hover:text-white transition-colors cursor-pointer"
                                                 >
-                                                    Show all cities & dates
+                                                    {t('communityOverview.showAllCities')}
                                                 </button>
                                             )}
                                         </div>
@@ -609,7 +613,7 @@ export default function CommunityOverviewView({
                                                                 ) : (
                                                                     <Check size={9} />
                                                                 )}
-                                                                Accept
+                                                                {t('communityOverview.accept')}
                                                             </button>
                                                             <button
                                                                 onClick={() => handleResolve(request, 'decline')}
@@ -617,7 +621,7 @@ export default function CommunityOverviewView({
                                                                 className="inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-lg text-[8px] font-mono font-bold uppercase tracking-wider bg-red-500/10 border border-red-500/25 text-red-400 hover:bg-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
                                                             >
                                                                 <X size={9} />
-                                                                Decline
+                                                                {t('communityOverview.decline')}
                                                             </button>
                                                         </div>
                                                     </div>
@@ -670,7 +674,7 @@ export default function CommunityOverviewView({
                                 <button
                                     onClick={closeReferrer}
                                     className="p-1.5 rounded-lg text-[#E8E0D5]/40 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
-                                    aria-label="Close network snapshot"
+                                    aria-label={t('communityOverview.closeSnapshot')}
                                 >
                                     <X size={16} />
                                 </button>
@@ -680,21 +684,21 @@ export default function CommunityOverviewView({
                             <div className="grid grid-cols-3 gap-2 mb-4">
                                 <div className="p-2.5 rounded-xl bg-[#0A0F2C]/50 border border-white/[0.05] text-center">
                                     <p className="text-sm font-mono font-bold text-white">{selectedReferrer.referred}</p>
-                                    <p className="mt-0.5 text-[7px] font-mono uppercase tracking-widest text-[#E8E0D5]/40">Referred</p>
+                                    <p className="mt-0.5 text-[7px] font-mono uppercase tracking-widest text-[#E8E0D5]/40">{t('communityOverview.referred')}</p>
                                 </div>
                                 <div className="p-2.5 rounded-xl bg-[#0A0F2C]/50 border border-white/[0.05] text-center">
                                     <p className="text-sm font-mono font-bold text-[#C9A84C]">${selectedReferrer.rewards.toLocaleString()}</p>
-                                    <p className="mt-0.5 text-[7px] font-mono uppercase tracking-widest text-[#E8E0D5]/40">Rewards</p>
+                                    <p className="mt-0.5 text-[7px] font-mono uppercase tracking-widest text-[#E8E0D5]/40">{t('communityOverview.rewards')}</p>
                                 </div>
                                 <div className="p-2.5 rounded-xl bg-[#0A0F2C]/50 border border-white/[0.05] text-center">
                                     <p className="text-sm font-mono font-bold text-[#4FC3F7]">{referrerUniqueCities}</p>
-                                    <p className="mt-0.5 text-[7px] font-mono uppercase tracking-widest text-[#E8E0D5]/40">Cities</p>
+                                    <p className="mt-0.5 text-[7px] font-mono uppercase tracking-widest text-[#E8E0D5]/40">{t('communityOverview.cities')}</p>
                                 </div>
                             </div>
 
                             {/* Who they brought + their cities */}
                             <h3 className="text-[9px] font-mono uppercase tracking-widest text-[#E8E0D5]/50 font-bold mb-2">
-                                Members brought ({selectedReferrer.recentReferrals.length})
+                                {t('communityOverview.membersBrought', { count: selectedReferrer.recentReferrals.length })}
                             </h3>
                             <div className="max-h-72 overflow-y-auto pr-1 space-y-1.5">
                                 {selectedReferrer.recentReferrals.map((member) => (
@@ -708,7 +712,7 @@ export default function CommunityOverviewView({
                                         <div className="flex-1 min-w-0">
                                             <p className="text-[11px] text-white font-medium truncate">{member.name}</p>
                                             <p className="text-[8px] font-mono text-[#E8E0D5]/40">
-                                                {daysAgoLabel(member.joinedAt)}
+                                                {daysAgoLabel(member.joinedAt, t, language)}
                                             </p>
                                         </div>
                                         <span className="shrink-0 inline-flex items-center gap-1 text-[9px] font-mono text-[#E8E0D5]/60">

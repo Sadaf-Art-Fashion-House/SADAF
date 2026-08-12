@@ -32,6 +32,7 @@ import {
     clearErrorLogs,
 } from '@/features/error-logging';
 import { getEmailSettings, sendErrorReportByEmail } from '@/features/email-settings';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 import type { ErrorLogEntry } from '@/features/error-logging';
 
 /** Lightweight health-check endpoint that only the server indicator uses. */
@@ -63,6 +64,7 @@ function downloadJson(data: ErrorLogEntry[], filename: string): void {
 }
 
 export default function AdminErrorLogsPage() {
+    const { t, language } = useLanguage();
     const pathname = usePathname();
     const [logs, setLogs] = useState<ErrorLogEntry[]>([]);
     const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -194,7 +196,7 @@ export default function AdminErrorLogsPage() {
 
         const settings = getEmailSettings();
         if (settings.recipients.length === 0) {
-            setEmailResult({ ok: false, error: 'No recipients configured. Add them in Email Settings.' });
+            setEmailResult({ ok: false, error: t('errorLogs.noRecipients') });
             setEmailSending(false);
             return;
         }
@@ -228,7 +230,7 @@ export default function AdminErrorLogsPage() {
 
     const formatTimestamp = (iso: string) => {
         const date = new Date(iso);
-        return date.toLocaleString('en-US', {
+        return date.toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US', {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
@@ -241,12 +243,12 @@ export default function AdminErrorLogsPage() {
     const timeAgo = (iso: string) => {
         const diff = Date.now() - new Date(iso).getTime();
         const minutes = Math.floor(diff / 60000);
-        if (minutes < 1) return 'Just now';
-        if (minutes < 60) return `${minutes}m ago`;
+        if (minutes < 1) return t('errorLogs.justNow');
+        if (minutes < 60) return t('errorLogs.minutesAgo', { count: minutes });
         const hours = Math.floor(minutes / 60);
-        if (hours < 24) return `${hours}h ago`;
+        if (hours < 24) return t('errorLogs.hoursAgo', { count: hours });
         const days = Math.floor(hours / 24);
-        return `${days}d ago`;
+        return t('errorLogs.daysAgo', { count: days });
     };
 
     return (
@@ -261,7 +263,7 @@ export default function AdminErrorLogsPage() {
                                 className="text-[10px] text-[#4FC3F7]/50 hover:text-[#4FC3F7] transition-colors font-mono uppercase tracking-wider flex items-center gap-1 cursor-pointer"
                             >
                                 <ArrowLeft size={11} />
-                                Back to Dashboard
+                                {t('errorLogs.backToDashboard')}
                             </Link>
 
                             {!isLoading && (
@@ -273,8 +275,8 @@ export default function AdminErrorLogsPage() {
                                     }`}
                                     title={
                                         serverConnected
-                                            ? 'Server logging active'
-                                            : 'Server unreachable — using local storage'
+                                            ? t('errorLogs.serverActive')
+                                            : t('errorLogs.serverUnreachable')
                                     }
                                 >
                                     {serverConnected ? (
@@ -293,13 +295,13 @@ export default function AdminErrorLogsPage() {
                         </div>
                         <h1 className="text-2xl md:text-3xl font-serif text-white tracking-wide flex items-center gap-3">
                             <FileWarning size={22} className="text-red-400" />
-                            Error Logs
+                            {t('errorLogs.title')}
                         </h1>
                         <p className="text-xs text-[#E8E0D5]/40 font-mono mt-1">
-                            {logs.length} error{logs.length !== 1 ? 's' : ''} recorded
+                            {t('errorLogs.recorded', { count: logs.length })}
                             {unreadCount > 0 && (
                                 <span className="text-red-400 ml-2">
-                                    &middot; {unreadCount} unread
+                                    &middot; {t('errorLogs.unreadCount', { count: unreadCount })}
                                 </span>
                             )}
                         </p>
@@ -316,22 +318,22 @@ export default function AdminErrorLogsPage() {
                                         ? 'border-green-500/30 bg-green-500/10 text-green-400'
                                         : 'border-[#4FC3F7]/15 hover:bg-[#4FC3F7]/10 text-[#4FC3F7]/60 hover:text-[#4FC3F7]'
                                 }`}
-                                title="Send error report via email"
+                                title={t('errorLogs.sendReportTitle')}
                             >
                                 {emailSending ? (
                                     <>
                                         <div className="w-3 h-3 border-2 border-[#4FC3F7]/30 border-t-[#4FC3F7] rounded-full animate-spin" />
-                                        Sending...
+                                        {t('errorLogs.sending')}
                                     </>
                                 ) : emailResult?.ok ? (
                                     <>
                                         <Send size={12} className="text-green-400" />
-                                        Sent
+                                        {t('errorLogs.sent')}
                                     </>
                                 ) : (
                                     <>
                                         <Mail size={12} />
-                                        Email Report
+                                        {t('errorLogs.emailReport')}
                                     </>
                                 )}
                             </button>
@@ -341,7 +343,7 @@ export default function AdminErrorLogsPage() {
                         <Link
                             href={ROUTES.DASHBOARD_EMAIL_SETTINGS}
                             className="p-2 rounded-lg border border-white/5 hover:bg-white/5 text-[#E8E0D5]/30 hover:text-[#4FC3F7] transition-all duration-200"
-                            title="Email Notification Settings"
+                            title={t('errorLogs.emailSettingsTitle')}
                         >
                             <Settings size={14} />
                         </Link>
@@ -352,14 +354,14 @@ export default function AdminErrorLogsPage() {
                                 onClick={handleExportJson}
                                 disabled={isExportingJson}
                                 className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#4FC3F7]/15 hover:bg-[#4FC3F7]/10 text-[#4FC3F7]/60 hover:text-[#4FC3F7] transition-all duration-200 text-[10px] font-mono uppercase tracking-wider cursor-pointer disabled:opacity-40 disabled:cursor-wait"
-                                title={isExportingJson ? 'Preparing export…' : 'Export all error logs as JSON'}
+                                title={isExportingJson ? t('errorLogs.preparingExport') : t('errorLogs.exportJsonTitle')}
                             >
                                 {isExportingJson ? (
                                     <span className="block w-3 h-3 rounded-full border-2 border-[#4FC3F7]/40 border-t-[#4FC3F7] animate-spin" />
                                 ) : (
                                     <Download size={12} />
                                 )}
-                                {isExportingJson ? 'Preparing…' : 'Export JSON'}
+                                {isExportingJson ? t('errorLogs.preparing') : t('errorLogs.exportJson')}
                             </button>
                         )}
 
@@ -367,7 +369,7 @@ export default function AdminErrorLogsPage() {
                             onClick={() => refreshLogs(true)}
                             disabled={isRefreshing || isLoading}
                             className="p-2 rounded-lg border border-white/5 hover:bg-white/5 text-[#E8E0D5]/40 hover:text-[#4FC3F7] transition-all duration-200 cursor-pointer disabled:opacity-30"
-                            title="Refresh"
+                            title={t('errorLogs.refresh')}
                         >
                             <RefreshCw
                                 size={14}
@@ -382,7 +384,7 @@ export default function AdminErrorLogsPage() {
                                 className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#4FC3F7]/20 hover:bg-[#4FC3F7]/10 text-[#4FC3F7]/70 hover:text-[#4FC3F7] transition-all duration-200 text-[10px] font-mono uppercase tracking-wider cursor-pointer disabled:opacity-30"
                             >
                                 <CheckCheck size={12} />
-                                Mark All Read
+                                {t('errorLogs.markAllRead')}
                             </button>
                         )}
 
@@ -393,7 +395,7 @@ export default function AdminErrorLogsPage() {
                                 className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-red-500/10 hover:bg-red-950/20 text-red-400/50 hover:text-red-400 transition-all duration-200 text-[10px] font-mono uppercase tracking-wider cursor-pointer disabled:opacity-30"
                             >
                                 <Trash2 size={12} />
-                                Clear All
+                                {t('errorLogs.clearAll')}
                             </button>
                         )}
                     </div>
@@ -412,13 +414,13 @@ export default function AdminErrorLogsPage() {
                                 <Mail size={12} className="text-amber-400" />
                             </div>
                             <p className="text-[10px] text-amber-400/70 font-mono">
-                                {emailResult.error || 'Failed to send email.'}
+                                {emailResult.error || t('errorLogs.failedToSend')}
                                 {' '}
                                 <Link
                                     href={ROUTES.DASHBOARD_EMAIL_SETTINGS}
                                     className="text-[#4FC3F7]/70 hover:text-[#4FC3F7] underline underline-offset-2"
                                 >
-                                    Configure Email Settings →
+                                    {t('errorLogs.configureEmail')} →
                                 </Link>
                             </p>
                         </motion.div>
@@ -429,19 +431,19 @@ export default function AdminErrorLogsPage() {
                 {!isLoading && logs.length > 0 && (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                         <div className="p-4 rounded-xl bg-[#0A0F2C]/60 border border-white/[0.05] hover:border-[#C9A84C]/20 transition-colors">
-                            <span className="text-[7px] font-mono uppercase tracking-widest text-[#E8E0D5]/40 font-semibold">Total Errors</span>
+                            <span className="text-[7px] font-mono uppercase tracking-widest text-[#E8E0D5]/40 font-semibold">{t('errorLogs.kpi.total')}</span>
                             <p className="text-lg font-serif text-white font-bold tracking-tight mt-1">{logs.length}</p>
                         </div>
                         <div className="p-4 rounded-xl bg-[#0A0F2C]/60 border border-white/[0.05] hover:border-red-500/20 transition-colors">
-                            <span className="text-[7px] font-mono uppercase tracking-widest text-[#E8E0D5]/40 font-semibold">Unread</span>
+                            <span className="text-[7px] font-mono uppercase tracking-widest text-[#E8E0D5]/40 font-semibold">{t('errorLogs.kpi.unread')}</span>
                             <p className={`text-lg font-serif font-bold tracking-tight mt-1 ${unreadCount > 0 ? 'text-red-400' : 'text-white'}`}>{unreadCount}</p>
                         </div>
                         <div className="p-4 rounded-xl bg-[#0A0F2C]/60 border border-white/[0.05] hover:border-[#4FC3F7]/20 transition-colors">
-                            <span className="text-[7px] font-mono uppercase tracking-widest text-[#E8E0D5]/40 font-semibold">Last 24h</span>
+                            <span className="text-[7px] font-mono uppercase tracking-widest text-[#E8E0D5]/40 font-semibold">{t('errorLogs.kpi.last24h')}</span>
                             <p className="text-lg font-serif text-white font-bold tracking-tight mt-1">{errorsToday}</p>
                         </div>
                         <div className="p-4 rounded-xl bg-[#0A0F2C]/60 border border-white/[0.05] hover:border-[#C9A84C]/20 transition-colors">
-                            <span className="text-[7px] font-mono uppercase tracking-widest text-[#E8E0D5]/40 font-semibold">Top Source</span>
+                            <span className="text-[7px] font-mono uppercase tracking-widest text-[#E8E0D5]/40 font-semibold">{t('errorLogs.kpi.topSource')}</span>
                             <p className="text-lg font-mono text-[#C9A84C] font-bold tracking-tight mt-1 truncate">{topSource}</p>
                         </div>
                     </div>
@@ -456,7 +458,7 @@ export default function AdminErrorLogsPage() {
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Search error messages..."
+                                placeholder={t('errorLogs.searchPlaceholder')}
                                 className="w-full bg-[#0A0F2C]/60 border border-white/10 rounded-lg pl-8 pr-3 py-2 text-[11px] text-white placeholder-slate-600 outline-none focus:border-[#4FC3F7]/40 transition"
                             />
                         </div>
@@ -467,10 +469,10 @@ export default function AdminErrorLogsPage() {
                                     key={status}
                                     label={
                                         status === 'all'
-                                            ? `All · ${logs.length}`
+                                            ? `${t('errorLogs.filter.all')} · ${logs.length}`
                                             : status === 'unread'
-                                                ? `Unread · ${unreadCount}`
-                                                : `Read · ${logs.length - unreadCount}`
+                                                ? `${t('errorLogs.filter.unread')} · ${unreadCount}`
+                                                : `${t('errorLogs.filter.read')} · ${logs.length - unreadCount}`
                                     }
                                     active={statusFilter === status}
                                     onClick={() => setStatusFilter(status)}
@@ -480,7 +482,7 @@ export default function AdminErrorLogsPage() {
 
                         <div className="flex items-center gap-1.5 flex-wrap">
                             <FilterChip
-                                label="General"
+                                label={t('errorLogs.filter.general')}
                                 active={sourceFilter === 'general'}
                                 onClick={() => setSourceFilter(sourceFilter === 'general' ? 'all' : 'general')}
                             />
@@ -504,7 +506,7 @@ export default function AdminErrorLogsPage() {
                         <div className="flex flex-col items-center gap-3">
                             <div className="w-8 h-8 border-2 border-[#4FC3F7]/30 border-t-[#4FC3F7] rounded-full animate-spin" />
                             <span className="text-[10px] text-[#E8E0D5]/30 font-mono tracking-wider uppercase">
-                                Loading error logs...
+                                {t('errorLogs.loading')}
                             </span>
                         </div>
                     </div>
@@ -516,9 +518,9 @@ export default function AdminErrorLogsPage() {
                         <div className="w-16 h-16 rounded-full bg-[#4FC3F7]/5 border border-[#4FC3F7]/10 flex items-center justify-center mb-4">
                             <CheckCheck size={28} className="text-[#4FC3F7]/40" />
                         </div>
-                        <h2 className="text-lg font-serif text-white mb-2">No Errors Recorded</h2>
+                        <h2 className="text-lg font-serif text-white mb-2">{t('errorLogs.emptyTitle')}</h2>
                         <p className="text-xs text-[#E8E0D5]/40 font-mono max-w-md">
-                            Your application is running smoothly. When an error occurs, it will appear here automatically.
+                            {t('errorLogs.emptyHint')}
                         </p>
                     </div>
                 )}
@@ -532,9 +534,9 @@ export default function AdminErrorLogsPage() {
                                 <div className="w-12 h-12 rounded-full bg-[#4FC3F7]/5 border border-[#4FC3F7]/10 flex items-center justify-center mb-3">
                                     <Search size={20} className="text-[#4FC3F7]/40" />
                                 </div>
-                                <h3 className="text-sm font-serif text-white mb-1">No errors match your filters</h3>
+                                <h3 className="text-sm font-serif text-white mb-1">{t('errorLogs.noMatchTitle')}</h3>
                                 <p className="text-[10px] text-[#E8E0D5]/40 font-mono max-w-sm">
-                                    Try clearing the search or switching filters to see more entries.
+                                    {t('errorLogs.noMatchHint')}
                                 </p>
                                 <button
                                     onClick={() => {
@@ -544,7 +546,7 @@ export default function AdminErrorLogsPage() {
                                     }}
                                     className="mt-4 px-3 py-1.5 rounded-lg border border-[#4FC3F7]/20 hover:bg-[#4FC3F7]/10 text-[#4FC3F7]/70 hover:text-[#4FC3F7] transition-all duration-200 text-[9px] font-mono uppercase tracking-wider cursor-pointer"
                                 >
-                                    Clear Filters
+                                    {t('errorLogs.clearFilters')}
                                 </button>
                             </div>
                         )}
@@ -620,7 +622,7 @@ export default function AdminErrorLogsPage() {
                                                             onClick={() => handleMarkRead(log.id)}
                                                             disabled={isRefreshing}
                                                             className="p-1.5 rounded-md hover:bg-[#4FC3F7]/10 text-[#E8E0D5]/20 hover:text-[#4FC3F7] transition-all duration-200 cursor-pointer disabled:opacity-30"
-                                                            title="Mark as read"
+                                                            title={t('errorLogs.markAsRead')}
                                                         >
                                                             <CheckCheck size={12} />
                                                         </button>
@@ -632,7 +634,7 @@ export default function AdminErrorLogsPage() {
                                                         className={`p-1.5 rounded-md hover:bg-white/5 text-[#E8E0D5]/20 hover:text-[#E8E0D5]/60 transition-all duration-200 cursor-pointer ${
                                                             expandedId === log.id ? 'rotate-180' : ''
                                                         }`}
-                                                        title="Toggle details"
+                                                        title={t('errorLogs.toggleDetails')}
                                                     >
                                                         <ChevronDown size={12} />
                                                     </button>
@@ -640,7 +642,7 @@ export default function AdminErrorLogsPage() {
                                                         onClick={() => handleDelete(log.id)}
                                                         disabled={isRefreshing}
                                                         className="p-1.5 rounded-md hover:bg-red-950/20 text-[#E8E0D5]/20 hover:text-red-400 transition-all duration-200 cursor-pointer disabled:opacity-30"
-                                                        title="Delete entry"
+                                                        title={t('errorLogs.deleteEntry')}
                                                     >
                                                         <Trash2 size={12} />
                                                     </button>
@@ -663,7 +665,7 @@ export default function AdminErrorLogsPage() {
                                                     <div className="mt-3 space-y-3">
                                                         <div>
                                                             <span className="text-[9px] text-[#E8E0D5]/30 font-mono uppercase tracking-wider block mb-1">
-                                                                Full Message
+                                                                {t('errorLogs.fullMessage')}
                                                             </span>
                                                             <div className="bg-black/50 border border-white/5 rounded-lg p-3">
                                                                 <code className="text-[11px] text-red-300/80 font-mono break-all leading-relaxed">
@@ -675,7 +677,7 @@ export default function AdminErrorLogsPage() {
                                                         {log.digest && (
                                                             <div>
                                                                 <span className="text-[9px] text-[#E8E0D5]/30 font-mono uppercase tracking-wider block mb-1">
-                                                                    Digest ID
+                                                                    {t('errorLogs.digestId')}
                                                                 </span>
                                                                 <code className="text-[10px] text-[#4FC3F7]/50 font-mono">
                                                                     {log.digest}
@@ -685,7 +687,7 @@ export default function AdminErrorLogsPage() {
 
                                                         <div>
                                                             <span className="text-[9px] text-[#E8E0D5]/30 font-mono uppercase tracking-wider block mb-1">
-                                                                URL at time of error
+                                                                {t('errorLogs.urlAtError')}
                                                             </span>
                                                             <code className="text-[10px] text-[#E8E0D5]/40 font-mono break-all">
                                                                 {log.url}
@@ -695,7 +697,7 @@ export default function AdminErrorLogsPage() {
                                                         {log.stack && (
                                                             <div>
                                                                 <span className="text-[9px] text-[#E8E0D5]/30 font-mono uppercase tracking-wider block mb-1">
-                                                                    Stack Trace
+                                                                    {t('errorLogs.stackTrace')}
                                                                 </span>
                                                                 <div className="bg-black/50 border border-white/5 rounded-lg p-3 max-h-64 overflow-y-auto">
                                                                     <pre className="text-[9px] text-[#E8E0D5]/30 font-mono leading-relaxed whitespace-pre-wrap">
@@ -719,8 +721,8 @@ export default function AdminErrorLogsPage() {
                 {logs.length > 0 && (
                     <div className="mt-6 text-center">
                         <p className="text-[8px] text-[#E8E0D5]/15 font-mono tracking-wider">
-                            Errors are logged server-side (persist across restarts in production with a database).
-                            {!serverConnected && ' Currently falling back to local storage.'}
+                            {t('errorLogs.serverHint')}
+                            {!serverConnected && t('errorLogs.localFallback')}
                         </p>
                     </div>
                 )}

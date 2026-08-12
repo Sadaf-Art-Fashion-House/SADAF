@@ -13,8 +13,10 @@ import {
     removeRecipient,
 } from '@/features/email-settings';
 import type { EmailSettings } from '@/features/email-settings';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 
 export default function AdminEmailSettingsPage() {
+    const { t } = useLanguage();
     const pathname = usePathname();
     const [settings, setSettings] = useState<EmailSettings>(getEmailSettings());
     const [newEmail, setNewEmail] = useState('');
@@ -61,14 +63,14 @@ export default function AdminEmailSettingsPage() {
                         className="text-[10px] text-[#4FC3F7]/50 hover:text-[#4FC3F7] transition-colors font-mono uppercase tracking-wider flex items-center gap-1 mb-3 cursor-pointer"
                     >
                         <ArrowLeft size={11} />
-                        Back to Dashboard
+                        {t('emailSettings.backToDashboard')}
                     </Link>
                     <h1 className="text-2xl md:text-3xl font-serif text-white tracking-wide flex items-center gap-3">
                         <Mail size={22} className="text-[#4FC3F7]" />
-                        Email Notifications
+                        {t('emailSettings.title')}
                     </h1>
                     <p className="text-xs text-[#E8E0D5]/40 font-mono mt-1">
-                        Configure who receives automated error reports via email.
+                        {t('emailSettings.subtitle')}
                     </p>
                 </div>
 
@@ -84,17 +86,17 @@ export default function AdminEmailSettingsPage() {
                                 <WifiOff size={14} className="text-amber-400" />
                             )}
                             <span className="text-xs font-mono text-[#E8E0D5]/50">
-                                SMTP Server:{' '}
+                                {t('emailSettings.smtpServer')}:{' '}
                                 {smtpStatus === 'checking'
-                                    ? 'Checking...'
+                                    ? t('emailSettings.checking')
                                     : smtpStatus === 'configured'
-                                      ? 'Connected'
-                                      : 'Not configured'}
+                                      ? t('emailSettings.connected')
+                                      : t('emailSettings.notConfigured')}
                             </span>
                         </div>
                         {smtpStatus === 'missing' && (
                             <span className="text-[9px] text-amber-400/60 font-mono">
-                                Set SMTP_HOST, SMTP_USER, SMTP_PASS in .env
+                                {t('emailSettings.envHint')}
                             </span>
                         )}
                     </div>
@@ -106,9 +108,9 @@ export default function AdminEmailSettingsPage() {
                     <div className="bg-[#05081A]/80 border border-white/5 rounded-xl p-5">
                         <label className="flex items-center justify-between cursor-pointer">
                             <div>
-                                <h3 className="text-sm font-serif text-white">Automatically send error reports</h3>
+                                <h3 className="text-sm font-serif text-white">{t('emailSettings.autoTitle')}</h3>
                                 <p className="text-[10px] text-[#E8E0D5]/40 font-mono mt-0.5">
-                                    Send an email to all recipients when an error occurs
+                                    {t('emailSettings.autoHint')}
                                 </p>
                             </div>
                             <button
@@ -133,9 +135,9 @@ export default function AdminEmailSettingsPage() {
                     <div className="bg-[#05081A]/80 border border-white/5 rounded-xl p-5">
                         <label className="flex items-center justify-between cursor-pointer">
                             <div>
-                                <h3 className="text-sm font-serif text-white">Include stack traces</h3>
+                                <h3 className="text-sm font-serif text-white">{t('emailSettings.stackTitle')}</h3>
                                 <p className="text-[10px] text-[#E8E0D5]/40 font-mono mt-0.5">
-                                    Attach full stack traces in the error report email
+                                    {t('emailSettings.stackHint')}
                                 </p>
                             </div>
                             <button
@@ -158,7 +160,7 @@ export default function AdminEmailSettingsPage() {
 
                     {/* Recipients */}
                     <div className="bg-[#05081A]/80 border border-white/5 rounded-xl p-5">
-                        <h3 className="text-sm font-serif text-white mb-3">Email Recipients</h3>
+                        <h3 className="text-sm font-serif text-white mb-3">{t('emailSettings.recipients')}</h3>
 
                         <div className="flex items-center gap-2 mb-4">
                             <input
@@ -180,7 +182,7 @@ export default function AdminEmailSettingsPage() {
 
                         {settings.recipients.length === 0 ? (
                             <p className="text-[11px] text-[#E8E0D5]/30 font-mono italic">
-                                No recipients added yet. Add email addresses above.
+                                {t('emailSettings.noRecipients')}
                             </p>
                         ) : (
                             <div className="space-y-2">
@@ -212,12 +214,12 @@ export default function AdminEmailSettingsPage() {
                         {saved ? (
                             <>
                                 <Check size={14} className="text-green-300" />
-                                Saved
+                                {t('emailSettings.saved')}
                             </>
                         ) : (
                             <>
                                 <Save size={14} />
-                                Save Settings
+                                {t('emailSettings.save')}
                             </>
                         )}
                     </button>
@@ -229,7 +231,7 @@ export default function AdminEmailSettingsPage() {
                             className="flex items-center gap-1.5 text-[9px] text-amber-400/50 font-mono"
                         >
                             <AlertCircle size={10} />
-                            SMTP must be configured for emails to work
+                            {t('emailSettings.smtpWarning')}
                         </motion.div>
                     )}
                 </div>
@@ -237,7 +239,7 @@ export default function AdminEmailSettingsPage() {
                 {/* Footer info */}
                 <div className="mt-10 text-center">
                     <p className="text-[8px] text-[#E8E0D5]/15 font-mono tracking-wider">
-                        Settings are stored locally. In production, replace with database-backed storage.
+                        {t('emailSettings.footer')}
                     </p>
                 </div>
             </div>
