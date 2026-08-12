@@ -1,14 +1,17 @@
 import HomePageClient from "@/features/home/components/HomePageClient";
 import type { Collection, ArtPiece, FashionProduct } from '@/shared/types';
-// TODO: replace with your real Supabase queries once you wire this feature's data layer
+// Static fallback from the shared catalog until the Supabase data layer is
+// wired — same pattern as the Store/Fashion/Artworks pages.
+import { fashionDatabase, artDatabase, collections } from '@/data';
+
 async function getFeaturedProducts(): Promise<FashionProduct[]> {
-    return [];
+    return fashionDatabase;
 }
 async function getFeaturedArtwork(): Promise<ArtPiece[]> {
-    return [];
+    return artDatabase;
 }
 async function getCollections(): Promise<Collection[]> {
-    return [];
+    return collections;
 }
 
 export default async function HomePage() {

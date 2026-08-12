@@ -170,7 +170,7 @@ export default function Header() {
                             }`}
                         >
                             <User size={13} />
-                            Sign In
+                            {t("common.signIn")}
                             {pathname.startsWith("/auth") && (
                                 <span className="absolute bottom-0 inset-x-0 h-[1.5px] bg-[#C9A84C]" />
                             )}
