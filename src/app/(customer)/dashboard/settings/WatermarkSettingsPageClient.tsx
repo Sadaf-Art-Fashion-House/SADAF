@@ -3,9 +3,13 @@
 import { motion } from 'motion/react';
 import Link from 'next/link';
 import { Settings, ArrowLeft } from 'lucide-react';
+import { ROUTES } from '@/config/routes';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 import { WatermarkSettingsView } from '@/features/watermark';
 
 export default function WatermarkSettingsPageClient() {
+    const { t } = useLanguage();
+
     return (
         <div className="relative w-full min-h-screen pb-20">
             {/* Background glow */}
@@ -21,11 +25,11 @@ export default function WatermarkSettingsPageClient() {
                         transition={{ duration: 0.6 }}
                     >
                         <Link
-                            href="/dashboard"
+                            href={ROUTES.DASHBOARD}
                             className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-[#E8E0D5]/50 hover:text-[#C9A84C] transition-colors mb-4"
                         >
-                            <ArrowLeft size={12} />
-                            Back to Dashboard
+                            <ArrowLeft size={12} className="rtl:rotate-180" />
+                            {t('watermark.backToDashboard')}
                         </Link>
                         <div className="flex items-center gap-3">
                             <div className="p-2.5 rounded-xl bg-gradient-to-br from-[#C9A84C]/20 to-[#4FC3F7]/10 border border-[#C9A84C]/20">
@@ -33,10 +37,10 @@ export default function WatermarkSettingsPageClient() {
                             </div>
                             <div>
                                 <h1 className="text-2xl md:text-3xl font-serif text-white font-bold tracking-tight">
-                                    Settings
+                                    {t('settings.title')}
                                 </h1>
                                 <p className="text-sm text-[#E8E0D5]/60 mt-0.5">
-                                    Customise your watermark and export preferences.
+                                    {t('watermark.pageSubtitle')}
                                 </p>
                             </div>
                         </div>

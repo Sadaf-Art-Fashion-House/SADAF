@@ -8,7 +8,7 @@ import {
 import type { AIClothingDesign, MaqasaqRecommendation } from '@/shared/types';
 import { fabricsList, printingMethods } from '@/features/ai/data';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
-import { localizedDesignName } from '@/features/i18n/productNames';
+import { localizedDesignName, localizedFabricName, localizedFabricDescription, localizedPrintingName } from '@/features/i18n/productNames';
 
 
 interface AiStudioViewProps {
@@ -321,8 +321,8 @@ export default function AiStudioView({
                                                 }`}
                                             >
                                                 <div>
-                                                    <span className="text-xs font-semibold block">{fb.name}</span>
-                                                    <span className="text-[10px] text-gray-500">{fb.description}</span>
+                                                    <span className="text-xs font-semibold block">{localizedFabricName(fb.name, language)}</span>
+                                                    <span className="text-[10px] text-gray-500">{localizedFabricDescription(fb.name, language)}</span>
                                                 </div>
                                                 <span className="text-[10px] font-mono text-[#C9A84C] font-semibold">
                                                     +${fb.priceOffset}
@@ -348,7 +348,7 @@ export default function AiStudioView({
                                                         : 'bg-[#0A0F2C] border-white/5 text-slate-400 hover:text-white'
                                                 }`}
                                             >
-                                                <span className="text-xs font-semibold block">{pr.name}</span>
+                                                <span className="text-xs font-semibold block">{localizedPrintingName(pr.name, language)}</span>
                                                 <span className="text-[9px] text-[#C9A84C] mt-1 font-mono">+${pr.priceOffset}</span>
                                             </button>
                                         ))}
@@ -600,11 +600,11 @@ export default function AiStudioView({
                         <div className="w-full flex justify-between items-center text-[10px] font-mono text-gray-400 border-t border-white/5 pt-4">
                             <div>
                                 <span className="block text-slate-500 uppercase text-[8px] text-left">{t('ai.selectedWeave')}</span>
-                                <span className="text-[#E8E0D5] font-semibold">{selectedFabric}</span>
+                                <span className="text-[#E8E0D5] font-semibold">{localizedFabricName(selectedFabric, language)}</span>
                             </div>
                             <div>
                                 <span className="block text-slate-500 uppercase text-[8px] text-right">{t('ai.selectedPrinting')}</span>
-                                <span className="text-[#C9A84C] font-semibold">{selectedPrinting}</span>
+                                <span className="text-[#C9A84C] font-semibold">{localizedPrintingName(selectedPrinting, language)}</span>
                             </div>
                         </div>
                     </div>

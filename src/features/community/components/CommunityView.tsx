@@ -295,7 +295,7 @@ export default function CommunityView({
                                                     fontFamily="monospace"
                                                     opacity={0.7}
                                                 >
-                                                    {node.name}
+                                                    {node.id === 'self' ? t('community.you') : node.name}
                                                 </text>
                                             </g>
                                         );
@@ -686,7 +686,7 @@ export default function CommunityView({
                                         required
                                         value={inviteName}
                                         onChange={(e) => setInviteName(e.target.value)}
-                                        placeholder="e.g. Sarah Ahmed"
+                                        placeholder={t('community.inviteNamePlaceholder')}
                                         className="w-full bg-black/40 border border-white/10 text-xs text-white rounded-xl p-3 outline-none focus:border-[#C9A84C] transition placeholder:text-slate-600"
                                     />
                                 </div>
@@ -731,7 +731,7 @@ export default function CommunityView({
                                     <textarea
                                         value={inviteMessage}
                                         onChange={(e) => setInviteMessage(e.target.value)}
-                                        placeholder="Hi! I'd love for you to join my SADAF family network..."
+                                        placeholder={t('community.inviteMessagePlaceholder')}
                                         rows={3}
                                         className="w-full bg-black/40 border border-white/10 text-xs text-white rounded-xl p-3 outline-none focus:border-[#C9A84C] transition resize-none placeholder:text-slate-600"
                                     />

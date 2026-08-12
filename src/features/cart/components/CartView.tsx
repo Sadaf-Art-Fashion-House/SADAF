@@ -18,7 +18,7 @@ import {
 import SuccessToast from '@/shared/components/SuccessToast';
 import type { CartItem } from '@/shared/types';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
-import { localizedAiItemName, localizedArtTitle, localizedProductName } from '@/features/i18n/productNames';
+import { localizedAiItemName, localizedArtTitle, localizedProductName, localizedFabricName, localizedPrintingName } from '@/features/i18n/productNames';
 
 interface CartViewProps {
     items: CartItem[];
@@ -239,10 +239,10 @@ export default function CartView({
                                                             <span>Color: {item.selectedColor}</span>
                                                         )}
                                                         {item.selectedFabric && (
-                                                            <span>Fabric: {item.selectedFabric}</span>
+                                                            <span>Fabric: {localizedFabricName(item.selectedFabric, language)}</span>
                                                         )}
                                                         {item.selectedPrinting && (
-                                                            <span>Print: {item.selectedPrinting}</span>
+                                                            <span>Print: {localizedPrintingName(item.selectedPrinting, language)}</span>
                                                         )}
                                                     </div>
                                                 </div>

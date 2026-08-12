@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { ShoppingCart, Heart, Filter, ChevronRight, X, CreditCard, Star } from "lucide-react";
 import { ROUTES } from "@/config/routes";
 import { useLanguage } from "@/features/i18n/LanguageProvider";
-import { localizedArtTitle, localizedProductName } from "@/features/i18n/productNames";
+import { localizedArtTitle, localizedProductName, localizedFabricName } from "@/features/i18n/productNames";
 import type { CartItem, FashionProduct } from "@/shared/types";
 import type { RatingsByProduct } from "@/features/reviews/hooks/useAggregatedRatings";
 import { useMarketplace } from "../hooks/useMarketplace";
@@ -496,7 +496,7 @@ export default function StoreView({
                                                         </div>
                                                         {item.selectedColor && <div>{t("store.cart.dye")}: {item.selectedColor}</div>}
                                                         {item.selectedFabric && (
-                                                            <div>{t("store.cart.weave")}: {item.selectedFabric}</div>
+                                                            <div>{t("store.cart.weave")}: {localizedFabricName(item.selectedFabric, language)}</div>
                                                         )}
                                                     </div>
                                                 </div>

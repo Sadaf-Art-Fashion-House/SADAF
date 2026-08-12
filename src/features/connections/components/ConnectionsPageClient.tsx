@@ -15,6 +15,7 @@
 import { useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 import { useConnections } from '../hooks/useConnections';
 import ConnectionsView, { type ConnectionsRole } from './ConnectionsView';
 import type { ConnectionResponse, NewConnectionRequest } from '../types';
@@ -26,13 +27,14 @@ interface ConnectionsPageClientProps {
 
 export default function ConnectionsPageClient({ role }: ConnectionsPageClientProps) {
     const { user } = useAuth();
+    const { t } = useLanguage();
     const { data, loading, error, wsLive, refetch, sendRequest, respond, mutating } =
         useConnections();
 
     // Hooks rules: all hooks called unconditionally, BEFORE any early return. ✅
     const handleSend = useCallback(
         async (designerId: string, message: string): Promise<{ ok: boolean; error?: string }> => {
-            if (!user) return { ok: false, error: 'You need to sign in to send a request.' };
+            if (!user) return { ok: false, error: t('connections.needSignIn') };
 
             const input: NewConnectionRequest = {
                 companyId: user.id,
@@ -44,7 +46,7 @@ export default function ConnectionsPageClient({ role }: ConnectionsPageClientPro
             };
             return sendRequest(input);
         },
-        [user, sendRequest],
+        [user, sendRequest, t],
     );
 
     const handleRespond = useCallback(
@@ -57,13 +59,13 @@ export default function ConnectionsPageClient({ role }: ConnectionsPageClientPro
             <div className="min-h-[60vh] flex items-center justify-center">
                 <div className="text-center">
                     <p className="text-sm text-[#E8E0D5]/60 mb-4">
-                        You need to sign in to access the connections hub.
+                        {t('connections.needSignIn')}
                     </p>
                     <Link
                         href={ROUTES.AUTH}
                         className="inline-block px-6 py-3 bg-gradient-to-r from-[#C9A84C] to-[#A78BFA] text-[#0A0F2C] text-xs font-mono font-bold uppercase tracking-widest rounded-xl transition-all duration-300 hover:scale-105"
                     >
-                        Sign In
+                        {t('community.signIn')}
                     </Link>
                 </div>
             </div>

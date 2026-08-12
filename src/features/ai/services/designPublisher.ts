@@ -16,6 +16,7 @@
 
 import type { AIClothingDesign, ArtPiece, Collection } from '@/shared/types';
 import type { FashionProduct } from '@/types';
+import { localizedFabricName } from '@/features/i18n/productNames';
 import type { DesignDraft, PublishResult } from '../types';
 import { useDesignDraftStore } from '../store/useDesignDraftStore';
 import { fashionDatabase, artDatabase } from '@/data';
@@ -53,6 +54,7 @@ function designToFashionProduct(design: AIClothingDesign, selectedFabric: string
         hoverImage: '',
         description: design.description || `An exclusive ${design.clothingType} designed through AI Studio.`,
         fabric: selectedFabric || 'Premium Raw Silk',
+        fabricAr: localizedFabricName(selectedFabric || 'Premium Raw Silk', 'ar'),
         sizes: ['S', 'M', 'L', 'XL'],
         colors: [
             { name: 'Primary', hex: design.primaryColor || '#0A0F2C' },

@@ -183,7 +183,7 @@ export default function Header() {
 
                     <Link
                         href="/search"
-                        className="p-2 text-slate-300 hover:text-[#C9A84C] relative transition-colors duration-300"
+                        className="hidden sm:block p-2 text-slate-300 hover:text-[#C9A84C] relative transition-colors duration-300"
                         title="Search Atelier"
                     >
                         <Search size={16} />
@@ -195,7 +195,7 @@ export default function Header() {
 
                     <Link
                         href="/reviews"
-                        className="p-2 text-slate-300 hover:text-[#C9A84C] relative transition-colors duration-300"
+                        className="hidden sm:block p-2 text-slate-300 hover:text-[#C9A84C] relative transition-colors duration-300"
                         title="Customer Reviews"
                     >
                         <MessageSquare size={16} />
