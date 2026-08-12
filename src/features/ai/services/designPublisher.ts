@@ -16,7 +16,7 @@
 
 import type { AIClothingDesign, ArtPiece, Collection } from '@/shared/types';
 import type { FashionProduct } from '@/types';
-import { localizedFabricName } from '@/features/i18n/productNames';
+import { localizedFabricName, localizedPrintingName } from '@/features/i18n/productNames';
 import type { DesignDraft, PublishResult } from '../types';
 import { useDesignDraftStore } from '../store/useDesignDraftStore';
 import { fashionDatabase, artDatabase } from '@/data';
@@ -39,6 +39,26 @@ const PRINTING_TO_DETAIL: Record<string, string> = {
     'Puff Print': 'High-rising velvet-embossed puff print texture',
 };
 
+/**
+ * Maps the AI printing option values to the catalog printingMethods
+ * names so the bilingual helpers (localizedPrintingName) can resolve them.
+ */
+const PRINTING_OPTION_TO_METHOD: Record<string, string> = {
+    DTG: 'Direct-to-Garment Micro-spray',
+    Embroidery: 'Embroidery (Gold Thread)',
+    'Screen Print': 'Artisanal Screen Printing',
+    'Puff Print': 'Puff Multi-Texture Print',
+};
+
+/** Arabic labels for the AI clothing types (used in generated copy). */
+const CLOTHING_TYPE_AR: Record<string, string> = {
+    Abaya: 'عباية',
+    Hoodie: 'هودي',
+    'T-Shirt': 'تي شيرت',
+    Jacket: 'جاكيت',
+    Streetwear: 'ستريت وير',
+};
+
 function generateId(prefix: string): string {
     return `${prefix}-${Date.now()}`;
 }
@@ -53,6 +73,9 @@ function designToFashionProduct(design: AIClothingDesign, selectedFabric: string
         image: '',
         hoverImage: '',
         description: design.description || `An exclusive ${design.clothingType} designed through AI Studio.`,
+        descriptionAr: design.patternNameAr
+            ? `تصميم حصري من نوع ${CLOTHING_TYPE_AR[design.clothingType] || design.clothingType} «${design.patternNameAr}» صُمم عبر استوديو الذكاء الاصطناعي.`
+            : `قطعة ${CLOTHING_TYPE_AR[design.clothingType] || design.clothingType} حصرية صُممت عبر استوديو الذكاء الاصطناعي.`,
         fabric: selectedFabric || 'Premium Raw Silk',
         fabricAr: localizedFabricName(selectedFabric || 'Premium Raw Silk', 'ar'),
         sizes: ['S', 'M', 'L', 'XL'],
@@ -65,6 +88,12 @@ function designToFashionProduct(design: AIClothingDesign, selectedFabric: string
             PRINTING_TO_DETAIL[selectedPrinting] || 'Bespoke custom print',
             '100% hand-finished stitching in Cairo atelier',
             'Limited edition AI Studio creation',
+        ],
+        detailsAr: [
+            `نقش مولّد بالذكاء الاصطناعي: ${design.patternNameAr || design.patternName}`,
+            localizedPrintingName(PRINTING_OPTION_TO_METHOD[selectedPrinting] || selectedPrinting, 'ar'),
+            'خياطة نهائية يدوية 100% في أتيليه القاهرة',
+            'إصدار محدود من استوديو الذكاء الاصطناعي',
         ],
         rating: 4.8,
     } as FashionProduct;
