@@ -28,8 +28,16 @@ import {
     getBestArabicVoiceName,
     type GoogleTtsResult,
 } from '@/lib/tts/googleTts';
+import { createLocalStorageSync } from '@/shared/utils/localStorageSync';
 
 const STORAGE_KEY = 'sadaf_exhibition_tts_settings';
+const CHANGED_EVENT = 'sadaf:exhibition-tts-settings-changed';
+
+/**
+ * Persistence + cross-tab sync (custom window event + native storage event)
+ * so TTS voice settings changed in one tab apply in another instantly.
+ */
+const ttsSettingsSync = createLocalStorageSync<TtsOptions>(STORAGE_KEY, CHANGED_EVENT);
 
 export type TtsLang = 'en' | 'ar' | 'fr' | 'de';
 
@@ -92,36 +100,23 @@ function langToGoogleCode(lang: TtsLang): string {
     }
 }
 
-/** Load saved options from localStorage. */
+/** Load saved options from localStorage (SSR-safe). */
 function loadSavedOptions(): TtsOptions | null {
-    try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) {
-            const parsed = JSON.parse(raw);
-            if (typeof parsed === 'object' && parsed !== null) {
-                return {
-                    rate: typeof parsed.rate === 'number' ? parsed.rate : DEFAULT_OPTIONS.rate,
-                    pitch: typeof parsed.pitch === 'number' ? parsed.pitch : DEFAULT_OPTIONS.pitch,
-                    voiceUri: typeof parsed.voiceUri === 'string' ? parsed.voiceUri : null,
-                    lang: (['en', 'ar', 'fr', 'de'] as TtsLang[]).includes(parsed.lang)
-                        ? parsed.lang
-                        : DEFAULT_OPTIONS.lang,
-                };
-            }
-        }
-    } catch {
-        // Ignore corrupted data
-    }
-    return null;
+    const stored = ttsSettingsSync.load();
+    if (!stored || typeof stored !== 'object') return null;
+    return {
+        rate: typeof stored.rate === 'number' ? stored.rate : DEFAULT_OPTIONS.rate,
+        pitch: typeof stored.pitch === 'number' ? stored.pitch : DEFAULT_OPTIONS.pitch,
+        voiceUri: typeof stored.voiceUri === 'string' ? stored.voiceUri : null,
+        lang: (['en', 'ar', 'fr', 'de'] as TtsLang[]).includes(stored.lang)
+            ? stored.lang
+            : DEFAULT_OPTIONS.lang,
+    };
 }
 
-/** Save options to localStorage. */
+/** Save options to localStorage (guarded — never throws). */
 function saveOptions(options: TtsOptions): void {
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(options));
-    } catch {
-        // Storage full or unavailable — silently ignore
-    }
+    ttsSettingsSync.save(options);
 }
 
 /** Find the best Arabic voice from available system voices. */

@@ -17,10 +17,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { playSoftChime } from '@/shared/utils/playSoftChime';
 import { usePreferencesStore } from '@/features/settings/store/usePreferencesStore';
+import { createLocalStorageSync } from '@/shared/utils/localStorageSync';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
 const STORAGE_KEY = 'sadaf_overtake_alerts';
+const CHANGED_EVENT = 'sadaf:overtake-alerts-changed';
 
 interface OvertakeAlertPreferences {
     /** Show the toast + flash on your row when someone passes you. */
@@ -31,20 +33,21 @@ interface OvertakeAlertPreferences {
 
 const DEFAULT_PREFERENCES: OvertakeAlertPreferences = { enabled: true, sound: false };
 
+/**
+ * Persistence + cross-tab sync (custom window event + native storage event)
+ * so the leaderboard alert toggles stay in sync across tabs.
+ */
+const overtakeSync = createLocalStorageSync<OvertakeAlertPreferences>(STORAGE_KEY, CHANGED_EVENT);
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function readStoredPreferences(): OvertakeAlertPreferences {
-    try {
-        const raw = window.localStorage.getItem(STORAGE_KEY);
-        if (!raw) return DEFAULT_PREFERENCES;
-        const parsed = JSON.parse(raw) as Partial<OvertakeAlertPreferences>;
-        return {
-            enabled: typeof parsed.enabled === 'boolean' ? parsed.enabled : DEFAULT_PREFERENCES.enabled,
-            sound: typeof parsed.sound === 'boolean' ? parsed.sound : DEFAULT_PREFERENCES.sound,
-        };
-    } catch {
-        return DEFAULT_PREFERENCES;
-    }
+    const stored = overtakeSync.load();
+    if (!stored) return DEFAULT_PREFERENCES;
+    return {
+        enabled: typeof stored.enabled === 'boolean' ? stored.enabled : DEFAULT_PREFERENCES.enabled,
+        sound: typeof stored.sound === 'boolean' ? stored.sound : DEFAULT_PREFERENCES.sound,
+    };
 }
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
@@ -73,11 +76,7 @@ export function useOvertakeAlerts() {
     useEffect(() => {
         if (!preferencesLoadedRef.current) return;
         preferencesRef.current = preferences;
-        try {
-            window.localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
-        } catch {
-            // Storage may be unavailable (private mode) — alerts still work in-session.
-        }
+        overtakeSync.save(preferences);
     }, [preferences]);
 
     // Mirror the settings-hub master toggle into the local preference so the

@@ -18,20 +18,23 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CommissionKind, WithdrawalMethod, WithdrawalRequest } from '../types';
 import { WITHDRAWAL_PROCESSING_MS } from '../types';
+import { createLocalStorageSync } from '@/shared/utils/localStorageSync';
 
 const storageKey = (kind: CommissionKind): string => `sadaf_withdrawals:${kind}`;
 
+const storageEventName = (kind: CommissionKind): string => `sadaf:withdrawals-${kind}-changed`;
+
+/**
+ * Per-kind persistence + cross-tab sync (custom window event + native
+ * storage event) so a withdrawal requested in one tab appears in the
+ * partner's panel in another tab instantly.
+ */
+const syncFor = (kind: CommissionKind) =>
+    createLocalStorageSync<WithdrawalRequest[]>(storageKey(kind), storageEventName(kind));
+
 function readStored(kind: CommissionKind): WithdrawalRequest[] {
-    try {
-        const raw = localStorage.getItem(storageKey(kind));
-        if (!raw) return [];
-        const parsed = JSON.parse(raw) as WithdrawalRequest[];
-        return Array.isArray(parsed) ? parsed : [];
-    } catch {
-        // Corrupt or unavailable storage — treat as an empty ledger rather
-        // than crashing the page (the user can still request again).
-        return [];
-    }
+    const parsed = syncFor(kind).load();
+    return Array.isArray(parsed) ? parsed : [];
 }
 
 export function useWithdrawals(kind: CommissionKind) {
@@ -48,11 +51,7 @@ export function useWithdrawals(kind: CommissionKind) {
 
     const persist = useCallback((next: WithdrawalRequest[]) => {
         setWithdrawals(next);
-        try {
-            localStorage.setItem(storageKey(kind), JSON.stringify(next));
-        } catch {
-            // Storage full/unavailable — state still works for this session.
-        }
+        syncFor(kind).save(next);
     }, [kind]);
 
     /** Create a payout request; returns ok:false with a code when invalid. */
@@ -94,11 +93,7 @@ export function useWithdrawals(kind: CommissionKind) {
                     return w;
                 });
                 if (changed) {
-                    try {
-                        localStorage.setItem(storageKey(kind), JSON.stringify(next));
-                    } catch {
-                        // Non-fatal — state remains correct for this session.
-                    }
+                    syncFor(kind).save(next);
                     const completed = next.find(
                         (w, i) => prev[i]?.status === 'requested' && w.status === 'completed',
                     );

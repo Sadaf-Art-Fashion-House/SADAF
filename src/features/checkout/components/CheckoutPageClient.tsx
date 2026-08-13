@@ -2,6 +2,7 @@
 
 import { useCartStore } from '@/features/cart/store/useCartStore';
 import RoleDashboardGuard from '@/shared/components/RoleDashboardGuard';
+import { savePlacedOrder } from '@/shared/utils/ordersStorage';
 import CheckoutView from './CheckoutView';
 import type { OrderPayload } from '../types';
 
@@ -11,10 +12,8 @@ export default function CheckoutPageClient() {
     const clearCart = useCartStore((state) => state.clearCart);
 
     const handlePlaceOrder = (order: OrderPayload) => {
-        // Persist order to localStorage for dashboard reference
-        const existingOrders = JSON.parse(localStorage.getItem('sadaf_orders') || '[]');
-        existingOrders.unshift(order);
-        localStorage.setItem('sadaf_orders', JSON.stringify(existingOrders));
+        // Persist order to localStorage for dashboard reference (sandbox).
+        savePlacedOrder(order);
 
         // Clear the cart after successful order
         clearCart();

@@ -1,6 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
+import { createLocalStorageSync } from '@/shared/utils/localStorageSync';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -134,27 +135,22 @@ export function getWatermarkExportPrefix(): string {
 
 const STORAGE_KEY = 'sadaf-watermark-settings';
 
+/**
+ * Persistence + cross-tab sync (custom window event + native storage event)
+ * so watermark changes made in one admin tab apply everywhere instantly.
+ */
+const watermarkSync = createLocalStorageSync<WatermarkSettings>(
+    STORAGE_KEY,
+    'sadaf:watermark-settings-changed',
+);
+
 function loadPersistedSettings(): WatermarkSettings {
-    if (typeof window === 'undefined') return { ...DEFAULT_WATERMARK_SETTINGS };
-    try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) {
-            const parsed = JSON.parse(raw) as Partial<WatermarkSettings>;
-            return { ...DEFAULT_WATERMARK_SETTINGS, ...parsed };
-        }
-    } catch {
-        // ignore corrupt storage
-    }
-    return { ...DEFAULT_WATERMARK_SETTINGS };
+    const stored = watermarkSync.load();
+    return stored ? { ...DEFAULT_WATERMARK_SETTINGS, ...stored } : { ...DEFAULT_WATERMARK_SETTINGS };
 }
 
 function persistSettings(settings: WatermarkSettings): void {
-    if (typeof window === 'undefined') return;
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-    } catch {
-        // storage full or unavailable — silently ignore
-    }
+    watermarkSync.save(settings);
 }
 
 export const useWatermarkStore = create<WatermarkStore>((set) => ({
@@ -223,4 +219,14 @@ export function getWatermarkFillStyle(settings?: WatermarkSettings): string | un
     const g = Number.parseInt(hex.substring(2, 4), 16);
     const b = Number.parseInt(hex.substring(4, 6), 16);
     return `rgba(${r}, ${g}, ${b}, ${s.opacity})`;
+}
+
+// ─── Cross-tab sync (client only) ────────────────────────────────────────────
+// Rehydrate the store whenever settings change in another tab (or same tab
+// via another writer) so the watermark preview and exports always reflect
+// the latest persisted values.
+if (typeof window !== 'undefined') {
+    watermarkSync.subscribe(() => {
+        useWatermarkStore.setState({ settings: loadPersistedSettings() });
+    });
 }
