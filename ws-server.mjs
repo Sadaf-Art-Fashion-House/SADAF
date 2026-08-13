@@ -726,6 +726,65 @@ if (DEMO_DESIGNER_ENABLED) {
     console.log('      Set DISABLE_DEMO_DESIGNER=1 to disable');
 }
 
+// ─── Live Atelier Submissions (designer:global) ──────────────────────────────
+// Pushes "a designer just submitted a new piece" events to every client
+// subscribed to the designer:global channel, mirroring the reviews:global
+// pattern. Only the admin atelier tab handles `liveDesign` — the designer's
+// own dashboard ignores it (no `data` payload), so a demo arrival never
+// pollutes the designer's portfolio.
+// → Replace generateDemoDesign() with real API polling in production.
+const DEMO_LIVE_DESIGNS_ENABLED = !process.env.DISABLE_DEMO_LIVE_DESIGNS;
+
+/** Demo designs cycled by the pusher — a fresh submission every push. */
+const DESIGN_TEMPLATES = [
+    { title: 'Cairo Mosaic Evening Kaftan', category: 'Kaftan', description: 'Hand-beaded geometric mosaic inspired by the gates of old Cairo, cut on the bias for a liquid drape.', price: 1_480 },
+    { title: 'Nile Twilight Silk Hoodie', category: 'Hoodie', description: 'Heavyweight sandwashed silk with a hand-painted Nile delta print and hidden drawcord details.', price: 620 },
+    { title: 'Fatimid Lattice Abaya', category: 'Abaya', description: 'Structured crepe abaya with laser-cut brass lattice appliqué echoing the Fatimid star gates.', price: 1_920 },
+    { title: 'Desert Bloom Editorial Jacket', category: 'Jacket', description: 'Cropped double-breasted jacket in raw linen with embroidered desert bloom motifs.', price: 1_150 },
+    { title: 'Scarab Evening Dress', category: 'Dress', description: 'Column dress in midnight silk with an iridescent scarab-embellished bodice.', price: 2_300 },
+];
+
+let liveDesignSeq = 0;
+
+/** Broadcast a live new-design event to every subscribed client. */
+function sendDesignerLiveDesign(design) {
+    const message = JSON.stringify({
+        type: 'designer:global',
+        liveDesign: design,
+        timestamp: new Date().toISOString(),
+    });
+    wss.clients.forEach((client) => {
+        if (client.readyState !== WebSocketClient.OPEN) return;
+        if (getSubscriptions(client).has('designer:global')) {
+            client.send(message);
+        }
+    });
+}
+
+if (DEMO_LIVE_DESIGNS_ENABLED) {
+    setInterval(() => {
+        if (!hasDesignerSubscribers()) return;
+
+        const template = DESIGN_TEMPLATES[Math.floor(Math.random() * DESIGN_TEMPLATES.length)];
+        liveDesignSeq += 1;
+
+        sendDesignerLiveDesign({
+            id: `live-ds-${Date.now()}-${liveDesignSeq}`,
+            title: template.title,
+            category: template.category,
+            description: template.description,
+            price: template.price,
+            status: 'under_review',
+            submittedAt: new Date().toISOString(),
+            ownerName: 'Yasmine Design Studio',
+            isLive: true,
+        });
+    }, 22_000); // Every 22 seconds
+
+    console.log('   🎨 Live atelier submissions enabled — new design push every 22s');
+    console.log('      Set DISABLE_DEMO_LIVE_DESIGNS=1 to disable');
+}
+
 // ─── Atelier Team Decision Generator ─────────────────────────────────────────
 // Pushes real atelier decisions (approve / reject / start production) to
 // every team member — the owner and each collaborator — via their

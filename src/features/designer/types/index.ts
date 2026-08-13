@@ -75,6 +75,8 @@ export interface DesignSubmission {
     adminNote?: string;
     /** Solo or team project — team projects show their collaborators. */
     collaboration?: DesignCollaboration;
+    /** True when the submission arrived live over WebSocket (demo pusher). */
+    isLive?: boolean;
 }
 
 /** What kind of atelier/team event was recorded. */

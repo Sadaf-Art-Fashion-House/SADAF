@@ -38,6 +38,7 @@ import { useExportChart } from '@/features/analytics/hooks/useExportChart';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
 import type { TranslationKey } from '@/features/i18n/dictionaries';
 import { formatRelativeTime } from '@/features/notifications/utils/formatRelativeTime';
+import AtelierRequestToast from './AtelierRequestToast';
 
 // ─── Status filter options ───────────────────────────────────────────────────
 
@@ -323,7 +324,17 @@ function SubmissionCard({
 
 export default function AtelierRequestsTab() {
     const { t } = useLanguage();
-    const { data, loading, error, wsLive, refetch, reviewSubmission, reviewing } = useAtelierRequests();
+    const {
+        data,
+        loading,
+        error,
+        wsLive,
+        refetch,
+        reviewSubmission,
+        reviewing,
+        latestArrival,
+        dismissLatestArrival,
+    } = useAtelierRequests();
     const [filter, setFilter] = useState<DesignStatus | 'all'>('all');
     const [feedback, setFeedback] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
 
@@ -613,6 +624,17 @@ export default function AtelierRequestsTab() {
                     ))}
                 </div>
             )}
+
+            {/* Live new-design toast — fires when a designer submits a piece
+                over the WebSocket (designer:global liveDesign event). */}
+            <AtelierRequestToast
+                design={latestArrival}
+                onReview={() => {
+                    setFilter('all');
+                    dismissLatestArrival();
+                }}
+                onDismiss={dismissLatestArrival}
+            />
         </div>
     );
 }
