@@ -11,10 +11,11 @@
  * the /reviews page. All window access lives in the mount effect.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useCartStore } from '@/features/cart/store/useCartStore';
 import { useWishlistStore } from '@/features/wishlist/store/useWishlistStore';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useLiveRatings } from '@/features/reviews/hooks/useLiveRatings';
 import {
     getUserReviews,
     saveUserReview,
@@ -51,6 +52,13 @@ export default function ProductPageClient({
     const isWishlisted = useWishlistStore((state) => state.isWishlisted);
     const toggleWishlist = useWishlistStore((state) => state.toggleWishlist);
 
+    // Community reviews landing over the reviews:global WebSocket channel —
+    // merged into the rating below so the average, count and latest-reviews
+    // list move in real time (see liveReviewsRef usage in refreshRating).
+    const { liveReviews, wsLive, lastLive } = useLiveRatings();
+    const liveReviewsRef = useRef(liveReviews);
+    liveReviewsRef.current = liveReviews;
+
     // Aggregated ratings for the related-product cards (mock + user reviews),
     // live-synced — same pattern as the /store and /search cards.
     const relatedRatings = useAggregatedRatings(
@@ -69,7 +77,7 @@ export default function ProductPageClient({
 
     const refreshRating = useCallback(() => {
         const userReviews = getUserReviews(user?.id ?? '');
-        const combined = [...mockReviews, ...userReviews];
+        const combined = [...mockReviews, ...liveReviewsRef.current, ...userReviews];
         const matches = reviewsForProduct(combined, product.id, product.name);
 
         setRatingSummary(averageRatingForProduct(combined, product.id, product.name));
@@ -101,6 +109,12 @@ export default function ProductPageClient({
             window.removeEventListener('storage', refreshRating);
         };
     }, [refreshRating]);
+
+    // Recompute the rating the moment a live review lands over WS — no
+    // listener churn (refreshRating reads liveReviews via the ref).
+    useEffect(() => {
+        refreshRating();
+    }, [refreshRating, liveReviews]);
 
     const handleAddToCart = useCallback(
         (size: string, color: string) => {
@@ -213,6 +227,9 @@ export default function ProductPageClient({
             ratingSummary={ratingSummary}
             ratingCounts={ratingCounts}
             reviews={reviews}
+            wsLive={wsLive}
+            lastLiveProductId={lastLive?.review.productId ?? null}
+            lastLiveAt={lastLive?.at ?? null}
             hasReviewedProduct={hasReviewedProduct}
             myReview={myReview}
             isWishlisted={isWishlisted(product.id)}

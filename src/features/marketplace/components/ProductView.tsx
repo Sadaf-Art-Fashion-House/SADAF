@@ -51,6 +51,12 @@ interface ProductViewProps {
      * latest two and can expand to the full list; the distribution bars
      * filter it by exact star count. */
     reviews?: Review[];
+    /** True while the reviews:global WebSocket channel is connected. */
+    wsLive?: boolean;
+    /** Product whose rating just changed over WS — its summary pulses. */
+    lastLiveProductId?: string | null;
+    /** Timestamp of the last live rating change (key for the pulse). */
+    lastLiveAt?: number | null;
     /** Whether the signed-in user already reviewed this product — hides the form. */
     hasReviewedProduct?: boolean;
     /** The signed-in user's own review for this product — shown under the
@@ -74,6 +80,9 @@ export default function ProductView({
     ratingSummary,
     ratingCounts = [0, 0, 0, 0, 0],
     reviews = [],
+    wsLive = false,
+    lastLiveProductId = null,
+    lastLiveAt = null,
     hasReviewedProduct = false,
     myReview = null,
     onSubmitReview,
@@ -167,9 +176,32 @@ export default function ProductView({
                                 {localizedProductName(product, language)}
                             </h1>
                             <div className="flex items-center gap-3 mt-2">
-                                <span className="text-[10px] font-mono text-[#F0D080]">
+                                {wsLive && (
+                                    <span
+                                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[8px] font-mono uppercase tracking-widest"
+                                        title={t('common.live')}
+                                    >
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                        {t('common.live')}
+                                    </span>
+                                )}
+                                <motion.span
+                                    key={
+                                        lastLiveProductId === product.id && lastLiveAt !== null
+                                            ? `live-${lastLiveAt}`
+                                            : `static-${product.id}`
+                                    }
+                                    initial={
+                                        lastLiveProductId === product.id && lastLiveAt !== null
+                                            ? { scale: 1.3, opacity: 0.5 }
+                                            : false
+                                    }
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                                    className="text-[10px] font-mono text-[#F0D080]"
+                                >
                                     ★ {ratingSummary ? ratingSummary.average.toFixed(1) : product.rating}
-                                </span>
+                                </motion.span>
                                 <span className="text-[9px] font-mono text-slate-500">
                                     {ratingSummary
                                         ? t('pdp.reviewCount', { count: ratingSummary.count, s: ratingSummary.count === 1 ? '' : 's' })
@@ -454,17 +486,25 @@ export default function ProductView({
                                             className="pt-3 border-t border-white/5 first:border-t-0 first:pt-0"
                                         >
                                             <div className="flex items-center justify-between mb-1.5">
-                                                <div className="flex gap-0.5">
-                                                    {[1, 2, 3, 4, 5].map((star) => (
-                                                        <Star
-                                                            key={star}
-                                                            size={10}
-                                                            fill={star <= review.rating ? '#C9A84C' : 'none'}
-                                                            className={
-                                                                star <= review.rating ? 'text-[#C9A84C]' : 'text-slate-600'
-                                                            }
-                                                        />
-                                                    ))}
+                                                <div className="flex items-center gap-1.5">
+                                                    <div className="flex gap-0.5">
+                                                        {[1, 2, 3, 4, 5].map((star) => (
+                                                            <Star
+                                                                key={star}
+                                                                size={10}
+                                                                fill={star <= review.rating ? '#C9A84C' : 'none'}
+                                                                className={
+                                                                    star <= review.rating ? 'text-[#C9A84C]' : 'text-slate-600'
+                                                                }
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                    {review.isLive && (
+                                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[7px] font-mono uppercase tracking-widest">
+                                                            <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
+                                                            {t('common.live')}
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <span className="text-[9px] text-slate-600 font-mono">
                                                     {new Date(review.createdAt).toLocaleDateString('en-US', {

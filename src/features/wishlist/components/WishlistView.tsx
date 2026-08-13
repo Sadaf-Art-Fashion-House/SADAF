@@ -14,6 +14,12 @@ interface WishlistViewProps {
     items: FashionProduct[];
     /** Aggregated mock + user ratings per product (null = no reviews yet). */
     ratingsByProduct?: RatingsByProduct;
+    /** True while the reviews:global WebSocket channel is connected. */
+    wsLive?: boolean;
+    /** Product whose rating just changed over WS — its row pulses. */
+    lastLiveProductId?: string | null;
+    /** Timestamp of the last live rating change (key for the pulse). */
+    lastLiveAt?: number | null;
     isInCart: (productId: string) => boolean;
     onToggleWishlist: (product: FashionProduct) => void;
     onAddToCart: (product: FashionProduct) => void;
@@ -22,6 +28,9 @@ interface WishlistViewProps {
 export default function WishlistView({
     items,
     ratingsByProduct = {},
+    wsLive = false,
+    lastLiveProductId = null,
+    lastLiveAt = null,
     isInCart,
     onToggleWishlist,
     onAddToCart,
@@ -163,15 +172,38 @@ export default function WishlistView({
                                             <p className="text-[10px] text-[#E8E0D5]/60 line-clamp-2 leading-relaxed mb-1">
                                                 {localizedProductFabric(product, language)}
                                             </p>
-                                            {/* Aggregated rating (mock + user reviews), falls back to the catalog rating */}
+                                            {/* Aggregated rating (mock + user reviews), falls back to the catalog rating.
+                                                Pulses briefly when a live community review lands on this product. */}
                                             {product.rating && (
                                                 <div className="flex items-center gap-1 text-[9px] text-[#F0D080] font-mono">
+                                                    {wsLive && (
+                                                        <span
+                                                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[7px] font-mono uppercase tracking-widest"
+                                                            title={t('common.live')}
+                                                        >
+                                                            <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
+                                                            {t('common.live')}
+                                                        </span>
+                                                    )}
                                                     <Star size={9} className="text-[#C9A84C]" fill="currentColor" />
-                                                    <span>
+                                                    <motion.span
+                                                        key={
+                                                            lastLiveProductId === product.id && lastLiveAt !== null
+                                                                ? `live-${lastLiveAt}`
+                                                                : `static-${product.id}`
+                                                        }
+                                                        initial={
+                                                            lastLiveProductId === product.id && lastLiveAt !== null
+                                                                ? { scale: 1.3, opacity: 0.5 }
+                                                                : false
+                                                        }
+                                                        animate={{ scale: 1, opacity: 1 }}
+                                                        transition={{ duration: 0.4, ease: 'easeOut' }}
+                                                    >
                                                         {ratingsByProduct[product.id]
                                                             ? ratingsByProduct[product.id]!.average.toFixed(1)
                                                             : product.rating.toFixed(1)}
-                                                    </span>
+                                                    </motion.span>
                                                     {ratingsByProduct[product.id] && (
                                                         <span className="text-gray-500">
                                                             &middot; {ratingsByProduct[product.id]!.count} {t('store.reviews')}
