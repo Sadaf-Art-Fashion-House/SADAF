@@ -3,14 +3,17 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
-import { Heart, ShoppingBag, Trash2, ArrowLeft, Sparkles } from 'lucide-react';
+import { Heart, ShoppingBag, Trash2, ArrowLeft, Sparkles, Star } from 'lucide-react';
 import type { FashionProduct } from '@/shared/types';
+import type { RatingsByProduct } from '@/features/reviews/hooks/useAggregatedRatings';
 import { ROUTES } from '@/config/routes';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
 import { localizedProductFabric, localizedProductName } from '@/features/i18n/productNames';
 
 interface WishlistViewProps {
     items: FashionProduct[];
+    /** Aggregated mock + user ratings per product (null = no reviews yet). */
+    ratingsByProduct?: RatingsByProduct;
     isInCart: (productId: string) => boolean;
     onToggleWishlist: (product: FashionProduct) => void;
     onAddToCart: (product: FashionProduct) => void;
@@ -18,6 +21,7 @@ interface WishlistViewProps {
 
 export default function WishlistView({
     items,
+    ratingsByProduct = {},
     isInCart,
     onToggleWishlist,
     onAddToCart,
@@ -159,9 +163,20 @@ export default function WishlistView({
                                             <p className="text-[10px] text-[#E8E0D5]/60 line-clamp-2 leading-relaxed mb-1">
                                                 {localizedProductFabric(product, language)}
                                             </p>
+                                            {/* Aggregated rating (mock + user reviews), falls back to the catalog rating */}
                                             {product.rating && (
                                                 <div className="flex items-center gap-1 text-[9px] text-[#F0D080] font-mono">
-                                                    ★ {product.rating}
+                                                    <Star size={9} className="text-[#C9A84C]" fill="currentColor" />
+                                                    <span>
+                                                        {ratingsByProduct[product.id]
+                                                            ? ratingsByProduct[product.id]!.average.toFixed(1)
+                                                            : product.rating.toFixed(1)}
+                                                    </span>
+                                                    {ratingsByProduct[product.id] && (
+                                                        <span className="text-gray-500">
+                                                            &middot; {ratingsByProduct[product.id]!.count} {t('store.reviews')}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>

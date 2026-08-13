@@ -31,6 +31,7 @@ import {
 import type { FashionProduct } from '@/shared/types';
 import type { Review } from '@/features/reviews/types';
 import type { RatingCounts } from './ProductPageClient';
+import type { RatingsByProduct } from '@/features/reviews/hooks/useAggregatedRatings';
 import ReviewForm from '@/features/reviews/components/ReviewForm';
 import { ROUTES } from '@/config/routes';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
@@ -39,6 +40,8 @@ import { localizedProductDescription, localizedProductDetails, localizedProductF
 interface ProductViewProps {
     product: FashionProduct;
     relatedProducts: FashionProduct[];
+    /** Aggregated mock + user ratings per related product (null = no reviews yet). */
+    relatedRatings?: RatingsByProduct;
     /** Combined average from catalog + user reviews — falls back to the
      * catalog's editorial rating when null (no reviews yet). */
     ratingSummary?: { average: number; count: number } | null;
@@ -67,6 +70,7 @@ interface ProductViewProps {
 export default function ProductView({
     product,
     relatedProducts,
+    relatedRatings = {},
     ratingSummary,
     ratingCounts = [0, 0, 0, 0, 0],
     reviews = [],
@@ -645,6 +649,21 @@ export default function ProductView({
                                             <h3 className="font-serif text-[#E8E0D5] text-sm group-hover:text-[#F0D080] transition-colors duration-300 leading-tight truncate">
                                                 {localizedProductName(related, language)}
                                             </h3>
+                                            {related.rating && (
+                                                <div className="flex items-center gap-1 text-[9px] text-[#F0D080] font-mono mt-1">
+                                                    <Star size={9} className="text-[#C9A84C]" fill="currentColor" />
+                                                    <span>
+                                                        {relatedRatings[related.id]
+                                                            ? relatedRatings[related.id]!.average.toFixed(1)
+                                                            : related.rating.toFixed(1)}
+                                                    </span>
+                                                    {relatedRatings[related.id] && (
+                                                        <span className="text-gray-500">
+                                                            &middot; {relatedRatings[related.id]!.count} {t('store.reviews')}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
                                         <span className="text-[9px] font-mono text-[#4FC3F7] uppercase tracking-wider mt-2">
                                             {t('pdp.viewDetails')}
