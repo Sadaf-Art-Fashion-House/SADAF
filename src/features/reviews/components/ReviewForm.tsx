@@ -11,6 +11,7 @@
 
 import { useState } from 'react';
 import { Star, CheckCircle2, AlertTriangle, MessageSquare } from 'lucide-react';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 
 interface ReviewFormProps {
     productName: string;
@@ -31,8 +32,9 @@ export default function ReviewForm({
     initialRating = 0,
     initialComment = '',
     title,
-    submitLabel = 'Submit Review',
+    submitLabel,
 }: ReviewFormProps) {
+    const { t } = useLanguage();
     const [rating, setRating] = useState(initialRating);
     const [hoverRating, setHoverRating] = useState(0);
     const [comment, setComment] = useState(initialComment);
@@ -43,11 +45,11 @@ export default function ReviewForm({
 
     const handleSubmit = async () => {
         if (rating === 0) {
-            setStatus({ kind: 'error', text: 'Please select a star rating.' });
+            setStatus({ kind: 'error', text: t('reviews.errNoRating') });
             return;
         }
         if (!comment.trim()) {
-            setStatus({ kind: 'error', text: 'Please share a few words about your piece.' });
+            setStatus({ kind: 'error', text: t('reviews.errNoComment') });
             return;
         }
 
@@ -58,10 +60,10 @@ export default function ReviewForm({
         if (result.ok) {
             setStatus({
                 kind: 'success',
-                text: 'Review submitted — thank you! It now appears on the Reviews page.',
+                text: t('reviews.submitted'),
             });
         } else {
-            setStatus({ kind: 'error', text: result.error ?? 'Could not submit your review.' });
+            setStatus({ kind: 'error', text: result.error ?? t('reviews.errSubmit') });
         }
     };
 
@@ -70,14 +72,14 @@ export default function ReviewForm({
             <div className="flex items-center gap-2">
                 <MessageSquare size={13} className="text-[#C9A84C]" />
                 <span className="text-[9px] font-mono uppercase tracking-widest text-[#C9A84C] font-bold">
-                    {title ?? `Write a Review — ${productName}`}
+                    {title ?? t('reviews.writeFor', { name: productName })}
                 </span>
             </div>
 
             {/* Star rating */}
             <div>
                 <span className="text-[9px] uppercase tracking-wider text-slate-400 block mb-2">
-                    Your Rating
+                    {t('reviews.yourRating')}
                 </span>
                 <div className="flex gap-1.5" role="radiogroup" aria-label="Star rating">
                     {[1, 2, 3, 4, 5].map((star) => (
@@ -86,7 +88,7 @@ export default function ReviewForm({
                             onClick={() => setRating(star)}
                             onMouseEnter={() => setHoverRating(star)}
                             onMouseLeave={() => setHoverRating(0)}
-                            aria-label={`${star} star${star > 1 ? 's' : ''}`}
+                            aria-label={t('reviews.starLabel', { count: star })}
                             aria-pressed={rating === star}
                             className="transition-transform hover:scale-110 cursor-pointer"
                         >
@@ -103,13 +105,13 @@ export default function ReviewForm({
             {/* Comment */}
             <div>
                 <span className="text-[9px] uppercase tracking-wider text-slate-400 block mb-2">
-                    Your Review
+                    {t('reviews.yourReview')}
                 </span>
                 <textarea
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
                     rows={3}
-                    placeholder="Share your experience with the craftsmanship, fit, and atelier service..."
+                    placeholder={t('reviews.commentPlaceholder')}
                     className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-xs text-white outline-none focus:border-[#C9A84C]/50 transition resize-none"
                 />
             </div>
@@ -140,7 +142,7 @@ export default function ReviewForm({
                     disabled={submitting}
                     className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/90 text-[#0A0F2C] text-[10px] font-mono font-bold uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-wait"
                 >
-                    {submitting ? 'Submitting…' : submitLabel}
+                    {submitting ? t('reviews.submitting') : (submitLabel ?? t('reviews.submit'))}
                 </button>
                 {onCancel && (
                     <button
@@ -148,7 +150,7 @@ export default function ReviewForm({
                         disabled={submitting}
                         className="px-5 py-3 rounded-xl bg-white/5 border border-white/10 text-[10px] font-mono uppercase tracking-widest text-slate-400 hover:text-white hover:bg-white/10 transition-all duration-300 cursor-pointer disabled:opacity-50"
                     >
-                        Cancel
+                        {t('common.cancel')}
                     </button>
                 )}
             </div>
