@@ -45,17 +45,17 @@ export default async function StoreProductPage({ params }: StoreProductPageProps
     );
     const relatedProducts: FashionProduct[] = [...sameCategory, ...otherPieces].slice(0, 3);
 
-    // Catalog reviews for this product — merged with the user's own reviews
-    // (localStorage) on the client to compute the displayed average rating.
-    const productMockReviews: Review[] = getMockReviews().filter(
-        (review) => review.productId === product.id,
-    );
+    // Catalog reviews — merged with the user's own reviews (localStorage) on
+    // the client. The full set is passed so the main product's summary AND
+    // the related-product cards all show their own aggregated ratings (the
+    // client filters per product by id/name).
+    const mockReviews: Review[] = getMockReviews();
 
     return (
         <ProductPageClient
             product={product}
             relatedProducts={relatedProducts}
-            mockReviews={productMockReviews}
+            mockReviews={mockReviews}
         />
     );
 }

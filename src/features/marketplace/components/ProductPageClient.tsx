@@ -26,6 +26,7 @@ import {
 } from '@/features/reviews/utils/userReviewsStorage';
 import { averageRatingForProduct, reviewsForProduct } from '@/features/reviews/utils/reviewRatings';
 import { titleForRating } from '@/features/reviews/utils/titleForRating';
+import { useAggregatedRatings } from '@/features/reviews/hooks/useAggregatedRatings';
 import ProductView from './ProductView';
 import type { FashionProduct } from '@/shared/types';
 import type { Review } from '@/features/reviews/types';
@@ -49,6 +50,13 @@ export default function ProductPageClient({
     const addFashionToCart = useCartStore((state) => state.addFashionToCart);
     const isWishlisted = useWishlistStore((state) => state.isWishlisted);
     const toggleWishlist = useWishlistStore((state) => state.toggleWishlist);
+
+    // Aggregated ratings for the related-product cards (mock + user reviews),
+    // live-synced — same pattern as the /store and /search cards.
+    const relatedRatings = useAggregatedRatings(
+        relatedProducts.map((related) => ({ id: related.id, name: related.name })),
+        mockReviews,
+    );
 
     // ── Rating: summary + star distribution + latest reviews, live-synced ──
     const [ratingSummary, setRatingSummary] = useState<{ average: number; count: number } | null>(null);
@@ -201,6 +209,7 @@ export default function ProductPageClient({
         <ProductView
             product={product}
             relatedProducts={relatedProducts}
+            relatedRatings={relatedRatings}
             ratingSummary={ratingSummary}
             ratingCounts={ratingCounts}
             reviews={reviews}
