@@ -1061,6 +1061,8 @@ export const en = {
     'orders.feed.tailoring': 'Your piece has entered the atelier — our artisans are sewing it by hand.',
     'orders.feed.shipped': 'Your order has shipped from the atelier and is on its way.',
     'orders.feed.delivered': 'Delivered! We hope your piece brings you joy.',
+    'orders.errAlreadyReviewed': 'This order already has a review.',
+    'orders.errSaveFailed': 'Could not save your review.',
 
     // ── Profile ─────────────────────────────────────────────────────────────
     'profile.needSignIn': 'You need to sign in to view your profile.',
@@ -2828,6 +2830,8 @@ export const ar: Record<TranslationKey, string> = {
     'orders.feed.tailoring': 'دخلت قطعتك الأتيليه — حرفيونا يخيطونها يدويًا الآن.',
     'orders.feed.shipped': 'تم شحن طلبك من الأتيليه وهو في طريقه إليك.',
     'orders.feed.delivered': 'تم التوصيل! نتمنى أن تجلب لك قطعتك الفرح.',
+    'orders.errAlreadyReviewed': 'هذا الطلب يحتوي على مراجعة بالفعل.',
+    'orders.errSaveFailed': 'تعذر حفظ مراجعتك.',
 
     // ── Profile ─────────────────────────────────────────────────────────────
     'profile.needSignIn': 'تحتاج إلى تسجيل الدخول لعرض ملفك الشخصي.',

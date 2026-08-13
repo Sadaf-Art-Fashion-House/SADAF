@@ -13,9 +13,11 @@ import { getMockReviews } from '@/features/reviews/data/mockReviews';
 import { useAggregatedRatings } from '@/features/reviews/hooks/useAggregatedRatings';
 import type { Review } from '@/features/reviews/types';
 import RoleDashboardGuard from '@/shared/components/RoleDashboardGuard';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 
 export default function OrdersPageClient() {
     const [orders] = useState<Order[]>(MOCK_ORDERS);
+    const { t } = useLanguage();
     const { user } = useAuth();
     const { statuses, events, loading, wsLive, error } = useOrderStatus(user?.id ?? null);
 
@@ -39,7 +41,7 @@ export default function OrdersPageClient() {
         async (order: Order, rating: number, comment: string): Promise<{ ok: boolean; error?: string }> => {
             try {
                 if (hasReviewForOrder(order.id, user?.id ?? '')) {
-                    return { ok: false, error: 'This order already has a review.' };
+                    return { ok: false, error: t('orders.errAlreadyReviewed') };
                 }
 
                 const review: Review = {
@@ -62,11 +64,11 @@ export default function OrdersPageClient() {
                 setReviewedOrderIds((current) => [...current, order.id]);
                 return { ok: true };
             } catch (err: unknown) {
-                const message = err instanceof Error ? err.message : 'Could not save your review';
+                const message = err instanceof Error ? err.message : t('orders.errSaveFailed');
                 return { ok: false, error: message };
             }
         },
-        [user],
+        [t, user],
     );
 
     return (
