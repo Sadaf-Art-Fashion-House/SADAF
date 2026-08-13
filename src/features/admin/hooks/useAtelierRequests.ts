@@ -19,13 +19,15 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { DesignerDashboardData, DesignStatus } from '@/features/designer/types';
+import type { DesignerDashboardData, DesignStatus, DesignSubmission } from '@/features/designer/types';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3001';
 const POLL_INTERVAL_MS = 30_000;
 const RECONNECT_DELAY_MS = 3_000;
+/** Upper bound for remembered submission ids — the demo pushes one every 22s. */
+const MAX_KNOWN_IDS = 400;
 
 export function useAtelierRequests() {
     const [data, setData] = useState<DesignerDashboardData | null>(null);
@@ -33,12 +35,18 @@ export function useAtelierRequests() {
     const [error, setError] = useState<string | null>(null);
     const [wsLive, setWsLive] = useState(false);
     const [reviewing, setReviewing] = useState(false);
+    // Most recent live arrival (a freshly submitted design pushed over WS) —
+    // consumed by the AtelierRequestToast.
+    const [latestArrival, setLatestArrival] = useState<DesignSubmission | null>(null);
 
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const abortRef = useRef<AbortController | null>(null);
     const wsConnectedRef = useRef(false);
+    // Submission ids already surfaced — the initial REST/WS seed is treated
+    // as historical (silent), only genuinely new ids fire the toast.
+    const knownIdsRef = useRef<Set<string>>(new Set());
 
     // ─── Apply incoming payload ───────────────────────────────────────────
 
@@ -47,6 +55,40 @@ export function useAtelierRequests() {
         setData(payload);
         setError(null);
         setLoading(false);
+        // Seed the seen-ids set from the first payload(s) so the initial
+        // queue is historical and never fires a toast.
+        payload.submissions.forEach((s) => knownIdsRef.current.add(s.id));
+        if (knownIdsRef.current.size > MAX_KNOWN_IDS) {
+            let overflow = knownIdsRef.current.size - MAX_KNOWN_IDS;
+            for (const id of knownIdsRef.current) {
+                if (overflow <= 0) break;
+                knownIdsRef.current.delete(id);
+                overflow -= 1;
+            }
+        }
+    }, []);
+
+    /** Merge a live WS submission into the queue + raise the toast event. */
+    const acceptLiveDesign = useCallback((design: DesignSubmission) => {
+        if (!design || !design.id) return;
+        if (knownIdsRef.current.has(design.id)) return;
+        knownIdsRef.current.add(design.id);
+        setData((prev) => {
+            if (!prev) return prev;
+            const submissions = [design, ...prev.submissions];
+            return {
+                ...prev,
+                submissions,
+                stats: prev.stats
+                    ? {
+                          ...prev.stats,
+                          total: prev.stats.total + 1,
+                          underReview: prev.stats.underReview + 1,
+                      }
+                    : prev.stats,
+            };
+        });
+        setLatestArrival(design);
     }, []);
 
     // ─── Review a submission (approve / reject / move to production) ───────
@@ -115,6 +157,13 @@ export function useAtelierRequests() {
                 try {
                     const msg = JSON.parse(event.data as string);
                     if (msg.type !== 'designer:global') return;
+                    // Live new-design event (demo pusher) — only the admin
+                    // atelier tab handles it; the designer dashboard ignores
+                    // it because there is no `data` payload.
+                    if (msg.liveDesign) {
+                        acceptLiveDesign(msg.liveDesign as DesignSubmission);
+                        return;
+                    }
                     if (!msg.data) return;
                     applyData(msg.data as DesignerDashboardData);
                 } catch {
@@ -135,7 +184,7 @@ export function useAtelierRequests() {
             setWsLive(false);
             reconnectTimeoutRef.current = setTimeout(connectWS, RECONNECT_DELAY_MS);
         }
-    }, [applyData]);
+    }, [applyData, acceptLiveDesign]);
 
     // ─── REST polling fallback ─────────────────────────────────────────────
 
@@ -193,5 +242,17 @@ export function useAtelierRequests() {
         };
     }, [connectWS, startPolling]);
 
-    return { data, loading, error, wsLive, refetch: fetchData, reviewSubmission, reviewing };
+    const dismissLatestArrival = useCallback(() => setLatestArrival(null), []);
+
+    return {
+        data,
+        loading,
+        error,
+        wsLive,
+        refetch: fetchData,
+        reviewSubmission,
+        reviewing,
+        latestArrival,
+        dismissLatestArrival,
+    };
 }
