@@ -26,6 +26,22 @@ const NAV_LABEL_KEYS: Record<string, string> = {
     "AI Studio": "nav.aiStudio",
 };
 
+/** The translation key for each "More ▾" dropdown label (falls back to the raw label). */
+const DROPDOWN_LABEL_KEYS: Record<string, string> = {
+    Exhibition: "nav.exhibition",
+    Atelier: "nav.atelier",
+    Lookbook: "nav.lookbook",
+    Reviews: "nav.reviews",
+};
+
+/** The translation key for each dropdown description (falls back to the raw desc). */
+const DROPDOWN_DESC_KEYS: Record<string, string> = {
+    Exhibition: "nav.dropdown.exhibition.desc",
+    Atelier: "nav.dropdown.atelier.desc",
+    Lookbook: "nav.dropdown.lookbook.desc",
+    Reviews: "nav.dropdown.reviews.desc",
+};
+
 export default function Header() {
     const pathname = usePathname();
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -118,10 +134,10 @@ export default function Header() {
                                                 } ${idx < DROPDOWN_LINKS.length - 1 ? "border-b border-white/5" : ""}`}
                                             >
                                                 <span className="text-xs uppercase tracking-[0.15em] font-semibold">
-                                                    {item.label}
+                                                    {t((DROPDOWN_LABEL_KEYS[item.label] ?? item.label) as never)}
                                                 </span>
                                                 <span className="text-[10px] text-[#E8E0D5]/40 group-hover:text-[#E8E0D5]/60 mt-0.5">
-                                                    {item.desc}
+                                                    {t((DROPDOWN_DESC_KEYS[item.label] ?? item.desc) as never)}
                                                 </span>
                                             </Link>
                                         );

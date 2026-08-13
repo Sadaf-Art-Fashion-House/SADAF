@@ -7,7 +7,12 @@ import { Compass, ZoomIn, ArrowRight, Heart, ShoppingCart, X } from "lucide-reac
 import type { FashionCategory, FashionProduct, LookbookItem } from "@/shared/types";
 import { FASHION_CATEGORIES } from "../constants/fashionCategories";
 import { useLanguage } from "@/features/i18n/LanguageProvider";
-import { localizedProductName } from "@/features/i18n/productNames";
+import {
+    localizedLookbookDescription,
+    localizedLookbookSubtitle,
+    localizedLookbookTitle,
+    localizedProductName,
+} from "@/features/i18n/productNames";
 
 interface FashionViewProps {
     products: FashionProduct[];
@@ -391,8 +396,12 @@ export default function FashionView({
                                     <span className="text-[9px] font-mono tracking-widest text-[#C9A84C] block mb-1">
                                         {t("fashion.campaignYear", { year: item.year })}
                                     </span>
-                                    <h3 className="font-serif text-lg font-bold mb-2">{item.title}</h3>
-                                    <p className="text-xs text-gray-400 line-clamp-2">{item.subtitle}</p>
+                                    <h3 className="font-serif text-lg font-bold mb-2">
+                                        {localizedLookbookTitle(item, language)}
+                                    </h3>
+                                    <p className="text-xs text-gray-400 line-clamp-2">
+                                        {localizedLookbookSubtitle(item, language)}
+                                    </p>
                                 </div>
                             ))}
                         </div>
@@ -403,16 +412,16 @@ export default function FashionView({
                                 <div className="flex-1 rounded-xl overflow-hidden relative border border-white/10 group shadow-lg">
                                     <Image
                                         src={activeLookDetails.image}
-                                        alt={activeLookDetails.title}
+                                        alt={localizedLookbookTitle(activeLookDetails, language)}
                                         fill
                                         className="object-cover filter brightness-[0.75] group-hover:scale-[1.03] transition-transform duration-[1200ms]"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-6">
                                         <span className="text-slate-300 font-serif text-sm block mb-1">
-                                            {activeLookDetails.subtitle}
+                                            {localizedLookbookSubtitle(activeLookDetails, language)}
                                         </span>
                                         <h4 className="text-white font-serif text-2xl font-semibold">
-                                            {activeLookDetails.title}
+                                            {localizedLookbookTitle(activeLookDetails, language)}
                                         </h4>
                                     </div>
                                 </div>
@@ -423,7 +432,7 @@ export default function FashionView({
                                         {t("fashion.collectionDesc", { year: activeLookDetails.year })}
                                     </span>
                                     <p className="text-[#E8E0D5]/80 text-xs md:text-sm leading-relaxed mb-6 font-sans">
-                                        {activeLookDetails.description}
+                                        {localizedLookbookDescription(activeLookDetails, language)}
                                     </p>
                                     <div className="flex items-center gap-3 border-t border-white/10 pt-4 mt-auto">
                                         <div className="text-xs uppercase font-mono text-[#C9A84C]">

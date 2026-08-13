@@ -12,7 +12,7 @@
  * the language value it already holds from `useLanguage()`.
  */
 
-import type { AIClothingDesign, ArtPiece, FashionProduct } from '@/shared/types';
+import type { AIClothingDesign, ArtPiece, FashionProduct, LookbookItem } from '@/shared/types';
 import type { SiteLanguage } from '@/features/settings/store/usePreferencesStore';
 import { artDatabase, fashionDatabase, fabricsList, printingMethods } from '@/data';
 import type { OrderItem } from '@/features/orders/types';
@@ -45,6 +45,21 @@ export function localizedArtTitle(art: ArtPiece, language: SiteLanguage): string
 /** The display name of an AI Studio design for the active language. */
 export function localizedDesignName(design: AIClothingDesign, language: SiteLanguage): string {
     return language === 'ar' && design.patternNameAr ? design.patternNameAr : design.patternName;
+}
+
+/** The display title of a lookbook item for the active language. */
+export function localizedLookbookTitle(item: LookbookItem, language: SiteLanguage): string {
+    return language === 'ar' && item.titleAr ? item.titleAr : item.title;
+}
+
+/** The display subtitle of a lookbook item for the active language. */
+export function localizedLookbookSubtitle(item: LookbookItem, language: SiteLanguage): string {
+    return language === 'ar' && item.subtitleAr ? item.subtitleAr : item.subtitle;
+}
+
+/** The display description of a lookbook item for the active language. */
+export function localizedLookbookDescription(item: LookbookItem, language: SiteLanguage): string {
+    return language === 'ar' && item.descriptionAr ? item.descriptionAr : item.description;
 }
 
 /**
