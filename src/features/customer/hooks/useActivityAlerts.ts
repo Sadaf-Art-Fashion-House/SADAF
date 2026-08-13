@@ -20,10 +20,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PersonalActivityEvent } from '../types';
 import { playSoftChime } from '@/shared/utils/playSoftChime';
 import { isBrowserNotificationSupported } from '@/features/notifications/hooks/useBrowserNotificationPermission';
+import { createLocalStorageSync } from '@/shared/utils/localStorageSync';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
 const STORAGE_KEY = 'sadaf_activity_alerts';
+const CHANGED_EVENT = 'sadaf:activity-alerts-changed';
 
 interface AlertPreferences {
     /** Show a browser Notification per new event. */
@@ -34,20 +36,21 @@ interface AlertPreferences {
 
 const DEFAULT_PREFERENCES: AlertPreferences = { browser: false, sound: false };
 
+/**
+ * Persistence + cross-tab sync (custom window event + native storage event)
+ * so the My Activity alert toggles stay in sync across tabs.
+ */
+const alertsSync = createLocalStorageSync<AlertPreferences>(STORAGE_KEY, CHANGED_EVENT);
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function readStoredPreferences(): AlertPreferences {
-    try {
-        const raw = window.localStorage.getItem(STORAGE_KEY);
-        if (!raw) return DEFAULT_PREFERENCES;
-        const parsed = JSON.parse(raw) as Partial<AlertPreferences>;
-        return {
-            browser: typeof parsed.browser === 'boolean' ? parsed.browser : DEFAULT_PREFERENCES.browser,
-            sound: typeof parsed.sound === 'boolean' ? parsed.sound : DEFAULT_PREFERENCES.sound,
-        };
-    } catch {
-        return DEFAULT_PREFERENCES;
-    }
+    const stored = alertsSync.load();
+    if (!stored) return DEFAULT_PREFERENCES;
+    return {
+        browser: typeof stored.browser === 'boolean' ? stored.browser : DEFAULT_PREFERENCES.browser,
+        sound: typeof stored.sound === 'boolean' ? stored.sound : DEFAULT_PREFERENCES.sound,
+    };
 }
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
@@ -85,11 +88,7 @@ export function useActivityAlerts(events: PersonalActivityEvent[]) {
     // Keep the ref in sync and persist every change.
     useEffect(() => {
         preferencesRef.current = preferences;
-        try {
-            window.localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
-        } catch {
-            // Storage may be unavailable (private mode) — alerts still work in-session.
-        }
+        alertsSync.save(preferences);
     }, [preferences]);
 
     // ─── Soft chime (shared Web Audio util — no asset needed) ───────────────

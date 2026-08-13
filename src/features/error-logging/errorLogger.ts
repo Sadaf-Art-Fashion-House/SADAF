@@ -11,10 +11,19 @@
  */
 
 import { buildExportErrorMessage } from '@/shared/utils/exportErrors';
+import { createLocalStorageSync } from '@/shared/utils/localStorageSync';
 
 const STORAGE_KEY = 'sadaf_error_logs';
+const CHANGED_EVENT = 'sadaf:error-logs-changed';
 const MAX_LOGS = 200;
 const API_ENDPOINT = '/api/error-logs';
+
+/**
+ * Local-only fallback storage — kept in sync across tabs via the shared
+ * localStorage sync utility (custom event + native storage event) so the
+ * admin error-logs dashboard refreshes the moment a new error lands.
+ */
+const errorLogsSync = createLocalStorageSync<ErrorLogEntry[]>(STORAGE_KEY, CHANGED_EVENT);
 
 export interface ErrorLogEntry {
     id: string;
@@ -33,22 +42,20 @@ function generateId(): string {
 // ─── localStorage helpers (fallback / offline) ──────────────────────────────
 
 function getLocalLogs(): ErrorLogEntry[] {
-    if (typeof window === 'undefined') return [];
-    try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? (JSON.parse(raw) as ErrorLogEntry[]) : [];
-    } catch {
-        return [];
-    }
+    return errorLogsSync.load() ?? [];
 }
 
 function saveLocalLogs(logs: ErrorLogEntry[]): void {
-    if (typeof window === 'undefined') return;
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
-    } catch {
-        // localStorage full — silently ignore
-    }
+    errorLogsSync.save(logs);
+}
+
+/**
+ * Subscribe to local error-log changes (in-tab custom event + cross-tab
+ * `storage` event). Returns an unsubscribe function — the admin/founder
+ * error-logs dashboard uses it to refresh the instant a new error lands.
+ */
+export function subscribeErrorLogs(listener: () => void): () => void {
+    return errorLogsSync.subscribe(listener);
 }
 
 // ─── API helpers ────────────────────────────────────────────────────────────
@@ -255,11 +262,5 @@ export async function deleteErrorLog(id: string): Promise<void> {
 /** Clear all error logs (server + localStorage). */
 export async function clearErrorLogs(): Promise<void> {
     await clearServerLogs();
-    if (typeof window !== 'undefined') {
-        try {
-            localStorage.removeItem(STORAGE_KEY);
-        } catch {
-            // silently ignore
-        }
-    }
+    errorLogsSync.remove();
 }

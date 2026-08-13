@@ -7,7 +7,16 @@
  * (e.g. a "settings" collection in Prisma).
  */
 
+import { createLocalStorageSync } from '@/shared/utils/localStorageSync';
+
 const STORAGE_KEY = 'sadaf_email_settings';
+const CHANGED_EVENT = 'sadaf:email-settings-changed';
+
+/**
+ * Persistence + cross-tab sync (custom window event + native storage event)
+ * so both admin/founder email-settings pages reflect changes instantly.
+ */
+const emailSettingsSync = createLocalStorageSync<EmailSettings>(STORAGE_KEY, CHANGED_EVENT);
 
 export interface EmailSettings {
     recipients: string[];
@@ -23,29 +32,24 @@ const DEFAULT_SETTINGS: EmailSettings = {
     includeStackTrace: true,
 };
 
-function isBrowser(): boolean {
-    return typeof window !== 'undefined';
-}
-
 /** Retrieve email notification settings from localStorage. */
 export function getEmailSettings(): EmailSettings {
-    if (!isBrowser()) return DEFAULT_SETTINGS;
-    try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? { ...DEFAULT_SETTINGS, ...JSON.parse(raw) } : DEFAULT_SETTINGS;
-    } catch {
-        return DEFAULT_SETTINGS;
-    }
+    const stored = emailSettingsSync.load();
+    return stored ? { ...DEFAULT_SETTINGS, ...stored } : DEFAULT_SETTINGS;
 }
 
 /** Save email notification settings to localStorage. */
 export function saveEmailSettings(settings: EmailSettings): void {
-    if (!isBrowser()) return;
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-    } catch {
-        // silently ignore
-    }
+    emailSettingsSync.save(settings);
+}
+
+/**
+ * Subscribe to email-settings changes (in-tab custom event + cross-tab
+ * `storage` event). Returns an unsubscribe function — the email-settings
+ * page uses it to refresh the moment settings change in another tab.
+ */
+export function subscribeEmailSettings(listener: () => void): () => void {
+    return emailSettingsSync.subscribe(listener);
 }
 
 /** Add an email recipient to the notification list. */
