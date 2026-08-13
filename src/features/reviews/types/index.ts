@@ -30,6 +30,12 @@ export interface Review {
      * "Edited" marker instead of the original creation date.
      */
     editedAt?: string;
+    /**
+     * True for reviews that landed over the reviews:global WebSocket channel
+     * during this session (live community reviews) — lets the UI mark them
+     * with a "LIVE" chip in the latest-reviews list.
+     */
+    isLive?: boolean;
 }
 
 export type ReviewSortOption = 'newest' | 'highest' | 'lowest';

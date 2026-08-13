@@ -3,6 +3,7 @@
 import { useWishlistStore } from '@/features/wishlist/store/useWishlistStore';
 import { useCartStore } from '@/features/cart/store/useCartStore';
 import { useAggregatedRatings } from '@/features/reviews/hooks/useAggregatedRatings';
+import { useLiveRatings } from '@/features/reviews/hooks/useLiveRatings';
 import WishlistView from './WishlistView';
 import type { FashionProduct } from '@/shared/types';
 import type { Review } from '@/features/reviews/types';
@@ -20,10 +21,13 @@ export default function WishlistPageClient({ mockReviews }: WishlistPageClientPr
     const addFashionToCart = useCartStore((state) => state.addFashionToCart);
 
     // Aggregated card ratings (mock catalog reviews + the user's own),
-    // live-synced — same pattern as the /store and /search cards.
+    // live-synced and merged with community reviews landing over the
+    // reviews:global WebSocket channel — same pattern as /store and /search.
+    const { liveReviews, wsLive, lastLive } = useLiveRatings();
     const ratingsByProduct = useAggregatedRatings(
         items.map((item) => ({ id: item.id, name: item.name })),
         mockReviews,
+        liveReviews,
     );
 
     const isInCart = (productId: string) =>
@@ -46,6 +50,9 @@ export default function WishlistPageClient({ mockReviews }: WishlistPageClientPr
         <WishlistView
             items={items}
             ratingsByProduct={ratingsByProduct}
+            wsLive={wsLive}
+            lastLiveProductId={lastLive?.review.productId ?? null}
+            lastLiveAt={lastLive?.at ?? null}
             isInCart={isInCart}
             onToggleWishlist={handleToggleWishlist}
             onAddToCart={handleAddToCart}

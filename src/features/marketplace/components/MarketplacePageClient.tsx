@@ -4,6 +4,7 @@ import StoreView from "./StoreView";
 import { useCartStore } from "@/features/cart/store/useCartStore";
 import { useWishlistStore } from "@/features/wishlist/store/useWishlistStore";
 import { useAggregatedRatings } from "@/features/reviews/hooks/useAggregatedRatings";
+import { useLiveRatings } from "@/features/reviews/hooks/useLiveRatings";
 import type { FashionProduct } from "@/shared/types";
 import type { Review } from "@/features/reviews/types";
 
@@ -21,10 +22,14 @@ export default function MarketplacePageClient({ products, mockReviews }: Marketp
     const isWishlisted = useWishlistStore((state) => state.isWishlisted);
     const toggleWishlist = useWishlistStore((state) => state.toggleWishlist);
 
-    // Aggregated card ratings (mock catalog reviews + the user's own), live-synced.
+    // Aggregated card ratings (mock catalog reviews + the user's own),
+    // live-synced and merged with community reviews landing over the
+    // reviews:global WebSocket channel.
+    const { liveReviews, wsLive, lastLive } = useLiveRatings();
     const ratingsByProduct = useAggregatedRatings(
         products.map((product) => ({ id: product.id, name: product.name })),
         mockReviews,
+        liveReviews,
     );
 
     const handleAddToCart = (product: FashionProduct, size: string, color: string) => {
@@ -52,6 +57,9 @@ export default function MarketplacePageClient({ products, mockReviews }: Marketp
             products={products}
             cartItems={cartItems}
             ratingsByProduct={ratingsByProduct}
+            wsLive={wsLive}
+            lastLiveProductId={lastLive?.review.productId ?? null}
+            lastLiveAt={lastLive?.at ?? null}
             isWishlisted={isWishlisted}
             onAddToCart={handleAddToCart}
             onRemoveFromCart={handleRemoveFromCart}

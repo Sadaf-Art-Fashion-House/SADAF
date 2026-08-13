@@ -26,9 +26,21 @@ interface SearchViewProps {
     allResults: SearchResult[];
     /** Aggregated mock + user ratings per product id (null = no reviews yet). */
     ratingsByProduct?: RatingsByProduct;
+    /** True while the reviews:global WebSocket channel is connected. */
+    wsLive?: boolean;
+    /** Product whose rating just changed over WS — its row pulses. */
+    lastLiveProductId?: string | null;
+    /** Timestamp of the last live rating change (key for the pulse). */
+    lastLiveAt?: number | null;
 }
 
-export default function SearchView({ allResults, ratingsByProduct = {} }: SearchViewProps) {
+export default function SearchView({
+    allResults,
+    ratingsByProduct = {},
+    wsLive = false,
+    lastLiveProductId = null,
+    lastLiveAt = null,
+}: SearchViewProps) {
     const { t, tc } = useLanguage();
     const {
         query,
@@ -229,6 +241,9 @@ export default function SearchView({ allResults, ratingsByProduct = {} }: Search
                                             key={result.id}
                                             result={result}
                                             rating={ratingsByProduct[result.id]}
+                                            wsLive={wsLive}
+                                            isLivePulse={lastLiveProductId === result.id}
+                                            lastLiveAt={lastLiveAt}
                                         />
                                     ))}
                                 </motion.div>
@@ -245,6 +260,9 @@ export default function SearchView({ allResults, ratingsByProduct = {} }: Search
                                             key={result.id}
                                             result={result}
                                             rating={ratingsByProduct[result.id]}
+                                            wsLive={wsLive}
+                                            isLivePulse={lastLiveProductId === result.id}
+                                            lastLiveAt={lastLiveAt}
                                         />
                                     ))}
                                 </motion.div>
@@ -272,7 +290,19 @@ export default function SearchView({ allResults, ratingsByProduct = {} }: Search
 
 // ─── Grid Card ────────────────────────────────────────────────────────────────
 
-function SearchCard({ result, rating }: { result: SearchResult; rating?: RatingsByProduct[string] }) {
+function SearchCard({
+    result,
+    rating,
+    wsLive = false,
+    isLivePulse = false,
+    lastLiveAt = null,
+}: {
+    result: SearchResult;
+    rating?: RatingsByProduct[string];
+    wsLive?: boolean;
+    isLivePulse?: boolean;
+    lastLiveAt?: number | null;
+}) {
     const { t } = useLanguage();
     return (
         <Link
@@ -301,13 +331,28 @@ function SearchCard({ result, rating }: { result: SearchResult; rating?: Ratings
                     </h3>
                     <p className="text-[10px] text-slate-500 font-sans line-clamp-1 mb-2">{result.subtitle}</p>
 
-                    {/* Aggregated rating on product cards (mock + user reviews) */}
+                    {/* Aggregated rating on product cards (mock + user reviews), pulses on live WS updates */}
                     {result.type === 'product' && (
                         <div className="flex items-center gap-1.5">
+                            {wsLive && (
+                                <span
+                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[7px] font-mono uppercase tracking-widest"
+                                    title={t('common.live')}
+                                >
+                                    <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
+                                    {t('common.live')}
+                                </span>
+                            )}
                             <Star size={10} className="text-[#C9A84C]" fill="currentColor" />
-                            <span className="text-[10px] font-mono text-[#E8E0D5]">
+                            <motion.span
+                                key={isLivePulse && lastLiveAt !== null ? `live-${lastLiveAt}` : `static-${result.id}`}
+                                initial={isLivePulse && lastLiveAt !== null ? { scale: 1.3, opacity: 0.5 } : false}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ duration: 0.4, ease: 'easeOut' }}
+                                className="text-[10px] font-mono text-[#E8E0D5]"
+                            >
                                 {rating ? rating.average.toFixed(1) : t('search.new')}
-                            </span>
+                            </motion.span>
                             {rating && (
                                 <span className="text-[9px] text-slate-500 font-mono">
                                     &middot; {rating.count} {t('store.reviews')}
@@ -332,7 +377,19 @@ function SearchCard({ result, rating }: { result: SearchResult; rating?: Ratings
 
 // ─── List Item ────────────────────────────────────────────────────────────────
 
-function SearchListItem({ result, rating }: { result: SearchResult; rating?: RatingsByProduct[string] }) {
+function SearchListItem({
+    result,
+    rating,
+    wsLive = false,
+    isLivePulse = false,
+    lastLiveAt = null,
+}: {
+    result: SearchResult;
+    rating?: RatingsByProduct[string];
+    wsLive?: boolean;
+    isLivePulse?: boolean;
+    lastLiveAt?: number | null;
+}) {
     const { t } = useLanguage();
     return (
         <Link
@@ -360,13 +417,28 @@ function SearchListItem({ result, rating }: { result: SearchResult; rating?: Rat
                 </h3>
                 <p className="text-[11px] text-slate-400 truncate">{result.subtitle}</p>
 
-                {/* Aggregated rating on product cards (mock + user reviews) */}
+                {/* Aggregated rating on product cards (mock + user reviews), pulses on live WS updates */}
                 {result.type === 'product' && (
                     <div className="flex items-center gap-1.5 mt-1">
+                        {wsLive && (
+                            <span
+                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[7px] font-mono uppercase tracking-widest"
+                                title={t('common.live')}
+                            >
+                                <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
+                                {t('common.live')}
+                            </span>
+                        )}
                         <Star size={10} className="text-[#C9A84C]" fill="currentColor" />
-                        <span className="text-[10px] font-mono text-[#E8E0D5]">
+                        <motion.span
+                            key={isLivePulse && lastLiveAt !== null ? `live-${lastLiveAt}` : `static-${result.id}`}
+                            initial={isLivePulse && lastLiveAt !== null ? { scale: 1.3, opacity: 0.5 } : false}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ duration: 0.4, ease: 'easeOut' }}
+                            className="text-[10px] font-mono text-[#E8E0D5]"
+                        >
                             {rating ? rating.average.toFixed(1) : t('search.new')}
-                        </span>
+                        </motion.span>
                         {rating && (
                             <span className="text-[9px] text-slate-500 font-mono">
                                 &middot; {rating.count} {t('store.reviews')}

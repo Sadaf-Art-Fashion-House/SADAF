@@ -62,6 +62,8 @@ function isValidEndpointType(type) {
     if (type.startsWith('personal:user:')) return true;
     // Global leaderboard channel
     if (type === 'leaderboard:global') return true;
+    // Global live ratings channel (new community reviews landing in real time)
+    if (type === 'reviews:global') return true;
     // Admin/founder community overview channel
     if (type === 'community:admin') return true;
     // Designer portfolio channel
@@ -497,7 +499,7 @@ wss.on('connection', (ws, req) => {
         status: 'connected',
         clientCount,
         apiHealthy,
-        endpoints: [...ENDPOINTS.map((e) => e.type), 'notifications:user:{id}', 'notifications:global', 'personal:user:{id}', 'leaderboard:global', 'community:admin', 'designer:global', 'sales-partner:global', 'connections:global'],
+        endpoints: [...ENDPOINTS.map((e) => e.type), 'notifications:user:{id}', 'notifications:global', 'personal:user:{id}', 'leaderboard:global', 'reviews:global', 'community:admin', 'designer:global', 'sales-partner:global', 'connections:global'],
         supportsNotifications: true,
         timestamp: new Date().toISOString(),
     }));
@@ -952,6 +954,86 @@ if (DEMO_LEADERBOARD_ENABLED) {
 
     console.log('   🏆 Real-time leaderboard enabled — global push every 12s');
     console.log('      Set DISABLE_DEMO_LEADERBOARD=1 to disable');
+}
+
+// ─── Live Ratings (reviews:global) ──────────────────────────────────────────
+// Pushes "a community review just landed" events to every client subscribed
+// to the reviews:global channel, mirroring the leaderboard:global pattern.
+// The client merges each live review into its aggregated rating (average +
+// count + latest-reviews list) so scores move in real time.
+// → Replace generateDemoReview() with real API polling in production.
+const DEMO_REVIEWS_ENABLED = !process.env.DISABLE_DEMO_REVIEWS;
+
+/** Catalog products the demo review pool can target (id + display name). */
+const REVIEW_PRODUCTS = [
+    { id: 'f-1', name: 'Empress Diwani Abaya Cape' },
+    { id: 'f-2', name: 'Sadaf Inlaid Peak Tuxedo' },
+    { id: 'f-3', name: 'Fatimid Star Silk Slip Dress' },
+    { id: 'f-4', name: 'Gilded Caliph Streetwear Hoodie' },
+    { id: 'f-5', name: 'Royal Heir Linen Set' },
+];
+
+/** Community review templates cycled by the demo pusher. */
+const REVIEW_TEMPLATES = [
+    { userName: 'Yara H.', rating: 5, title: 'Even more stunning in person', comment: 'The details are unreal — the embroidery catches the light beautifully. I get stopped everywhere.' },
+    { userName: 'Omar S.', rating: 4, title: 'Beautiful craftsmanship', comment: 'Incredible quality and finish. The fit runs slightly large but the fabric is worth every penny.' },
+    { userName: 'Nadine K.', rating: 5, title: 'Worth the investment', comment: 'Felt like royalty at the event. The stitching is museum-grade and it arrived beautifully packaged.' },
+    { userName: 'Tarek M.', rating: 3, title: 'Lovely piece, delicate fabric', comment: 'Gorgeous design — just be careful with the fabric, it needs professional care only.' },
+    { userName: 'Lina W.', rating: 4, title: 'Elegant and unique', comment: 'Nothing else like it in my closet. The gold accents are subtle yet striking.' },
+    { userName: 'Salma F.', rating: 5, title: 'A masterpiece', comment: 'The craftsmanship is beyond anything I have seen locally. Highly recommend for special occasions.' },
+];
+
+let liveReviewSeq = 0;
+
+/** True when at least one connected client subscribes to reviews:global. */
+function hasReviewsSubscribers() {
+    let found = false;
+    wss.clients.forEach((client) => {
+        if (client.readyState !== WebSocketClient.OPEN) return;
+        if (getSubscriptions(client).has('reviews:global')) found = true;
+    });
+    return found;
+}
+
+/** Broadcast a live review event to every client subscribed to the global channel. */
+function sendReviewsGlobal(review) {
+    const message = JSON.stringify({
+        type: 'reviews:global',
+        review,
+        timestamp: new Date().toISOString(),
+    });
+    wss.clients.forEach((client) => {
+        if (client.readyState !== WebSocketClient.OPEN) return;
+        if (getSubscriptions(client).has('reviews:global')) {
+            client.send(message);
+        }
+    });
+}
+
+if (DEMO_REVIEWS_ENABLED) {
+    setInterval(() => {
+        if (!hasReviewsSubscribers()) return;
+
+        const product = REVIEW_PRODUCTS[Math.floor(Math.random() * REVIEW_PRODUCTS.length)];
+        const template = REVIEW_TEMPLATES[Math.floor(Math.random() * REVIEW_TEMPLATES.length)];
+        liveReviewSeq += 1;
+
+        sendReviewsGlobal({
+            id: `live-rev-${Date.now()}-${liveReviewSeq}`,
+            productId: product.id,
+            productName: product.name,
+            userName: template.userName,
+            rating: template.rating,
+            title: template.title,
+            comment: template.comment,
+            createdAt: new Date().toISOString(),
+            verified: true,
+            isLive: true,
+        });
+    }, 18_000); // Every 18 seconds
+
+    console.log('   ⭐ Real-time ratings enabled — global review push every 18s');
+    console.log('      Set DISABLE_DEMO_REVIEWS=1 to disable');
 }
 
 // Graceful shutdown
