@@ -18,6 +18,7 @@ export const ROUTES = {
     REVIEWS: '/reviews',
     EXHIBITION: '/exhibition',
     ATELIER: '/atelier',
+    LOOKBOOK: '/lookbook',
     CART: '/cart',
     CHECKOUT: '/checkout',
     WISHLIST: '/wishlist',
@@ -84,5 +85,6 @@ export const NAV_LINKS = [
 export const DROPDOWN_LINKS = [
     { href: ROUTES.EXHIBITION, label: 'Exhibition', desc: 'Virtual 3D art gallery' },
     { href: ROUTES.ATELIER, label: 'Atelier', desc: 'Design workshop & crafts' },
+    { href: ROUTES.LOOKBOOK, label: 'Lookbook', desc: 'Seasonal editorials & campaigns' },
     { href: ROUTES.REVIEWS, label: 'Reviews', desc: 'Customer reviews & ratings' },
 ] as const;

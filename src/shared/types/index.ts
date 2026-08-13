@@ -195,6 +195,12 @@ export interface LookbookItem {
     image: string;
     year: string;
     description: string;
+    /** Arabic display title — falls back to `title` when absent. */
+    titleAr?: string;
+    /** Arabic display subtitle — falls back to `subtitle` when absent. */
+    subtitleAr?: string;
+    /** Arabic display description — falls back to `description` when absent. */
+    descriptionAr?: string;
 }
 
 // ─── Collections ─────────────────────────────────────────────────────────────
