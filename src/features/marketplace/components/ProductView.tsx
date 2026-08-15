@@ -297,10 +297,10 @@ export default function ProductView({
                                                 </div>
                                                 <span
                                                     className={`w-6 text-left font-mono transition-colors ${
-                                                        active ? 'text-[#C9A84C] font-bold' : 'text-slate-500'
+                                                        active ? 'text-[#C9A84C] font-bold' : count > 0 ? 'text-slate-500' : 'text-slate-600'
                                                     }`}
                                                 >
-                                                    {count}
+                                                    {count > 0 ? count : '—'}
                                                 </span>
                                             </button>
                                         );
