@@ -3,12 +3,13 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
-import { Heart, ShoppingBag, Trash2, ArrowLeft, Sparkles, Star } from 'lucide-react';
+import { Heart, ShoppingBag, Trash2, ArrowLeft, Sparkles } from 'lucide-react';
 import type { FashionProduct } from '@/shared/types';
 import type { RatingsByProduct } from '@/features/reviews/hooks/useAggregatedRatings';
 import { ROUTES } from '@/config/routes';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
 import { reviewCountWord } from '@/shared/utils/countWord';
+import StarRatingRow from '@/shared/components/StarRatingRow';
 import { localizedProductFabric, localizedProductName } from '@/features/i18n/productNames';
 
 interface WishlistViewProps {
@@ -186,7 +187,14 @@ export default function WishlistView({
                                                             {t('common.live')}
                                                         </span>
                                                     )}
-                                                    <Star size={9} className="text-[#C9A84C]" fill="currentColor" />
+                                                    <StarRatingRow
+                                                        rating={
+                                                            ratingsByProduct[product.id]
+                                                                ? ratingsByProduct[product.id]!.average
+                                                                : product.rating
+                                                        }
+                                                        size={9}
+                                                    />
                                                     <motion.span
                                                         key={
                                                             lastLiveProductId === product.id && lastLiveAt !== null

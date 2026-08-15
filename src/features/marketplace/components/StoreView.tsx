@@ -3,10 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
-import { ShoppingCart, Heart, Filter, ChevronRight, X, CreditCard, Star } from "lucide-react";
+import { ShoppingCart, Heart, Filter, ChevronRight, X, CreditCard } from "lucide-react";
 import { ROUTES } from "@/config/routes";
 import { useLanguage } from "@/features/i18n/LanguageProvider";
 import { reviewCountWord } from "@/shared/utils/countWord";
+import StarRatingRow from "@/shared/components/StarRatingRow";
 import { localizedArtTitle, localizedProductName, localizedFabricName } from "@/features/i18n/productNames";
 import type { CartItem, FashionProduct } from "@/shared/types";
 import type { RatingsByProduct } from "@/features/reviews/hooks/useAggregatedRatings";
@@ -256,10 +257,13 @@ export default function StoreView({
                                                         {t("common.live")}
                                                     </span>
                                                 )}
-                                                <Star
+                                                <StarRatingRow
+                                                    rating={
+                                                        ratingsByProduct[prod.id]
+                                                            ? ratingsByProduct[prod.id]!.average
+                                                            : prod.rating
+                                                    }
                                                     size={11}
-                                                    className="text-[#C9A84C]"
-                                                    fill="currentColor"
                                                 />
                                                 <motion.span
                                                     key={
