@@ -148,6 +148,32 @@ body {
   transform: rotate(180deg);
 }
 
+/* ── Smooth theme transition ─────────────────────────────────────────────
+ * The LanguageProvider adds the `theme-switching` class to <html> for a
+ * short window right before flipping `pref-light-theme`, so every surface
+ * cross-fades its colours instead of snapping. The class is removed after
+ * ~700ms, so the transitions never run on first paint or on hover — only
+ * during an actual theme switch. Disabled for reduced-motion users.
+ * ──────────────────────────────────────────────────────────────────────── */
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition:
+    background-color 0.45s ease,
+    color 0.45s ease,
+    border-color 0.45s ease,
+    fill 0.45s ease,
+    stroke 0.45s ease,
+    box-shadow 0.45s ease !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  html.theme-switching *,
+  html.theme-switching *::before,
+  html.theme-switching *::after {
+    transition: none !important;
+  }
+}
+
 /* ── Light theme ──────────────────────────────────────────────────────────
  * The app was built with hardcoded dark colors (navy backgrounds, cream
  * text). The `pref-light-theme` class (applied to <html> by the
@@ -223,8 +249,8 @@ body {
 .pref-light-theme .text-\[\#E8E0D5\]\/90 { color: rgba(43, 43, 61, 0.9); }
 
 /* Light-gold / purple accents — darken for contrast on light surfaces. */
-.pref-light-theme .text-\[\#F0D080\] { color: #8B6914; }
-.pref-light-theme .text-\[\#ebd083\] { color: #8B6914; }
+.pref-light-theme .text-\[\#F0D080\] { color: #7A5C12; }
+.pref-light-theme .text-\[\#ebd083\] { color: #7A5C12; }
 .pref-light-theme .text-\[\#FFD700\] { color: #B8860B; }
 .pref-light-theme .text-\[\#A78BFA\] { color: #6D3FD6; }
 
@@ -285,3 +311,113 @@ body {
   background: rgba(255, 255, 255, 0.8);
   border-color: rgba(201, 168, 76, 0.3);
 }
+
+/* ── Light theme contrast pass ──────────────────────────────────────────
+ * The base remaps flip surfaces to parchment/white, but the brand accents
+ * (gold #C9A84C, crystal #4FC3F7) and faint cream opacities were built for
+ * dark navy and sit at ~1.5–2:1 on light backgrounds. This pass darkens
+ * them, then RESTORES the original light text inside photo-card overlays
+ * that intentionally stay dark in light theme (black/navy gradients under
+ * imagery), so nothing becomes dark-on-dark. Must come after the base
+ * remaps so these rules win the cascade.
+ * ──────────────────────────────────────────────────────────────────────── */
+
+/* Gold + crystal accents → darker ink, WCAG AA on parchment. */
+.pref-light-theme .text-\[\#C9A84C\] { color: #7A5C12; }
+.pref-light-theme .hover\:text-\[\#C9A84C\]:hover { color: #7A5C12; }
+.pref-light-theme .group-hover\:text-\[\#C9A84C\]:hover { color: #7A5C12; }
+.pref-light-theme .text-\[\#4FC3F7\] { color: #075985; }
+.pref-light-theme .hover\:text-\[\#4FC3F7\]:hover { color: #0369A1; }
+.pref-light-theme .group-hover\:text-\[\#4FC3F7\]:hover { color: #0369A1; }
+.pref-light-theme .text-\[\#ebd083\] { color: #7A5C12; }
+
+/* hover/group-hover → white and gold on light surfaces must become dark. */
+.pref-light-theme .hover\:text-white:hover { color: #1A1A2E; }
+.pref-light-theme .group-hover\:text-white:hover { color: #1A1A2E; }
+.pref-light-theme .group-hover\:text-\[\#F0D080\]:hover { color: #7A5C12; }
+.pref-light-theme .hover\:text-\[\#F0D080\]:hover { color: #7A5C12; }
+.pref-light-theme .hover\:text-\[\#E8E0D5\]:hover { color: #2B2B3D; }
+.pref-light-theme .group-hover\:text-\[\#E8E0D5\]:hover { color: #2B2B3D; }
+.pref-light-theme .group-hover\:text-\[\#A78BFA\]:hover { color: #6D3FD6; }
+
+/* Faint cream text (35–60%) → boost alpha for AA on white cards. */
+.pref-light-theme .text-\[\#E8E0D5\]\/35 { color: rgba(43, 43, 61, 0.7); }
+.pref-light-theme .text-\[\#E8E0D5\]\/40 { color: rgba(43, 43, 61, 0.68); }
+.pref-light-theme .text-\[\#E8E0D5\]\/45 { color: rgba(43, 43, 61, 0.72); }
+.pref-light-theme .text-\[\#E8E0D5\]\/50 { color: rgba(43, 43, 61, 0.75); }
+.pref-light-theme .text-\[\#E8E0D5\]\/55 { color: rgba(43, 43, 61, 0.78); }
+.pref-light-theme .text-\[\#E8E0D5\]\/60 { color: rgba(43, 43, 61, 0.8); }
+.pref-light-theme .text-\[\#E8E0D5\]\/65 { color: rgba(43, 43, 61, 0.82); }
+.pref-light-theme .text-\[\#E8E0D5\]\/70 { color: rgba(43, 43, 61, 0.84); }
+
+/* ── Dark photo overlays stay dark in light theme — restore light text. ── */
+/* These gradients are NOT remapped by the base pass (black / navy with
+ * opacity), so they keep dark backgrounds under imagery. Text on top of
+ * them must keep its original light colour instead of the dark ink above. */
+.pref-light-theme [class*="from-black/"] .text-white,
+.pref-light-theme [class*="from-black/"] .text-\[\#E8E0D5\]\/70,
+.pref-light-theme [class*="from-black/"] .text-\[\#E8E0D5\]\/80,
+.pref-light-theme [class*="from-black/"] .text-slate-300,
+.pref-light-theme [class*="from-black/"] .text-\[\#C9A84C\],
+.pref-light-theme [class*="from-black/"] .text-\[\#4FC3F7\] { color: #F5F2EB; }
+.pref-light-theme [class*="from-black/"] .text-\[\#E8E0D5\]\/70 { color: rgba(232, 224, 213, 0.7); }
+.pref-light-theme [class*="from-black/"] .text-\[\#E8E0D5\]\/80 { color: rgba(232, 224, 213, 0.8); }
+.pref-light-theme [class*="from-black/"] .text-\[\#C9A84C\] { color: #C9A84C; }
+.pref-light-theme [class*="from-black/"] .text-\[\#4FC3F7\] { color: #4FC3F7; }
+
+/* Navy overlays with opacity (lookbook cards, collection tiles). */
+.pref-light-theme [class*="from-\[#0A0F2C\]/"] .text-white { color: #F5F2EB; }
+.pref-light-theme [class*="from-\[#0A0F2C\]/"] .text-\[\#E8E0D5\]\/70 { color: rgba(232, 224, 213, 0.7); }
+.pref-light-theme [class*="from-\[#0A0F2C\]/"] .text-\[\#E8E0D5\] { color: #E8E0D5; }
+.pref-light-theme [class*="from-\[#0A0F2C\]/"] .text-\[\#C9A84C\] { color: #C9A84C; }
+.pref-light-theme [class*="from-\[#0A0F2C\]/"] .text-\[\#4FC3F7\] { color: #4FC3F7; }
+
+/* Navy via-stops on light gradient sections (from/to already remapped
+ * to parchment) — otherwise the middle of the gradient stays dark. */
+.pref-light-theme .via-\[\#1B2A6B\]\/15 { --tw-gradient-via: rgba(216, 224, 245, 0.15); }
+.pref-light-theme .via-\[\#1B2A6B\]\/20 { --tw-gradient-via: rgba(216, 224, 245, 0.2); }
+.pref-light-theme .via-\[\#1B2A6B\]\/25 { --tw-gradient-via: rgba(216, 224, 245, 0.25); }
+.pref-light-theme .via-\[\#1B2A6B\] { --tw-gradient-via: #D8E0F5; }
+
+/* Deep navy gradient cards (Fashion details panel, stays dark). */
+.pref-light-theme [class*="from-\[#050A1C\]"] .text-\[\#E8E0D5\]\/80 { color: rgba(232, 224, 213, 0.8); }
+.pref-light-theme [class*="from-\[#050A1C\]"] .text-\[\#4FC3F7\] { color: #4FC3F7; }
+.pref-light-theme [class*="from-\[#050A1C\]"] .text-\[\#C9A84C\] { color: #C9A84C; }
+
+/* ── Remaining dark gradient stops (full sections/cards) → light. ────── */
+/* These navy stops are not covered by the base remap and, combined with
+ * the light remapped `from-[#0A0F2C]` neighbours, leave a dark band in the
+ * middle of page-header gradients. Flip them to the light palette too. */
+.pref-light-theme .from-\[\#0C1130\] { --tw-gradient-from: #F5F2EB; }
+.pref-light-theme .via-\[\#141B44\] { --tw-gradient-via: #FFFFFF; }
+.pref-light-theme .to-\[\#0C1130\] { --tw-gradient-to: #F5F2EB; }
+.pref-light-theme .from-\[\#090D2B\] { --tw-gradient-from: #FFFFFF; }
+.pref-light-theme .via-\[\#0E153E\] { --tw-gradient-via: #FFFFFF; }
+.pref-light-theme .via-\[\#111A45\] { --tw-gradient-via: #FFFFFF; }
+.pref-light-theme .via-\[\#1A1126\] { --tw-gradient-via: #FFFFFF; }
+.pref-light-theme .from-\[\#0E0B16\] { --tw-gradient-from: #FFFFFF; }
+.pref-light-theme .via-\[\#0E153D\]\/40 { --tw-gradient-via: rgba(216, 224, 245, 0.4); }
+.pref-light-theme .to-\[\#0E153D\]\/60 { --tw-gradient-to: rgba(216, 224, 245, 0.6); }
+.pref-light-theme .from-\[\#141B4D\] { --tw-gradient-from: #FFFFFF; }
+.pref-light-theme .to-\[\#0A2A1F\] { --tw-gradient-to: #E8F2EC; }
+.pref-light-theme .to-\[\#2A1020\] { --tw-gradient-to: #F6E9EE; }
+.pref-light-theme .to-\[\#1A1228\] { --tw-gradient-to: #EFE9F5; }
+.pref-light-theme .to-\[\#1B2A6B\]\/30 { --tw-gradient-to: rgba(216, 224, 245, 0.3); }
+.pref-light-theme .from-\[\#1B2A6B\]\/40 { --tw-gradient-from: rgba(216, 224, 245, 0.4); }
+.pref-light-theme .from-\[\#12193E\] { --tw-gradient-from: #FFFFFF; }
+.pref-light-theme .via-\[\#12193E\] { --tw-gradient-via: #FFFFFF; }
+.pref-light-theme .to-\[\#12193E\] { --tw-gradient-to: #FFFFFF; }
+
+/* ── Photo overlays (solid navy from, no opacity) stay dark. ─────────── */
+/* ArtsView/SearchView overlay tiles use `from-[#0A0F2C]` WITHOUT opacity
+ * (the base remap catches it) but they sit on dark imagery and must keep
+ * their dark gradient + light text. Attribute-select on the container. */
+.pref-light-theme [class*="bg-gradient-to-t"][class*="to-transparent"][class*="from-\[\#0A0F2C\]"],
+.pref-light-theme [class*="bg-linear-to-t"][class*="to-transparent"][class*="from-\[\#0A0F2C\]"] {
+  --tw-gradient-from: #0A0F2C;
+}
+.pref-light-theme [class*="to-transparent"][class*="from-\[\#0A0F2C\]"] .text-white { color: #F5F2EB; }
+.pref-light-theme [class*="to-transparent"][class*="from-\[\#0A0F2C\]"] .text-\[\#C9A84C\] { color: #C9A84C; }
+.pref-light-theme [class*="to-transparent"][class*="from-\[\#0A0F2C\]"] .text-\[\#E8E0D5\]\/80 { color: rgba(232, 224, 213, 0.8); }
+.pref-light-theme [class*="to-transparent"][class*="from-\[\#0A0F2C\]"] .text-\[\#4FC3F7\] { color: #4FC3F7; }
+
