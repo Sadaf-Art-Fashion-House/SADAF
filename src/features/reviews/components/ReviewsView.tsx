@@ -101,7 +101,9 @@ export default function ReviewsView({ reviews }: ReviewsViewProps) {
                     <div className="md:col-span-4 flex flex-col items-center md:items-start justify-center text-center md:text-left p-6 rounded-xl bg-gradient-to-br from-[#0A0F2C] to-[#1B2A6B]/30 border border-[#C9A84C]/10">
                         <span className="text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-2">Overall Rating</span>
                         <div className="flex items-center gap-3">
-                            <span className="text-5xl font-serif text-white font-bold">{averageRating.toFixed(1)}</span>
+                            <span className="text-5xl font-serif text-white font-bold">
+                                {reviews.length === 0 ? '—' : averageRating.toFixed(1)}
+                            </span>
                             <div className="flex flex-col items-start gap-0.5">
                                 <div className="flex gap-0.5">
                                     {[1, 2, 3, 4, 5].map((star) => (
@@ -113,7 +115,9 @@ export default function ReviewsView({ reviews }: ReviewsViewProps) {
                                         />
                                     ))}
                                 </div>
-                                <span className="text-[10px] text-slate-500 font-mono">{reviews.length} reviews</span>
+                                <span className="text-[10px] text-slate-500 font-mono">
+                                    {reviews.length === 0 ? 'No reviews yet' : `${reviews.length} reviews`}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -121,7 +125,13 @@ export default function ReviewsView({ reviews }: ReviewsViewProps) {
                     {/* Rating Distribution Bars — each bar is a button that
                         filters to exactly that star count; press again to clear. */}
                     <div className="md:col-span-5 flex flex-col gap-1.5 justify-center">
-                        {[5, 4, 3, 2, 1].map((star) => {
+                        {reviews.length === 0 ? (
+                            <div className="flex flex-col items-center text-center gap-2 py-6">
+                                <MessageSquare size={20} className="text-slate-500" />
+                                <p className="text-xs text-slate-400">No reviews yet — be the first to share your experience.</p>
+                            </div>
+                        ) : (
+                        [5, 4, 3, 2, 1].map((star) => {
                             const count = ratingCounts[star - 1];
                             const pct = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
                             const active = exactStarFilter === star;
@@ -158,14 +168,15 @@ export default function ReviewsView({ reviews }: ReviewsViewProps) {
                                     </div>
                                     <span
                                         className={`w-8 text-left font-mono transition-colors ${
-                                            active ? 'text-[#C9A84C] font-bold' : 'text-slate-500'
+                                            active ? 'text-[#C9A84C] font-bold' : count > 0 ? 'text-slate-500' : 'text-slate-600'
                                         }`}
                                     >
-                                        {count}
+                                        {count > 0 ? count : '—'}
                                     </span>
                                 </button>
                             );
-                        })}
+                        })
+                    )}
                     </div>
 
                     {/* Quick Quote */}
