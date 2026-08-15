@@ -39,12 +39,12 @@ interface ProfileViewProps {
 }
 
 export default function ProfileView({ user, onLogout, onUpdateProfile }: ProfileViewProps) {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
 
     // ── Profile state ──
     const [fullName, setFullName] = useState(user.fullName || '');
-    const [bio, setBio] = useState('Passionate about authentic Cairo heritage calligraphies and fine jacquard abayas.');
-    const [shippingAddress, setShippingAddress] = useState('Villa 14, Al-Yasmine District, New Cairo, Egypt');
+    const [bio, setBio] = useState(t('profile.defaultBio'));
+    const [shippingAddress, setShippingAddress] = useState(t('profile.defaultAddress'));
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -243,7 +243,7 @@ export default function ProfileView({ user, onLogout, onUpdateProfile }: Profile
                                     <Calendar size={12} className="text-[#C9A84C]/60 shrink-0" />
                                     <div>
                                         <span className="block text-[9px] font-mono uppercase text-[#E8E0D5]/40">{t('profile.memberSince')}</span>
-                                        {new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                        {new Date(user.createdAt).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2.5">
