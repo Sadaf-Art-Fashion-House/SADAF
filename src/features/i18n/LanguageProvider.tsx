@@ -34,7 +34,7 @@ interface LanguageContextValue {
     setLanguage: (language: SiteLanguage) => void;
 }
 
-const LanguageContext = createContext<LanguageContextValue | null>(null);
+export const LanguageContext = createContext<LanguageContextValue | null>(null);
 
 /** Substitute {var} placeholders, e.g. t('settings.updated.language', { lang: 'العربية' }). */
 function interpolate(template: string, vars?: Record<string, string | number>): string {

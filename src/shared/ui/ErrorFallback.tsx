@@ -1,9 +1,13 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useContext, useState, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AlertTriangle, RefreshCw, Bug, ChevronDown, CheckCircle2, Terminal } from 'lucide-react';
 import SadafLogo from '@/components/common/SadafLogo';
+import { LanguageContext } from '@/features/i18n/LanguageProvider';
+import { dictionaries, en } from '@/features/i18n/dictionaries';
+import type { TranslationKey } from '@/features/i18n/dictionaries';
+import { usePreferencesStore } from '@/features/settings/store/usePreferencesStore';
 
 interface ErrorFallbackProps {
     /** The error that occurred — shown in the collapsible diagnostics panel. */
@@ -53,7 +57,7 @@ export function ErrorFallback({
     error,
     onReset,
     subtitle,
-    title = 'THE LOOM STALLED',
+    title,
     description,
     label,
     notified = true,
@@ -66,6 +70,26 @@ export function ErrorFallback({
 }: ErrorFallbackProps) {
     const [showDetails, setShowDetails] = useState(false);
     const isScreen = size === 'screen';
+
+    // Translation: prefer the LanguageProvider context (normal pages), but
+    // fall back to the persisted preference so the root global-error boundary
+    // (which renders OUTSIDE the provider) is translated too.
+    const ctx = useContext(LanguageContext);
+    const storeLanguage = usePreferencesStore((s) => s.preferences.language);
+    const effectiveT =
+        ctx?.t ??
+        ((key: TranslationKey, vars?: Record<string, string | number>) => {
+            const dict = dictionaries[storeLanguage] ?? en;
+            let text = dict[key] ?? en[key] ?? key;
+            if (vars) {
+                for (const [name, value] of Object.entries(vars)) {
+                    text = text.replace(`{${name}}`, String(value));
+                }
+            }
+            return text;
+        });
+    const resolvedTitle = title ?? effectiveT(isScreen ? 'error.loomTitle' : 'error.sectionTitle');
+    const resolvedDescription = description ?? (isScreen ? undefined : effectiveT('error.sectionDescription'));
 
     return (
         <div
@@ -132,7 +156,7 @@ export function ErrorFallback({
                         transition={{ duration: 0.5, delay: 0.25 }}
                         className="text-[9px] font-mono uppercase tracking-[0.3em] text-[#E8E0D5]/30 mb-2"
                     >
-                        Section: {label}
+                        {effectiveT('error.section', { label })}
                     </motion.p>
                 )}
 
@@ -155,18 +179,18 @@ export function ErrorFallback({
                     transition={{ duration: 0.6, delay: 0.5 }}
                     className="text-2xl md:text-4xl font-serif text-white tracking-wide mb-3"
                 >
-                    {title}
+                    {resolvedTitle}
                 </motion.h1>
 
                 {/* Description */}
-                {description && (
+                {resolvedDescription && (
                     <motion.p
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ duration: 0.6, delay: 0.7 }}
                         className="text-sm md:text-base text-[#E8E0D5]/60 max-w-md leading-relaxed mb-3"
                     >
-                        {description}
+                        {resolvedDescription}
                     </motion.p>
                 )}
 
@@ -186,9 +210,11 @@ export function ErrorFallback({
                             >
                                 <CheckCircle2 size={14} />
                             </motion.span>
-                            <span>We&rsquo;ve been notified</span>
+                            <span>{effectiveT('error.notified')}</span>
                             {reportSent && (
-                                <span className="text-emerald-500/60 text-[10px] font-mono">· Report sent</span>
+                                <span className="text-emerald-500/60 text-[10px] font-mono">
+                                    {effectiveT('error.reportSent')}
+                                </span>
                             )}
                         </div>
                     </motion.div>
@@ -205,7 +231,7 @@ export function ErrorFallback({
                         onClick={onReset}
                         className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/90 text-[#0A0F2C] hover:scale-105 active:scale-95 transition-all duration-300 text-xs font-semibold uppercase tracking-[0.12em] shadow-lg shadow-[#C9A84C]/20 cursor-pointer"
                     >
-                        <RefreshCw size={13} /> Try Again
+                        <RefreshCw size={13} /> {effectiveT('error.tryAgain')}
                     </button>
                     {actions}
                 </motion.div>
@@ -225,7 +251,7 @@ export function ErrorFallback({
                         className="inline-flex items-center gap-1.5 text-[10px] text-[#E8E0D5]/25 hover:text-[#4FC3F7]/60 transition-all duration-200 font-mono tracking-wider uppercase cursor-pointer mb-3"
                     >
                         <Bug size={10} />
-                        Error Details
+                        {effectiveT('error.details')}
                         <ChevronDown
                             size={10}
                             className={`transition-transform duration-200 ${showDetails ? 'rotate-180' : ''}`}
@@ -244,17 +270,17 @@ export function ErrorFallback({
                                 <div className="text-left bg-black/60 border border-red-500/20 rounded-xl p-4 backdrop-blur-sm">
                                     <div className="flex items-center gap-2 mb-3 text-[10px] text-[#4FC3F7]/70 font-mono tracking-wider uppercase border-b border-white/5 pb-2">
                                         <Terminal size={11} />
-                                        Error Diagnostics
+                                        {effectiveT('error.diagnostics')}
                                     </div>
 
                                     {/* Error message */}
                                     <div className="mb-3">
                                         <span className="text-[9px] text-[#E8E0D5]/40 font-mono uppercase tracking-wider block mb-1">
-                                            Message
+                                            {effectiveT('error.message')}
                                         </span>
                                         <div className="bg-red-950/30 border border-red-500/10 rounded-lg p-3">
                                             <code className="text-xs text-red-300 font-mono break-all leading-relaxed">
-                                                {error.message || 'Unknown error'}
+                                                {error.message || effectiveT('error.unknown')}
                                             </code>
                                         </div>
                                     </div>
@@ -263,7 +289,7 @@ export function ErrorFallback({
                                     {error.digest && (
                                         <div className="mb-3">
                                             <span className="text-[9px] text-[#E8E0D5]/40 font-mono uppercase tracking-wider block mb-1">
-                                                Digest ID
+                                                {effectiveT('error.digestId')}
                                             </span>
                                             <code className="text-[10px] text-[#4FC3F7]/60 font-mono">
                                                 {error.digest}
@@ -275,7 +301,7 @@ export function ErrorFallback({
                                     {error.stack && (
                                         <div>
                                             <span className="text-[9px] text-[#E8E0D5]/40 font-mono uppercase tracking-wider block mb-1">
-                                                Stack Trace
+                                                {effectiveT('error.stackTrace')}
                                             </span>
                                             <div className="bg-black/50 border border-white/5 rounded-lg p-3 max-h-48 overflow-y-auto">
                                                 <pre className="text-[9px] text-[#E8E0D5]/40 font-mono leading-relaxed whitespace-pre-wrap">

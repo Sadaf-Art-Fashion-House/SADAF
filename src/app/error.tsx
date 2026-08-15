@@ -7,6 +7,7 @@ import { ROUTES } from '@/config/routes';
 import { ErrorFallback } from '@/shared/ui/ErrorFallback';
 import { logError } from '@/features/error-logging';
 import { getEmailSettings, sendErrorReportByEmail } from '@/features/email-settings';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 
 interface ErrorPageProps {
     error: Error & { digest?: string };
@@ -14,6 +15,7 @@ interface ErrorPageProps {
 }
 
 export default function ErrorPage({ error, reset }: ErrorPageProps) {
+    const { t } = useLanguage();
     const [reportSent, setReportSent] = useState(false);
 
     useEffect(() => {
@@ -53,9 +55,9 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
         <ErrorFallback
             error={error}
             onReset={reset}
-            subtitle="SOMETHING WENT WRONG"
-            title="THE LOOM STALLED"
-            description="Something went wrong while weaving this page. Please try again or return home."
+            subtitle={t('error.pageSubtitle')}
+            title={t('error.loomTitle')}
+            description={t('error.pageDescription')}
             reportSent={reportSent}
             size="screen"
             showLogo
