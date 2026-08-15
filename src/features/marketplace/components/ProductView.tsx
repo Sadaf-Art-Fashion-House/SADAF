@@ -36,6 +36,7 @@ import ReviewForm from '@/features/reviews/components/ReviewForm';
 import { ROUTES } from '@/config/routes';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
 import { pdpReviewCountWord, reviewCountWord } from '@/shared/utils/countWord';
+import StarRatingRow from '@/shared/components/StarRatingRow';
 import { localizedProductDescription, localizedProductDetails, localizedProductFabric, localizedProductName } from '@/features/i18n/productNames';
 
 interface ProductViewProps {
@@ -692,7 +693,14 @@ export default function ProductView({
                                             </h3>
                                             {related.rating && (
                                                 <div className="flex items-center gap-1 text-[9px] text-[#F0D080] font-mono mt-1">
-                                                    <Star size={9} className="text-[#C9A84C]" fill="currentColor" />
+                                                    <StarRatingRow
+                                                        rating={
+                                                            relatedRatings[related.id]
+                                                                ? relatedRatings[related.id]!.average
+                                                                : related.rating
+                                                        }
+                                                        size={9}
+                                                    />
                                                     <span>
                                                         {relatedRatings[related.id]
                                                             ? relatedRatings[related.id]!.average.toFixed(1)
