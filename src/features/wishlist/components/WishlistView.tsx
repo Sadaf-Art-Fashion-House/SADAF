@@ -8,6 +8,7 @@ import type { FashionProduct } from '@/shared/types';
 import type { RatingsByProduct } from '@/features/reviews/hooks/useAggregatedRatings';
 import { ROUTES } from '@/config/routes';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
+import { reviewCountWord } from '@/shared/utils/countWord';
 import { localizedProductFabric, localizedProductName } from '@/features/i18n/productNames';
 
 interface WishlistViewProps {
@@ -206,7 +207,7 @@ export default function WishlistView({
                                                     </motion.span>
                                                     {ratingsByProduct[product.id] && (
                                                         <span className="text-gray-500">
-                                                            &middot; {ratingsByProduct[product.id]!.count} {t('store.reviews')}
+                                                            &middot; {ratingsByProduct[product.id]!.count} {reviewCountWord(t, ratingsByProduct[product.id]!.count)}
                                                         </span>
                                                     )}
                                                 </div>

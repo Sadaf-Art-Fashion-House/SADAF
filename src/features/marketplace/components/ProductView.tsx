@@ -35,6 +35,7 @@ import type { RatingsByProduct } from '@/features/reviews/hooks/useAggregatedRat
 import ReviewForm from '@/features/reviews/components/ReviewForm';
 import { ROUTES } from '@/config/routes';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
+import { pdpReviewCountWord, reviewCountWord } from '@/shared/utils/countWord';
 import { localizedProductDescription, localizedProductDetails, localizedProductFabric, localizedProductName } from '@/features/i18n/productNames';
 
 interface ProductViewProps {
@@ -204,7 +205,7 @@ export default function ProductView({
                                 </motion.span>
                                 <span className="text-[9px] font-mono text-slate-500">
                                     {ratingSummary
-                                        ? t('pdp.reviewCount', { count: ratingSummary.count, s: ratingSummary.count === 1 ? '' : 's' })
+                                        ? `${ratingSummary.count} ${pdpReviewCountWord(t, ratingSummary.count)} ${t('pdp.reviewFromCustomers')}`
                                         : t('pdp.editorRating')}
                                 </span>
                                 <span className="text-[10px] font-mono text-slate-500">
@@ -244,7 +245,7 @@ export default function ProductView({
                                             ))}
                                         </div>
                                         <span className="text-[10px] text-slate-500 font-mono">
-                                            {t('pdp.reviewCount', { count: ratingSummary.count, s: ratingSummary.count === 1 ? '' : 's' })}
+                                            {ratingSummary.count} {pdpReviewCountWord(t, ratingSummary.count)} {t('pdp.reviewFromCustomers')}
                                         </span>
                                     </div>
                                     <Link
@@ -699,7 +700,7 @@ export default function ProductView({
                                                     </span>
                                                     {relatedRatings[related.id] && (
                                                         <span className="text-gray-500">
-                                                            &middot; {relatedRatings[related.id]!.count} {t('store.reviews')}
+                                                            &middot; {relatedRatings[related.id]!.count} {reviewCountWord(t, relatedRatings[related.id]!.count)}
                                                         </span>
                                                     )}
                                                 </div>
