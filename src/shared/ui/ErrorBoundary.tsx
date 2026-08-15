@@ -72,8 +72,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 error={error}
                 onReset={this.handleReset}
                 label={label}
-                title="Something went wrong"
-                description="This section hit an unexpected error. The team has been notified — you can try again below."
                 size="section"
             />
         );
