@@ -12,7 +12,7 @@
  * attributes are applied in an effect, never during render.
  */
 
-import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import {
     usePreferencesStore,
     type SiteLanguage,
@@ -57,12 +57,26 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     // Apply the theme preference: `pref-light-theme` on <html> flips the
     // whole app to the light palette (globals.css override layer). 'auto'
     // follows the OS color-scheme and reacts to live changes.
+    //
+    // The `theme-switching` class is added for a short window around the
+    // flip so globals.css can run smooth colour transitions on every
+    // surface — then removed so the animation only plays while switching
+    // (not on first paint). Skipped when reduced motion is enabled.
+    // First theme run just establishes the initial class — no animation.
+    const firstThemeRun = useRef(false);
+
     useEffect(() => {
         const root = document.documentElement;
         const applyTheme = () => {
             const isLight =
                 theme === 'light' ||
                 (theme === 'auto' && window.matchMedia('(prefers-color-scheme: light)').matches);
+            if (firstThemeRun.current) {
+                root.classList.add('theme-switching');
+                window.setTimeout(() => root.classList.remove('theme-switching'), 700);
+            } else {
+                firstThemeRun.current = true;
+            }
             root.classList.toggle('pref-light-theme', isLight);
         };
         applyTheme();
@@ -71,7 +85,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
             mq.addEventListener('change', applyTheme);
             return () => mq.removeEventListener('change', applyTheme);
         }
-    }, [theme]);
+    }, [theme, reducedMotion]);
 
     // Apply the UX preferences at the document level: root font size (scales
     // every rem-based Tailwind size) + reduced-motion / high-contrast classes
