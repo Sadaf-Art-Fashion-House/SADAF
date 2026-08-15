@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { ShoppingCart, Heart, Filter, ChevronRight, X, CreditCard, Star } from "lucide-react";
 import { ROUTES } from "@/config/routes";
 import { useLanguage } from "@/features/i18n/LanguageProvider";
+import { reviewCountWord } from "@/shared/utils/countWord";
 import { localizedArtTitle, localizedProductName, localizedFabricName } from "@/features/i18n/productNames";
 import type { CartItem, FashionProduct } from "@/shared/types";
 import type { RatingsByProduct } from "@/features/reviews/hooks/useAggregatedRatings";
@@ -281,7 +282,7 @@ export default function StoreView({
                                                 </motion.span>
                                                 {ratingsByProduct[prod.id] && (
                                                     <span className="text-[10px] text-gray-500 font-mono">
-                                                        &middot; {ratingsByProduct[prod.id]!.count} {t("store.reviews")}
+                                                        &middot; {ratingsByProduct[prod.id]!.count} {reviewCountWord(t, ratingsByProduct[prod.id]!.count)}
                                                     </span>
                                                 )}
                                             </div>

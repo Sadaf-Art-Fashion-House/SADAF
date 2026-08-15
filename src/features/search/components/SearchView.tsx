@@ -19,6 +19,7 @@ import {
 import { useSearch } from '../hooks/useSearch';
 import { SEARCH_CATEGORIES } from '../constants/searchCategories';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
+import { reviewCountWord } from '@/shared/utils/countWord';
 import type { RatingsByProduct } from '@/features/reviews/hooks/useAggregatedRatings';
 import type { SearchResult, SearchCategory } from '../types';
 
@@ -355,7 +356,7 @@ function SearchCard({
                             </motion.span>
                             {rating && (
                                 <span className="text-[9px] text-slate-500 font-mono">
-                                    &middot; {rating.count} {t('store.reviews')}
+                                    &middot; {rating.count} {reviewCountWord(t, rating.count)}
                                 </span>
                             )}
                         </div>
@@ -441,7 +442,7 @@ function SearchListItem({
                         </motion.span>
                         {rating && (
                             <span className="text-[9px] text-slate-500 font-mono">
-                                &middot; {rating.count} {t('store.reviews')}
+                                &middot; {rating.count} {reviewCountWord(t, rating.count)}
                             </span>
                         )}
                     </div>
