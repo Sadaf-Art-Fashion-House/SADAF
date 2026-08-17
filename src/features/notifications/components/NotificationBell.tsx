@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import { Bell, BellRing, BellOff, CheckCheck, ChevronRight, Globe, Wifi, WifiOff } from 'lucide-react';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
 import { useRealtimeNotifications } from '../hooks/useRealtimeNotifications';
@@ -170,7 +171,7 @@ export default function NotificationBell() {
                             onClick={() => setIsOpen(false)}
                             className="flex items-center justify-center gap-1.5 px-4 py-3 border-t border-white/5 text-[10px] font-mono uppercase tracking-wider text-[#C9A84C]/80 hover:text-[#C9A84C] hover:bg-white/5 transition-all"
                         >
-                            {t('notifications.viewAll')} <ChevronRight size={10} />
+                            {t('notifications.viewAll')} <DirectionalIcon icon={ChevronRight} size={10} />
                         </Link>
                     </motion.div>
                 )}

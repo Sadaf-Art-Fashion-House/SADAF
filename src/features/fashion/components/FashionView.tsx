@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { Compass, ZoomIn, ArrowRight, Heart, ShoppingCart, X } from "lucide-react";
+import { DirectionalIcon } from "@/shared/ui/DirectionalIcon";
 import type { FashionCategory, FashionProduct, LookbookItem } from "@/shared/types";
 import { ROUTES } from "@/config/routes";
 import { SmartClamp } from "@/shared/ui/SmartClamp";
@@ -262,7 +263,7 @@ export default function FashionView({
                                             onClick={() => openProductDetail(product)}
                                             className="px-4 py-2 bg-[#1B2A6B] hover:bg-[#C9A84C] hover:text-[#0A0F2C] text-xs text-white uppercase tracking-wider font-semibold rounded transition-all duration-300 flex items-center gap-1 cursor-pointer"
                                         >
-                                            {t("fashion.configure")} <ArrowRight size={11} />
+                                            {t("fashion.configure")} <DirectionalIcon icon={ArrowRight} size={11} />
                                         </button>
                                     </div>
                                 </div>

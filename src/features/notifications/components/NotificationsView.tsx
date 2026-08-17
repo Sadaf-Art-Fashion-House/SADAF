@@ -10,6 +10,7 @@ import {
     ChevronRight,
     Globe,
 } from 'lucide-react';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import type { Notification } from '../types';
 import {
     TYPE_ICONS,
@@ -231,7 +232,7 @@ function NotificationItem({
                     </span>
                     {notification.href && (
                         <span className="flex items-center gap-1 text-[9px] text-[#4FC3F7]/70 group-hover:text-[#4FC3F7] transition-colors font-mono uppercase tracking-wider">
-                            {t('notifications.viewDetails')} <ChevronRight size={10} />
+                            {t('notifications.viewDetails')} <DirectionalIcon icon={ChevronRight} size={10} />
                         </span>
                     )}
                 </div>

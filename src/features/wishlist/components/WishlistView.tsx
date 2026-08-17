@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import { Heart, ShoppingBag, Trash2, ArrowLeft, Sparkles } from 'lucide-react';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import type { FashionProduct } from '@/shared/types';
 import type { RatingsByProduct } from '@/features/reviews/hooks/useAggregatedRatings';
 import { ROUTES } from '@/config/routes';
@@ -72,7 +73,7 @@ export default function WishlistView({
                         href="/store"
                         className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] hover:text-[#4FC3F7] transition-colors duration-300"
                     >
-                        <ArrowLeft size={12} />
+                        <DirectionalIcon icon={ArrowLeft} size={12} />
                         {t('store.cart.browseStore')}
                     </Link>
                 </div>
@@ -251,7 +252,7 @@ export default function WishlistView({
                             href="/store"
                             className="text-[#C9A84C] hover:text-[#4FC3F7] transition-colors duration-300 flex items-center gap-1.5"
                         >
-                            <ArrowLeft size={11} />
+                            <DirectionalIcon icon={ArrowLeft} size={11} />
                             {t('orders.continueShopping')}
                         </Link>
                         <span className="text-[#C9A84C]/30">&bull;</span>

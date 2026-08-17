@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { ShoppingCart, Heart, Filter, ChevronRight, X, CreditCard } from "lucide-react";
+import { DirectionalIcon } from "@/shared/ui/DirectionalIcon";
 import { ShareIconButton } from "@/shared/components/ShareIconButton";
 import { ROUTES } from "@/config/routes";
 import { SmartClamp } from "@/shared/ui/SmartClamp";
@@ -126,7 +127,8 @@ export default function StoreView({
                                     }`}
                                 >
                                     <span>{tc(`store.category.${cat}`, cat)}</span>
-                                    <ChevronRight
+                                    <DirectionalIcon
+                                        icon={ChevronRight}
                                         size={10}
                                         className={selectedCategory === cat ? "text-[#C9A84C]" : "opacity-0"}
                                     />

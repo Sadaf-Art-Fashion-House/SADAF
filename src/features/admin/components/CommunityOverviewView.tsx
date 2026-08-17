@@ -20,6 +20,7 @@ import {
     Inbox,
     ChevronRight,
 } from 'lucide-react';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import type { CommunityOverviewData, PlatformPendingRequest, ReferredMember } from '../types';
 import { useCityFilter } from '@/features/customer/hooks/useCityFilter';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
@@ -388,7 +389,8 @@ export default function CommunityOverviewView({
                                                                 ${referrer.rewards.toLocaleString()}
                                                             </p>
                                                         </div>
-                                                        <ChevronRight
+                                                        <DirectionalIcon
+                                                            icon={ChevronRight}
                                                             size={12}
                                                             className="shrink-0 text-[#E8E0D5]/20 group-hover/referrer:text-[#C9A84C] transition-colors"
                                                         />

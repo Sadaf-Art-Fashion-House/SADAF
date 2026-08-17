@@ -11,6 +11,7 @@
 
 import Link from 'next/link';
 import { Handshake, Building2, ArrowRight } from 'lucide-react';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
 import { ROUTES } from '@/config/routes';
 
@@ -49,7 +50,7 @@ export default function CompanyHomeView() {
                         </p>
                     </div>
                     <span className="flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-widest text-rose-400 group-hover:gap-3 transition-all duration-300">
-                        {t('company.home.openHub')} <ArrowRight size={12} />
+                        {t('company.home.openHub')} <DirectionalIcon icon={ArrowRight} size={12} />
                     </span>
                 </Link>
 

@@ -20,6 +20,7 @@ import {
     Shirt,
     AlertCircle,
 } from 'lucide-react';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import type { CartItem } from '@/shared/types';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
 import type { TranslationKey } from '@/features/i18n/dictionaries';
@@ -338,7 +339,7 @@ export default function CheckoutView({
                             href="/cart"
                             className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] hover:text-[#4FC3F7] transition-colors duration-300"
                         >
-                            <ArrowLeft size={12} />
+                            <DirectionalIcon icon={ArrowLeft} size={12} />
                             {t('checkout.backToCart')}
                         </Link>
                     )}
@@ -531,7 +532,7 @@ export default function CheckoutView({
                                         type="submit"
                                         className="w-full py-3.5 rounded bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/90 text-[#0A0F2C] text-xs font-mono font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.01] active:scale-98 cursor-pointer"
                                     >
-                                        {t('checkout.continueReview')} <ArrowRight size={14} />
+                                        {t('checkout.continueReview')} <DirectionalIcon icon={ArrowRight} size={14} />
                                     </button>
                                 </motion.form>
                             )}

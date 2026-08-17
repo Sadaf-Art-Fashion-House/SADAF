@@ -15,6 +15,7 @@ import {
     Palette,
     Shirt,
 } from 'lucide-react';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import SuccessToast from '@/shared/components/SuccessToast';
 import type { CartItem } from '@/shared/types';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
@@ -150,7 +151,7 @@ export default function CartView({
                         href="/store"
                         className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] hover:text-[#4FC3F7] transition-colors duration-300"
                     >
-                        <ArrowLeft size={12} />
+                        <DirectionalIcon icon={ArrowLeft} size={12} />
                         {t('orders.continueShopping')}
                     </Link>
                 </div>
@@ -382,7 +383,7 @@ export default function CartView({
                             href="/store"
                             className="text-[#C9A84C] hover:text-[#4FC3F7] transition-colors duration-300 flex items-center gap-1.5"
                         >
-                            <ArrowLeft size={11} />
+                            <DirectionalIcon icon={ArrowLeft} size={11} />
                             {t('orders.continueShopping')}
                         </Link>
                         <span className="text-[#C9A84C]/30">&bull;</span>

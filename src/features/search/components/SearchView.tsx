@@ -17,6 +17,7 @@ import {
     SlidersHorizontal,
     Star,
 } from 'lucide-react';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import { useSearch } from '../hooks/useSearch';
 import { SEARCH_CATEGORIES } from '../constants/searchCategories';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
@@ -372,7 +373,7 @@ function SearchCard({
                         ${result.price.toLocaleString()}
                     </span>
                     <span className="text-[9px] text-[#4FC3F7]/70 flex items-center gap-1 group-hover:text-[#4FC3F7] transition-colors font-mono uppercase tracking-wider">
-                        {t('search.view')} <ChevronRight size={10} />
+                        {t('search.view')} <DirectionalIcon icon={ChevronRight} size={10} />
                     </span>
                 </div>
             </div>
@@ -461,7 +462,7 @@ function SearchListItem({
                     ${result.price.toLocaleString()}
                 </p>
                 <span className="text-[9px] text-[#4FC3F7]/60 flex items-center gap-1 justify-end mt-1 group-hover:text-[#4FC3F7] transition-colors font-mono uppercase tracking-wider">
-                    {t('search.view')} <ChevronRight size={10} />
+                    {t('search.view')} <DirectionalIcon icon={ChevronRight} size={10} />
                 </span>
             </div>
         </Link>

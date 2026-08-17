@@ -14,6 +14,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { ArrowLeft, ArrowRight, Compass, Sparkles, Camera } from "lucide-react";
+import { DirectionalIcon } from "@/shared/ui/DirectionalIcon";
 import type { LookbookItem } from "@/shared/types";
 import { ROUTES } from "@/config/routes";
 import { useLanguage } from "@/features/i18n/LanguageProvider";
@@ -199,7 +200,7 @@ export default function LookbookView({ lookbookItems }: LookbookViewProps) {
                                     className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/90 text-[#0A0F2C] text-xs font-mono font-bold uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 shadow-lg shadow-[#C9A84C]/10"
                                 >
                                     {t("lookbook.shopTheLook")}
-                                    <ArrowRight size={12} />
+                                    <DirectionalIcon icon={ArrowRight} size={12} />
                                 </Link>
                                 <div className="flex items-center gap-2 ms-auto">
                                     <button
@@ -207,14 +208,14 @@ export default function LookbookView({ lookbookItems }: LookbookViewProps) {
                                         aria-label={t("lookbook.prevLook")}
                                         className="p-2.5 rounded-lg border border-white/10 text-slate-300 hover:text-white hover:border-[#C9A84C]/40 transition-all duration-300 cursor-pointer"
                                     >
-                                        <ArrowLeft size={13} />
+                                        <DirectionalIcon icon={ArrowLeft} size={13} />
                                     </button>
                                     <button
                                         onClick={() => goTo(1)}
                                         aria-label={t("lookbook.nextLook")}
                                         className="p-2.5 rounded-lg border border-white/10 text-slate-300 hover:text-white hover:border-[#C9A84C]/40 transition-all duration-300 cursor-pointer"
                                     >
-                                        <ArrowRight size={13} />
+                                        <DirectionalIcon icon={ArrowRight} size={13} />
                                     </button>
                                 </div>
                             </div>
@@ -280,14 +281,14 @@ export default function LookbookView({ lookbookItems }: LookbookViewProps) {
                             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#C9A84C] text-[#0A0F2C] text-xs font-mono font-bold uppercase tracking-widest hover:bg-white transition-all duration-300 shadow-lg shadow-[#C9A84C]/10"
                         >
                             {t("lookbook.exploreStore")}
-                            <ArrowRight size={12} />
+                            <DirectionalIcon icon={ArrowRight} size={12} />
                         </Link>
                         <Link
                             href={ROUTES.FASHION}
                             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-[#C9A84C]/40 text-[#C9A84C] text-xs font-mono font-bold uppercase tracking-widest hover:bg-[#C9A84C]/10 transition-all duration-300"
                         >
                             {t("lookbook.viewFashion")}
-                            <ArrowRight size={12} />
+                            <DirectionalIcon icon={ArrowRight} size={12} />
                         </Link>
                     </div>
                 </div>

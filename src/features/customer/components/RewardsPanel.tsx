@@ -19,6 +19,7 @@ import {
     ChevronDown,
     ArrowLeft,
 } from 'lucide-react';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import type { RewardsData } from '../types';
 import { TIER_COLORS, RANK_MEDALS } from '../constants/tierStyles';
 import { formatPoints } from '../utils/formatPoints';
@@ -246,7 +247,7 @@ export default function RewardsPanel({ data, loading, error, memberName, isLive 
                                     aria-label={t('lb.resetCityFilter')}
                                     className="mt-4 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#C9A84C]/15 border border-[#C9A84C]/30 text-[#C9A84C] text-[9px] font-mono uppercase tracking-wider hover:bg-[#C9A84C]/25 transition-all cursor-pointer"
                                 >
-                                    <ArrowLeft size={11} />
+                                    <DirectionalIcon icon={ArrowLeft} size={11} />
                                     {t('lb.showAllCities')}
                                 </button>
                             </div>
@@ -310,7 +311,7 @@ export default function RewardsPanel({ data, loading, error, memberName, isLive 
                         className="mt-4 flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl bg-[#C9A84C]/10 border border-[#C9A84C]/25 text-[#C9A84C] text-[9px] font-mono uppercase tracking-widest hover:bg-[#C9A84C]/20 hover:border-[#C9A84C]/40 transition-all duration-300 group"
                     >
                         {t('rewards.viewFull')}
-                        <ArrowRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
+                        <DirectionalIcon icon={ArrowRight} size={10} className="group-hover:translate-x-0.5 transition-transform" />
                     </Link>
                 </div>
             </div>

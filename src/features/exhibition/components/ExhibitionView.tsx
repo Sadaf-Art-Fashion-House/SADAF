@@ -16,6 +16,7 @@ import {
     Play,
     AlertTriangle,
 } from 'lucide-react';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import type { ArtPiece } from '@/shared/types';
 import type { ExhibitionRoom } from '../types';
 import { useTextToSpeech, type TtsLang } from '../hooks/useTextToSpeech';
@@ -403,7 +404,7 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                     className="p-2 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition cursor-pointer"
                                     title={t('exh.prevRoom')}
                                 >
-                                    <ArrowLeft size={14} />
+                                    <DirectionalIcon icon={ArrowLeft} size={14} />
                                 </button>
                                 <span className="text-[9px] sm:text-[10px] font-mono text-white tracking-widest uppercase font-bold">
                                     {t('exh.roomCount', { current: activeRoomIndex + 1, total: ROOMS.length })}
@@ -416,7 +417,7 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                     className="p-2 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition cursor-pointer"
                                     title={t('exh.nextRoom')}
                                 >
-                                    <ArrowRight size={14} />
+                                    <DirectionalIcon icon={ArrowRight} size={14} />
                                 </button>
                             </div>
                         </div>

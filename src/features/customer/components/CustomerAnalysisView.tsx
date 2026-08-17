@@ -15,6 +15,7 @@ import {
     Calendar,
     WifiOff,
 } from 'lucide-react';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import {
     BarChart,
     Bar,
@@ -154,7 +155,7 @@ export default function CustomerAnalysisView({
                                 href="/dashboard/profile"
                                 className="px-4 py-2 bg-black/40 hover:bg-white text-[10px] font-mono uppercase tracking-widest font-bold text-gray-300 hover:text-[#0A0F2C] border border-white/10 transition rounded-xl cursor-pointer flex items-center gap-1.5"
                             >
-                                <ArrowLeft size={11} />
+                                <DirectionalIcon icon={ArrowLeft} size={11} />
                                 {t('analysis.profile')}
                             </Link>
                         </div>

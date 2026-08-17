@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { motion } from 'motion/react';
 import { ArrowLeft, Sparkles, ShoppingBag, Feather, Home } from 'lucide-react';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import { ROUTES } from '@/config/routes';
 import SadafLogo from '@/components/common/SadafLogo';
 
@@ -125,7 +126,7 @@ export default function NotFound() {
                         href={ROUTES.HOME}
                         className="inline-flex items-center gap-1.5 text-[10px] text-[#E8E0D5]/40 hover:text-[#C9A84C] transition-all duration-300 tracking-[0.15em] uppercase font-mono cursor-pointer group"
                     >
-                        <ArrowLeft size={11} className="transition-transform group-hover:-translate-x-1" />
+                        <DirectionalIcon icon={ArrowLeft} size={11} className="transition-transform group-hover:-translate-x-1" />
                         Return to the Atrium
                     </Link>
                 </motion.div>

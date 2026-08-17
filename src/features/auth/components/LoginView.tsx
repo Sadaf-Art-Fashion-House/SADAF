@@ -11,6 +11,7 @@ import {
     Chrome,
     ArrowRight,
 } from 'lucide-react';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import SadafLogo from '@/components/common/SadafLogo';
 import { ErrorBanner } from '@/shared/ui/ErrorGuidance';
@@ -177,7 +178,7 @@ export default function LoginView({
                                 <span className="w-4 h-4 border-2 border-[#0A0F2C] border-t-transparent rounded-full animate-spin" />
                             ) : (
                                 <>
-                                    {t('auth.connectCta')} <ArrowRight size={13} />
+                                    {t('auth.connectCta')} <DirectionalIcon icon={ArrowRight} size={13} />
                                 </>
                             )}
                         </button>

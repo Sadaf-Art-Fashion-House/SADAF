@@ -23,6 +23,7 @@ import {
     Search,
     Send,
 } from 'lucide-react';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import { ROUTES } from '@/config/routes';
 import {
     getErrorLogs,
@@ -262,7 +263,7 @@ export default function AdminErrorLogsPage() {
                                 href={backHref}
                                 className="text-[10px] text-[#4FC3F7]/50 hover:text-[#4FC3F7] transition-colors font-mono uppercase tracking-wider flex items-center gap-1 cursor-pointer"
                             >
-                                <ArrowLeft size={11} />
+                                <DirectionalIcon icon={ArrowLeft} size={11} />
                                 {t('errorLogs.backToDashboard')}
                             </Link>
 

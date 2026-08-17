@@ -3,6 +3,7 @@
 import { useMemo, useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trophy, Search, Users, Medal, Crown, Filter, X, Wifi, WifiOff, MapPin, ChevronDown, TrendingDown, Swords, Volume2, VolumeX, ArrowLeft } from 'lucide-react';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import type { LeaderboardEntry, LeaderboardKind, LoyaltyTier, OvertakeEvent } from '../types';
 import { TIER_COLORS, RANK_MEDALS } from '../constants/tierStyles';
 import { formatPoints } from '../utils/formatPoints';
@@ -429,7 +430,7 @@ export default function LeaderboardView({
                                 aria-label={t('lb.resetCityFilter')}
                                 className="mt-5 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#C9A84C]/15 border border-[#C9A84C]/30 text-[#C9A84C] text-[10px] font-mono uppercase tracking-wider hover:bg-[#C9A84C]/25 transition-all cursor-pointer"
                             >
-                                <ArrowLeft size={12} />
+                                <DirectionalIcon icon={ArrowLeft} size={12} />
                                 {t('lb.showAllCities')}
                             </button>
                         </div>

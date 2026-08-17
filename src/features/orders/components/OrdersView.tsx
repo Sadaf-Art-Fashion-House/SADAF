@@ -15,6 +15,7 @@ import {
     Heart,
     Star,
 } from 'lucide-react';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import type { Order, OrderStatus, OrderStatusEvent } from '@/features/orders/types';
 import type { RatingsByProduct } from '@/features/reviews/hooks/useAggregatedRatings';
 import type { TranslationKey } from '@/features/i18n/dictionaries';
@@ -124,7 +125,7 @@ export default function OrdersView({
                         href={ROUTES.DASHBOARD_PROFILE}
                         className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] hover:text-[#4FC3F7] transition-colors duration-300"
                     >
-                        <ArrowLeft size={12} className="rtl:rotate-180" />
+                        <DirectionalIcon icon={ArrowLeft} size={12} />
                         {t('orders.backToProfile')}
                     </Link>
                 </div>
@@ -320,7 +321,7 @@ export default function OrdersView({
                             href={ROUTES.DASHBOARD_PROFILE}
                             className="text-[#C9A84C] hover:text-[#4FC3F7] transition-colors duration-300 flex items-center gap-1.5"
                         >
-                            <ArrowLeft size={11} className="rtl:rotate-180" />
+                            <DirectionalIcon icon={ArrowLeft} size={11} />
                             {t('orders.backToProfile')}
                         </Link>
                         <span className="text-[#C9A84C]/30">&bull;</span>

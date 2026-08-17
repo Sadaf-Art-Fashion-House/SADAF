@@ -27,6 +27,7 @@ import {
     AlertTriangle,
     CheckCircle2,
 } from 'lucide-react';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import Link from 'next/link';
 import { ROUTES } from '@/config/routes';
 import SuccessToast from '@/shared/components/SuccessToast';
@@ -469,7 +470,7 @@ export default function SettingsView() {
                             {t('settings.watermark.subtitle')}
                         </span>
                     </span>
-                    <ArrowRight size={14} className="text-[#C9A84C] group-hover:translate-x-0.5 transition-transform rtl:rotate-180" />
+                    <DirectionalIcon icon={ArrowRight} size={14} className="text-[#C9A84C] group-hover:translate-x-0.5 transition-transform" />
                 </Link>
             </section>
 

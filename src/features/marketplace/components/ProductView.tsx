@@ -30,6 +30,7 @@ import {
     AlertTriangle,
     X,
 } from 'lucide-react';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import type { FashionProduct } from '@/shared/types';
 import type { Review } from '@/features/reviews/types';
 import type { RatingCounts } from './ProductPageClient';
@@ -155,9 +156,9 @@ export default function ProductView({
                     <Link href={ROUTES.STORE} className="hover:text-[#C9A84C] transition-colors">
                         {t('pdp.breadcrumb')}
                     </Link>
-                    <ChevronRight size={11} />
+                    <DirectionalIcon icon={ChevronRight} size={11} />
                     <span className="text-[#E8E0D5]/60">{product.category}</span>
-                    <ChevronRight size={11} />
+                    <DirectionalIcon icon={ChevronRight} size={11} />
                     <span className="text-[#C9A84C]">{localizedProductName(product, language)}</span>
                 </nav>
 
@@ -266,7 +267,7 @@ export default function ProductView({
                                         href={ROUTES.REVIEWS}
                                         className="ml-auto inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-wider text-[#4FC3F7] hover:text-[#C9A84C] transition-colors"
                                     >
-                                        {t('pdp.viewAll')} <ChevronRight size={10} />
+                                        {t('pdp.viewAll')} <DirectionalIcon icon={ChevronRight} size={10} />
                                     </Link>
                                 </div>
 
@@ -366,7 +367,8 @@ export default function ProductView({
                                             {showAllReviews
                                                 ? t('pdp.showFewer')
                                                 : t('pdp.showAllReviews', { count: reviews.length })}
-                                            <ChevronRight
+                                            <DirectionalIcon
+                                                icon={ChevronRight}
                                                 size={10}
                                                 className={`transition-transform duration-300 ${showAllReviews ? 'rotate-90' : ''}`}
                                             />
