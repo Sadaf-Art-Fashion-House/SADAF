@@ -12,6 +12,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import { motion, AnimatePresence } from 'motion/react';
 import {
     ChevronRight,
@@ -753,9 +754,12 @@ export default function ProductView({
                                             <span className="text-[9px] uppercase font-mono text-gray-500 block mb-0.5">
                                                 {related.category}
                                             </span>
-                                            <h3 className="font-serif text-[#E8E0D5] text-sm group-hover:text-[#F0D080] transition-colors duration-300 leading-tight truncate">
-                                                {localizedProductName(related, language)}
-                                            </h3>
+                                            <SmartClamp
+                                                as="h3"
+                                                maxLines={1}
+                                                className="font-serif text-[#E8E0D5] text-sm group-hover:text-[#F0D080] transition-colors duration-300 leading-tight"
+                                                text={localizedProductName(related, language)}
+                                            />
                                             {related.rating && (
                                                 <div className="flex items-center gap-1 text-[9px] text-[#F0D080] font-mono mt-1">
                                                     <StarRatingRow

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import {
     Search,
     X,
@@ -327,10 +328,13 @@ function SearchCard({
 
             <div className="p-4 flex-1 flex flex-col justify-between">
                 <div>
-                    <h3 className="font-serif text-[#E8E0D5] text-sm group-hover:text-[#F0D080] transition-colors duration-300 mb-1 leading-tight line-clamp-2">
-                        {result.title}
-                    </h3>
-                    <p className="text-[10px] text-slate-500 font-sans line-clamp-1 mb-2">{result.subtitle}</p>
+                    <SmartClamp
+                        as="h3"
+                        maxLines={2}
+                        className="font-serif text-[#E8E0D5] text-sm group-hover:text-[#F0D080] transition-colors duration-300 mb-1 leading-tight"
+                        text={result.title}
+                    />
+                    <SmartClamp as="p" maxLines={1} className="text-[10px] text-slate-500 font-sans mb-2" text={result.subtitle} />
 
                     {/* Aggregated rating on product cards (mock + user reviews), pulses on live WS updates */}
                     {result.type === 'product' && (
@@ -413,10 +417,13 @@ function SearchListItem({
                     </span>
                     <span className="text-[9px] text-slate-500">{result.category}</span>
                 </div>
-                <h3 className="font-serif text-white text-sm group-hover:text-[#F0D080] transition-colors truncate">
-                    {result.title}
-                </h3>
-                <p className="text-[11px] text-slate-400 truncate">{result.subtitle}</p>
+                <SmartClamp
+                    as="h3"
+                    maxLines={1}
+                    className="font-serif text-white text-sm group-hover:text-[#F0D080] transition-colors"
+                    text={result.title}
+                />
+                <SmartClamp as="p" maxLines={1} className="text-[11px] text-slate-400" text={result.subtitle} />
 
                 {/* Aggregated rating on product cards (mock + user reviews), pulses on live WS updates */}
                 {result.type === 'product' && (

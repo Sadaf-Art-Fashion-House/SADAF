@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import type { AIClothingDesign, MaqasaqRecommendation } from '@/shared/types';
 import { fabricsList, printingMethods } from '@/features/ai/data';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
 import {
     localizedClothingType,
@@ -196,9 +197,12 @@ export default function AiStudioView({
                                                 <strong className="block text-[#C9A84C] font-serif mb-1">
                                                     {language === 'ar' && pr.nameAr ? pr.nameAr : pr.name}
                                                 </strong>
-                                                <span className="text-[10px] text-gray-500 line-clamp-1">
-                                                    {language === 'ar' && pr.textAr ? pr.textAr : pr.text}
-                                                </span>
+                                                <SmartClamp
+                                                    as="span"
+                                                    maxLines={1}
+                                                    className="text-[10px] text-gray-500"
+                                                    text={language === 'ar' && pr.textAr ? pr.textAr : pr.text}
+                                                />
                                             </button>
                                         ))}
                                     </div>

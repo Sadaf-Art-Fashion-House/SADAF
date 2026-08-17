@@ -6,6 +6,7 @@ import { Trophy, Search, Users, Medal, Crown, Filter, X, Wifi, WifiOff, MapPin, 
 import type { LeaderboardEntry, LeaderboardKind, LoyaltyTier, OvertakeEvent } from '../types';
 import { TIER_COLORS, RANK_MEDALS } from '../constants/tierStyles';
 import { formatPoints } from '../utils/formatPoints';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import { formatCurrency } from '@/utils/formatCurrency';
 import { LEADERBOARD_KIND_LABELS, TIER_ORDER, tierMemberCounts } from '../utils/leaderboard';
 import { useCityFilter } from '../hooks/useCityFilter';
@@ -541,9 +542,11 @@ export default function LeaderboardView({
                                             </span>
                                             <span className="flex flex-col min-w-0">
                                                 <span className="flex items-center gap-1.5 min-w-0">
-                                                    <span className="truncate">
-                                                        {isCurrentUser ? `${memberName} ${t('lb.you')}` : entry.name}
-                                                    </span>
+                                                    <SmartClamp
+                                                        as="span"
+                                                        maxLines={1}
+                                                        text={isCurrentUser ? `${memberName} ${t('lb.you')}` : entry.name}
+                                                    />
                                                     <RoleBadge
                                                         role={isCurrentUser && currentUserRole ? currentUserRole : entry.role}
                                                     />

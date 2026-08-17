@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { ShoppingCart, Heart, Filter, ChevronRight, X, CreditCard } from "lucide-react";
 import { ShareIconButton } from "@/shared/components/ShareIconButton";
 import { ROUTES } from "@/config/routes";
+import { SmartClamp } from "@/shared/ui/SmartClamp";
 import { useLanguage } from "@/features/i18n/LanguageProvider";
 import { reviewCountWord } from "@/shared/utils/countWord";
 import StarRatingRow from "@/shared/components/StarRatingRow";
@@ -250,9 +251,12 @@ export default function StoreView({
                                             >
                                                 {localizedProductName(prod, language)}
                                             </Link>
-                                            <p className="text-xs text-[#E8E0D5]/65 line-clamp-2 leading-relaxed mb-3">
-                                                {localizedProductDescription(prod, language)}
-                                            </p>
+                                            <SmartClamp
+                                                as="p"
+                                                maxLines={2}
+                                                className="text-xs text-[#E8E0D5]/65 leading-relaxed mb-3"
+                                                text={localizedProductDescription(prod, language)}
+                                            />
 
                                             {/* Aggregated rating (mock + user reviews), falls back to the catalog rating.
                                                 Pulses briefly when a live community review lands on this product. */}
@@ -530,12 +534,17 @@ export default function StoreView({
                                             <div className="flex-1 flex flex-col justify-between">
                                                 <div>
                                                     <div className="flex justify-between items-start">
-                                                        <h4 className="font-serif text-white uppercase text-xs tracking-wide leading-tight line-clamp-1 max-w-[190px]">
-                                                            {item.product
-                                                                ? localizedProductName(item.product, language)
-                                                                : item.artPiece?.title ||
-                                                                  `${item.aiCustomDesign?.clothingType} Custom`}
-                                                        </h4>
+                                                        <SmartClamp
+                                                            as="h4"
+                                                            maxLines={1}
+                                                            className="font-serif text-white uppercase text-xs tracking-wide leading-tight max-w-[190px]"
+                                                            text={
+                                                                item.product
+                                                                    ? localizedProductName(item.product, language)
+                                                                    : item.artPiece?.title ||
+                                                                      `${item.aiCustomDesign?.clothingType} Custom`
+                                                            }
+                                                        />
                                                         <button
                                                             onClick={() => onRemoveFromCart(item.id)}
                                                             className="text-gray-500 hover:text-red-400 cursor-pointer text-[10px] font-semibold tracking-wider font-mono"

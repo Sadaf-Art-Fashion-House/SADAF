@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import {
     Users,
     UserPlus,
@@ -417,14 +418,20 @@ export default function CommunityView({
                                                         )}
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <p className="text-xs text-[#E8E0D5]/80 font-medium truncate">
-                                                            {user.name}
-                                                        </p>
+                                                        <SmartClamp
+                                                            as="p"
+                                                            maxLines={1}
+                                                            className="text-xs text-[#E8E0D5]/80 font-medium"
+                                                            text={user.name}
+                                                        />
                                                         <div className="flex items-center gap-1.5 min-w-0">
                                                             <RoleBadge role={user.role} />
-                                                            <span className="text-[9px] font-mono text-[#E8E0D5]/40 truncate">
-                                                                {formatDate(user.joinedAt)}
-                                                            </span>
+                                                            <SmartClamp
+                                                                as="span"
+                                                                maxLines={1}
+                                                                className="text-[9px] font-mono text-[#E8E0D5]/40"
+                                                                text={formatDate(user.joinedAt)}
+                                                            />
                                                         </div>
                                                     </div>
                                                     {user.hasFirstPurchase ? (
@@ -468,7 +475,7 @@ export default function CommunityView({
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-xs text-white font-medium">{req.name}</p>
-                                                <p className="text-[9px] font-mono text-[#E8E0D5]/50 truncate">{req.email}</p>
+                                                <SmartClamp as="p" maxLines={1} className="text-[9px] font-mono text-[#E8E0D5]/50" text={req.email} />
                                                 {req.message && (
                                                     <p className="text-[10px] text-[#E8E0D5]/60 mt-0.5 italic">&ldquo;{req.message}&rdquo;</p>
                                                 )}
@@ -560,7 +567,7 @@ export default function CommunityView({
                                         {/* Info */}
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2">
-                                                <p className="text-xs text-white font-medium truncate">{conn.name}</p>
+                                                <SmartClamp as="p" maxLines={1} className="text-xs text-white font-medium" text={conn.name} />
                                                 <span className={`shrink-0 px-1.5 py-0.5 rounded-full text-[8px] font-mono uppercase tracking-wider ${
                                                     conn.type === 'family'
                                                         ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
