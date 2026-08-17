@@ -118,15 +118,24 @@ export const fashionDatabase: FashionProduct[] = [
     {
         id: 'f-1',
         name: 'Empress Diwani Abaya Cape',
-        nameAr: 'عباية الإمبراطورة ديواني',
         category: 'Traditional Fusion',
         price: 1850,
         image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=82',
         hoverImage: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=82',
         description: 'A masterpiece drape in rich navy velvet, overlaying standard silk dress lines, featuring authentic gold calligraphic embroidery sweeping along the left sleeve and lapel.',
-        descriptionAr: 'ثوب مذهل من المخمل الكحلي الفاخر ينسدل فوق خطوط فستان حريرية كلاسيكية، مع تطريز خطي ذهبي أصيل يمتد على الكم الأيسر والياقة.',
         fabric: 'Italian Velvet & Raw Egyptian Silk',
-        fabricAr: 'مخمل إيطالي وحرير مصري خام',
+        // Complete Arabic text block — bilingual data layer (ADR-0001).
+        i18n: {
+            name: 'عباية الإمبراطورة ديواني',
+            description: 'ثوب مذهل من المخمل الكحلي الفاخر ينسدل فوق خطوط فستان حريرية كلاسيكية، مع تطريز خطي ذهبي أصيل يمتد على الكم الأيسر والياقة.',
+            fabric: 'مخمل إيطالي وحرير مصري خام',
+            details: [
+                'تطريز بخيوط ذهب مركّب حقيقي عيار 18',
+                'تنسدل غير متماثلة مستوحاة من عباءات البدو',
+                'أزرار صدف مخفية مزدوجة الصدر',
+                'تنظيف جاف فقط على يد حرفيين متخصصين',
+            ],
+        },
         sizes: ['XS', 'S', 'M', 'L', 'XL'],
         colors: [
             { name: 'Royal Navy', nameAr: 'كحلي ملكي', hex: '#0A0F2C' },
@@ -137,12 +146,6 @@ export const fashionDatabase: FashionProduct[] = [
             'Fluid asymmetric drapery styled after Bedouin capes',
             'Concealed double-breasted mother-of-pearl buttons',
             'Dry clean only by luxury artisans',
-        ],
-        detailsAr: [
-            'تطريز بخيوط ذهب مركّب حقيقي عيار 18',
-            'تنسدل غير متماثلة مستوحاة من عباءات البدو',
-            'أزرار صدف مخفية مزدوجة الصدر',
-            'تنظيف جاف فقط على يد حرفيين متخصصين',
         ],
         rating: 4.9,
     },

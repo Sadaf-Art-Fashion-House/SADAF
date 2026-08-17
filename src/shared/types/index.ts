@@ -166,6 +166,14 @@ export type FashionCategory =
     | 'Traditional Fusion'
     | 'Limited Edition';
 
+/** Complete Arabic text block for a product — the data layer is bilingual (ADR-0001). */
+export interface ProductLocalizedText {
+    name: string;
+    description: string;
+    fabric: string;
+    details: string[];
+}
+
 export interface FashionProduct {
     id: string;
     name: string;
@@ -188,6 +196,13 @@ export interface FashionProduct {
     /** Arabic bullet-point details — falls back to `details` when absent. */
     detailsAr?: string[];
     rating: number;
+    /**
+     * Complete Arabic text block — supersedes the legacy `nameAr` /
+     * `descriptionAr` / `fabricAr` / `detailsAr` fields. When present, all
+     * user-facing fields are fully translated (no English fallback).
+     * See docs/adr/0001-multilingual-data-layer.md.
+     */
+    i18n?: ProductLocalizedText;
 }
 
 export interface LookbookItem {

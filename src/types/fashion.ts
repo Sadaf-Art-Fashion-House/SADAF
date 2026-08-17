@@ -19,6 +19,8 @@ export interface FashionProduct {
     /** Arabic bullet-point details — falls back to `details` when absent. */
     detailsAr?: string[];
     rating: number;
+    /** Complete Arabic text block — bilingual data layer (ADR-0001). */
+    i18n?: { name: string; description: string; fabric: string; details: string[] };
 }
 
 export interface LookbookItem {

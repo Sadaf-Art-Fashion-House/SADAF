@@ -18,23 +18,27 @@ import { artDatabase, fashionDatabase, fabricsList, printingMethods } from '@/da
 import type { OrderItem } from '@/features/orders/types';
 import type { Review } from '@/features/reviews/types';
 
-/** The display name of a product for the active language. */
+/** The display name of a product for the active language (i18n → nameAr → name). */
 export function localizedProductName(product: FashionProduct, language: SiteLanguage): string {
+    if (product.i18n) return language === 'ar' ? product.i18n.name : product.name;
     return language === 'ar' && product.nameAr ? product.nameAr : product.name;
 }
 
-/** The display description of a product for the active language. */
+/** The display description of a product for the active language (i18n → descriptionAr → description). */
 export function localizedProductDescription(product: FashionProduct, language: SiteLanguage): string {
+    if (product.i18n) return language === 'ar' ? product.i18n.description : product.description;
     return language === 'ar' && product.descriptionAr ? product.descriptionAr : product.description;
 }
 
-/** The fabric label of a product for the active language. */
+/** The fabric label of a product for the active language (i18n → fabricAr → fabric). */
 export function localizedProductFabric(product: FashionProduct, language: SiteLanguage): string {
+    if (product.i18n) return language === 'ar' ? product.i18n.fabric : product.fabric;
     return language === 'ar' && product.fabricAr ? product.fabricAr : product.fabric;
 }
 
-/** The bullet-point details of a product for the active language. */
+/** The bullet-point details of a product for the active language (i18n → detailsAr → details). */
 export function localizedProductDetails(product: FashionProduct, language: SiteLanguage): string[] {
+    if (product.i18n) return language === 'ar' ? product.i18n.details : product.details;
     return language === 'ar' && product.detailsAr ? product.detailsAr : product.details;
 }
 
