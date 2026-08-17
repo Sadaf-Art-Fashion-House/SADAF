@@ -96,7 +96,7 @@ export default function WithdrawPanel({ totalPending, kind }: WithdrawPanelProps
                             </p>
                             <p className="text-[10px] font-mono text-[#E8E0D5]/40 mt-1">
                                 {requestedCount > 0
-                                    ? t('withdraw.processingCount', { count: requestedCount, requestPlural: requestedCount === 1 ? '' : 's' })
+                                    ? t('withdraw.pendingReviewCount', { count: requestedCount, requestPlural: requestedCount === 1 ? '' : 's' })
                                     : t('withdraw.balanceHint')}
                             </p>
                         </div>
@@ -120,14 +120,17 @@ export default function WithdrawPanel({ totalPending, kind }: WithdrawPanelProps
                         </h3>
                         <div className="flex flex-col gap-2">
                             {withdrawals.map((request) => {
-                                const isProcessing = request.status === 'requested';
+                                const isPending = request.status === 'requested';
+                                const isRejected = request.status === 'rejected';
+                                const isApproved = request.status === 'approved';
+                                const isCompleted = request.status === 'completed';
                                 return (
                                     <div
                                         key={request.id}
                                         className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#0A0F2C]/60 border border-white/[0.05]"
                                     >
-                                        <span className={`p-2 rounded-lg shrink-0 ${isProcessing ? 'bg-amber-500/10 text-amber-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
-                                            {isProcessing ? <Clock size={13} /> : <CheckCircle2 size={13} />}
+                                        <span className={`p-2 rounded-lg shrink-0 ${isRejected ? 'bg-red-500/10 text-red-400' : isPending ? 'bg-amber-500/10 text-amber-400' : isApproved ? 'bg-[#4FC3F7]/10 text-[#4FC3F7]' : 'bg-emerald-500/10 text-emerald-400'}`}>
+                                            {isRejected ? <X size={13} /> : isPending ? <Clock size={13} /> : isApproved ? <CheckCircle2 size={13} /> : <CheckCircle2 size={13} />}
                                         </span>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-xs text-white font-medium">
@@ -138,8 +141,8 @@ export default function WithdrawPanel({ totalPending, kind }: WithdrawPanelProps
                                                 {request.completedAt ? ` · ${new Date(request.completedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}` : ''}
                                             </p>
                                         </div>
-                                        <span className={`px-2.5 py-1 rounded-full text-[8px] font-mono uppercase tracking-wider border ${isProcessing ? 'text-amber-400 border-amber-500/30 bg-amber-500/10' : 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'}`}>
-                                            {isProcessing ? t('withdraw.processing') : t('withdraw.completed')}
+                                        <span className={`px-2.5 py-1 rounded-full text-[8px] font-mono uppercase tracking-wider border ${isRejected ? 'text-red-400 border-red-500/30 bg-red-500/10' : isPending ? 'text-amber-400 border-amber-500/30 bg-amber-500/10' : isApproved ? 'text-[#4FC3F7] border-[#4FC3F7]/30 bg-[#4FC3F7]/10' : 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'}`}>
+                                            {isRejected ? t('withdraw.rejected') : isPending ? t('withdraw.pendingApproval') : isApproved ? t('withdraw.approved') : t('withdraw.completed')}
                                         </span>
                                         <span className="text-[12px] font-mono font-bold text-[#C9A84C]">
                                             ${request.amount.toLocaleString()}

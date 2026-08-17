@@ -5,6 +5,8 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { Compass, ZoomIn, ArrowRight, Heart, ShoppingCart, X } from "lucide-react";
 import type { FashionCategory, FashionProduct, LookbookItem } from "@/shared/types";
+import { ROUTES } from "@/config/routes";
+import { ShareIconButton } from "@/shared/components/ShareIconButton";
 import { FASHION_CATEGORIES } from "../constants/fashionCategories";
 import { useLanguage } from "@/features/i18n/LanguageProvider";
 import {
@@ -175,6 +177,14 @@ export default function FashionView({
                                             className="object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
                                         />
                                     )}
+
+                                    {/* Share — native share sheet or copy link */}
+                                    <ShareIconButton
+                                        path={`${ROUTES.STORE}/${product.id}`}
+                                        title={localizedProductName(product, language)}
+                                        label={t("share.product")}
+                                        className="absolute top-4 right-12 z-10"
+                                    />
 
                                     {/* Wishlist heart overlay */}
                                     <button

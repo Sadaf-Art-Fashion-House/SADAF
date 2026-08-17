@@ -20,6 +20,7 @@ import {
     Minus,
     Plus,
     ShoppingBag,
+    Share2,
     Star,
     PenLine,
     CheckCircle2,
@@ -37,6 +38,7 @@ import { ROUTES } from '@/config/routes';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
 import { pdpReviewCountWord, reviewCountWord } from '@/shared/utils/countWord';
 import StarRatingRow from '@/shared/components/StarRatingRow';
+import { ShareLinks } from '@/shared/components/ShareLinks';
 import { localizedColorLabel, localizedColorName, localizedProductDescription, localizedProductDetails, localizedProductFabric, localizedProductName, localizedReviewerName, localizedReviewTitle } from '@/features/i18n/productNames';
 
 interface ProductViewProps {
@@ -107,6 +109,16 @@ export default function ProductView({
     // cart-clear confirmation.
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [deleteToast, setDeleteToast] = useState<'removed' | 'error' | null>(null);
+
+    // Share popover — the URL is built lazily on open (client-only window
+    // access, SSR-safe); the popover closes via a fixed backdrop.
+    const [showShare, setShowShare] = useState(false);
+    const [shareUrl, setShareUrl] = useState('');
+
+    const openShare = () => {
+        setShareUrl(`${window.location.origin}${ROUTES.STORE}/${product.id}`);
+        setShowShare(true);
+    };
 
     const handleConfirmDelete = async () => {
         if (!myReview) return;
@@ -644,6 +656,59 @@ export default function ProductView({
                             >
                                 <Heart size={15} fill={isWishlisted ? 'currentColor' : 'none'} />
                             </button>
+
+                            {/* Share — opens the network share popover */}
+                            <div className="relative">
+                                <button
+                                    onClick={openShare}
+                                    aria-pressed={showShare}
+                                    title={t('share.product')}
+                                    className={`p-3.5 rounded-xl border transition-all duration-300 cursor-pointer ${
+                                        showShare
+                                            ? 'bg-[#4FC3F7]/10 border-[#4FC3F7]/40 text-[#4FC3F7]'
+                                            : 'bg-white/5 border-white/10 text-[#E8E0D5]/70 hover:border-[#4FC3F7]/40 hover:text-[#4FC3F7]'
+                                    }`}
+                                >
+                                    <Share2 size={15} />
+                                </button>
+
+                                <AnimatePresence>
+                                    {showShare && (
+                                        <>
+                                            <div
+                                                className="fixed inset-0 z-40"
+                                                onClick={() => setShowShare(false)}
+                                                aria-hidden="true"
+                                            />
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                                                transition={{ duration: 0.2, ease: 'easeOut' }}
+                                                className="absolute bottom-full right-0 mb-3 z-50 w-64 rounded-xl border border-white/10 bg-[#0F1535]/95 backdrop-blur-md shadow-2xl shadow-black/50 p-4"
+                                            >
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <span className="text-[9px] uppercase tracking-widest font-mono text-[#C9A84C] font-bold">
+                                                        {t('share.via')}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => setShowShare(false)}
+                                                        aria-label={t('pdp.cancel')}
+                                                        className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                </div>
+                                                <ShareLinks
+                                                    url={shareUrl}
+                                                    text={t('share.productTitle', { name: localizedProductName(product, language) })}
+                                                    ariaLabel={t('share.via')}
+                                                />
+                                            </motion.div>
+                                        </>
+                                    )}
+                                </AnimatePresence>
+                            </div>
                         </div>
 
                         {/* Add-to-cart feedback */}

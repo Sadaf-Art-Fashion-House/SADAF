@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { ShoppingCart, Heart, Filter, ChevronRight, X, CreditCard } from "lucide-react";
+import { ShareIconButton } from "@/shared/components/ShareIconButton";
 import { ROUTES } from "@/config/routes";
 import { useLanguage } from "@/features/i18n/LanguageProvider";
 import { reviewCountWord } from "@/shared/utils/countWord";
@@ -207,6 +208,14 @@ export default function StoreView({
                                                 className="object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
                                             />
                                         )}
+
+                                        {/* Share — native share sheet or copy link */}
+                                        <ShareIconButton
+                                            path={`${ROUTES.STORE}/${prod.id}`}
+                                            title={localizedProductName(prod, language)}
+                                            label={t("share.product")}
+                                            className="absolute top-4 right-12"
+                                        />
 
                                         {/* Wishlist Heart overlay */}
                                         <button

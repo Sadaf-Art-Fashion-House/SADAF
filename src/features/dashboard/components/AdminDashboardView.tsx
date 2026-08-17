@@ -32,6 +32,7 @@ import { useWSAdminDashboardData } from '@/features/dashboard/hooks/useDashboard
 import { ErrorBanner } from '@/shared/ui/ErrorGuidance';
 import { ErrorBoundary } from '@/shared/ui/ErrorBoundary';
 import AtelierRequestsTab from '@/features/admin/components/AtelierRequestsTab';
+import AdminWithdrawalsTab from '@/features/admin/components/AdminWithdrawalsTab';
 
 // ─── Dynamic icon resolver for API-driven KPIs ────────────────────────────
 function DynamicKpiIcon({ name, size, className }: { name: string; size: number; className: string }) {
@@ -98,7 +99,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
         'Impasto Oil on Linen': t('admin.art.medium.impasto'),
         'Oil & Sand Texture on Linen': t('admin.art.medium.oilSand'),
     };
-    const [mainTab, setMainTab] = useState<'analytics' | 'products' | 'arts' | 'ai-logs' | 'orders' | 'customers' | 'designs' | 'atelier'>('analytics');
+    const [mainTab, setMainTab] = useState<'analytics' | 'products' | 'arts' | 'ai-logs' | 'orders' | 'customers' | 'designs' | 'atelier' | 'withdrawals'>('analytics');
 
     // Product management
     const [newProdName, setNewProdName] = useState('');
@@ -254,6 +255,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
         { id: 'designs', label: t('admin.tabs.designs'), icon: Bookmark },
         { id: 'atelier', label: t('admin.tabs.atelier'), icon: Hammer },
         { id: 'ai-logs', label: t('admin.tabs.aiLogs'), icon: Cpu },
+        { id: 'withdrawals', label: t('admin.tabs.withdrawals'), icon: Coins },
     ] as const;
 
     return (
@@ -1087,6 +1089,19 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                             <ErrorBoundary label="admin:atelier">
                             <AtelierRequestsTab />
                             </ErrorBoundary>
+                        </motion.div>
+                    )}
+
+                    {/* Withdrawals Tab — admin approval of payout requests */}
+                    {mainTab === 'withdrawals' && (
+                        <motion.div
+                            key="withdrawals"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="space-y-6"
+                        >
+                            <AdminWithdrawalsTab />
                         </motion.div>
                     )}
                 </AnimatePresence>

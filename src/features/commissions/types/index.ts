@@ -50,7 +50,7 @@ export interface CommissionHistory {
 // ─── Withdrawals ─────────────────────────────────────────────────────────────
 
 /** Lifecycle of a payout request. */
-export type WithdrawalStatus = 'requested' | 'completed';
+export type WithdrawalStatus = 'requested' | 'approved' | 'rejected' | 'completed';
 
 /** Payout destination the earner picks when requesting a withdrawal. */
 export type WithdrawalMethod = 'bank' | 'paypal';
@@ -69,6 +69,10 @@ export interface WithdrawalRequest {
     status: WithdrawalStatus;
     /** ISO timestamp of when the request was created. */
     requestedAt: string;
+    /** ISO timestamp of the admin review — present when approved or rejected. */
+    reviewedAt?: string;
+    /** Who reviewed the request (e.g. 'admin'). */
+    reviewedBy?: string;
     /** ISO timestamp of the payout — present only when completed. */
     completedAt?: string;
 }
