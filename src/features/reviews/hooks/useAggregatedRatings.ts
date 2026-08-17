@@ -43,10 +43,21 @@ export function useAggregatedRatings(
     const { user } = useAuth();
 
     // Live reviews live in a ref so `refresh` keeps a stable identity across
-    // WS pushes (no endless listener re-subscription); a separate effect
-    // below re-runs refresh the moment a new live review lands.
+    // WS pushes (no endless listener re-subscription). The ref is written in
+    // an effect — React refs must not be touched during render — and a
+    // separate effect below re-runs refresh the moment live review content
+    // changes.
     const liveReviewsRef = useRef(liveReviews);
-    liveReviewsRef.current = liveReviews;
+    useEffect(() => {
+        liveReviewsRef.current = liveReviews;
+    }, [liveReviews]);
+
+    // Content signature of the live reviews — the recompute effect below
+    // depends on THIS, not the array reference. Callers that omit liveReviews
+    // get the `[]` default, a fresh reference every render; depending on the
+    // reference would re-run refresh → setRatings → re-render → the
+    // "Maximum update depth exceeded" loop seen on /store, /cart, /orders.
+    const liveReviewsKey = JSON.stringify(liveReviews);
 
     // Stable identities by CONTENT, not reference. Callers commonly map
     // inline (products.map(...) / getMockReviews() on every render), so the
@@ -80,7 +91,10 @@ export function useAggregatedRatings(
         for (const item of itemList) {
             next[item.id] = averageRatingForProduct(combined, item.id, item.name);
         }
-        setRatings(next);
+        // Skip the update when the aggregated content is unchanged: keeps the
+        // state reference stable so a stray effect firing can never cascade
+        // into a re-render loop.
+        setRatings((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
     }, [user?.id, reviews, itemList]);
 
     useEffect(() => {
@@ -93,11 +107,13 @@ export function useAggregatedRatings(
         };
     }, [refresh]);
 
-    // Recompute the averages when a live review lands over WS — no listener
-    // churn, just a refresh (refresh reads liveReviews via the ref).
+    // Recompute the averages when live review CONTENT changes (WS push) — the
+    // dep is the content signature (liveReviewsKey), not the array reference,
+    // so callers that omit liveReviews (default `[]`) never re-trigger this on
+    // re-render. refresh reads the latest array via liveReviewsRef.
     useEffect(() => {
         refresh();
-    }, [refresh, liveReviews]);
+    }, [refresh, liveReviewsKey]);
 
     return ratings;
 }
