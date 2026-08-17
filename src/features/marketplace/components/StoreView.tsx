@@ -9,7 +9,7 @@ import { ROUTES } from "@/config/routes";
 import { useLanguage } from "@/features/i18n/LanguageProvider";
 import { reviewCountWord } from "@/shared/utils/countWord";
 import StarRatingRow from "@/shared/components/StarRatingRow";
-import { localizedArtTitle, localizedProductName, localizedFabricName } from "@/features/i18n/productNames";
+import { localizedArtTitle, localizedProductDescription, localizedProductName, localizedFabricName } from "@/features/i18n/productNames";
 import type { CartItem, FashionProduct } from "@/shared/types";
 import type { RatingsByProduct } from "@/features/reviews/hooks/useAggregatedRatings";
 import { useMarketplace } from "../hooks/useMarketplace";
@@ -251,7 +251,7 @@ export default function StoreView({
                                                 {localizedProductName(prod, language)}
                                             </Link>
                                             <p className="text-xs text-[#E8E0D5]/65 line-clamp-2 leading-relaxed mb-3">
-                                                {prod.description}
+                                                {localizedProductDescription(prod, language)}
                                             </p>
 
                                             {/* Aggregated rating (mock + user reviews), falls back to the catalog rating.

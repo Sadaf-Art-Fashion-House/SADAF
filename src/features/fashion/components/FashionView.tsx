@@ -14,6 +14,7 @@ import {
     localizedLookbookSubtitle,
     localizedColorName,
     localizedLookbookTitle,
+    localizedProductDescription,
     localizedProductName,
 } from "@/features/i18n/productNames";
 
@@ -225,7 +226,7 @@ export default function FashionView({
                                             {localizedProductName(product, language)}
                                         </h3>
                                         <p className="text-xs text-[#E8E0D5]/70 line-clamp-2 leading-relaxed mb-4">
-                                            {product.description}
+                                            {localizedProductDescription(product, language)}
                                         </p>
 
                                         <div className="flex flex-wrap gap-1 mb-4">
