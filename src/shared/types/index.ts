@@ -87,6 +87,9 @@ export function getRoleCategory(role: UserRole): RoleCategory {
 }
 
 /** Canonical user profile — used by Auth, Header, Dashboard, and Profile features. */
+/** Account verification (KYC) level — 'full' unlocks the fast commission payout path. */
+export type KycLevel = 'none' | 'basic' | 'full';
+
 export interface UserProfile {
     id: string;
     email: string;
@@ -129,6 +132,11 @@ export interface UserProfile {
      * Business focus for company accounts (e.g. "Bridal & Occasion Wear").
      */
     focus?: string;
+    /**
+     * Account verification (KYC) level. 'full' unlocks the fast payout path
+     * for commission withdrawals (auto-approved without manual review).
+     */
+    kycLevel?: KycLevel;
 }
 
 // ─── Art ─────────────────────────────────────────────────────────────────────

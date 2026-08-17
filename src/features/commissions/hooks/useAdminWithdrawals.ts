@@ -10,7 +10,7 @@
  * window events from withdrawalStorage.ts).
  *
  * Approval lifecycle (sandbox):
- *   requested → (admin approve) → approved → (processing window) → completed
+ *   requested → (admin approve) → approved → (transfer executes) → paid
  *   requested → (admin reject)  → rejected
  *
  * In production the approve/reject calls become finance-ledger mutations
@@ -38,7 +38,7 @@ const STATUS_ORDER: Record<WithdrawalStatus, number> = {
     requested: 0,
     approved: 1,
     rejected: 2,
-    completed: 3,
+    paid: 3,
 };
 
 export function useAdminWithdrawals() {
@@ -71,7 +71,7 @@ export function useAdminWithdrawals() {
 
     /** Approve or reject a single request. Returns false when it's no longer pending. */
     const review = useCallback(
-        (kind: CommissionKind, requestId: string, decision: 'approved' | 'rejected'): boolean => {
+        (kind: CommissionKind, requestId: string, decision: 'approved' | 'rejected', reason?: string): boolean => {
             const current = readWithdrawals(kind);
             const target = current.find((request) => request.id === requestId);
             if (!target || target.status !== 'requested') return false;
@@ -83,6 +83,7 @@ export function useAdminWithdrawals() {
                           status: decision,
                           reviewedAt: new Date().toISOString(),
                           reviewedBy: 'admin',
+                          ...(decision === 'rejected' ? { rejectionReason: reason ?? '' } : {}),
                       }
                     : request,
             );
@@ -94,7 +95,10 @@ export function useAdminWithdrawals() {
     );
 
     const approve = useCallback((kind: CommissionKind, requestId: string) => review(kind, requestId, 'approved'), [review]);
-    const reject = useCallback((kind: CommissionKind, requestId: string) => review(kind, requestId, 'rejected'), [review]);
+    const reject = useCallback(
+        (kind: CommissionKind, requestId: string, reason: string) => review(kind, requestId, 'rejected', reason),
+        [review],
+    );
 
     return {
         entries,

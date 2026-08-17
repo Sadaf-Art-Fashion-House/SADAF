@@ -9,21 +9,22 @@
  *
  * - `requestWithdrawal` appends a request (validated against the available
  *   balance) and persists it.
- * - An interval settles requested entries to `completed` after the simulated
- *   processing window, so the flow stays visible end-to-end.
+ * - An interval marks approved entries as `paid` once the simulated
+ *   transfer-execution window elapses, so the flow stays visible end-to-end.
  * - `availableBalance(totalPending)` = pending − sum of still-requested
  *   amounts (completed payouts no longer hold the balance).
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CommissionKind, WithdrawalMethod, WithdrawalRequest } from '../types';
-import { WITHDRAWAL_PROCESSING_MS } from '../types';
+import { WITHDRAWAL_AUTO_LIMIT, WITHDRAWAL_FAST_PATH_MS, WITHDRAWAL_PROCESSING_MS } from '../types';
+import type { KycLevel } from '@/shared/types';
 import { readWithdrawals, persistWithdrawals, withdrawalSync } from '../utils/withdrawalStorage';
 
 export function useWithdrawals(kind: CommissionKind) {
     const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
     // Set when a request finishes processing — the panel shows a toast.
-    const [completionNotice, setCompletionNotice] = useState<WithdrawalRequest | null>(null);
+    const [paymentNotice, setPaymentNotice] = useState<WithdrawalRequest | null>(null);
     const loadedRef = useRef(false);
 
     // Hydration-safe initial read — localStorage is only touched on mount.
@@ -39,7 +40,12 @@ export function useWithdrawals(kind: CommissionKind) {
 
     /** Create a payout request; returns ok:false with a code when invalid. */
     const requestWithdrawal = useCallback(
-        (amount: number, method: WithdrawalMethod, totalPending: number): { ok: boolean; code?: 'invalid' | 'exceeds' } => {
+        (
+            amount: number,
+            method: WithdrawalMethod,
+            totalPending: number,
+            kycLevel: KycLevel,
+        ): { ok: boolean; code?: 'invalid' | 'exceeds' } => {
             const available = Math.max(0, totalPending - withdrawals.reduce((sum, w) => sum + w.amount, 0));
 
             if (!Number.isFinite(amount) || amount <= 0) {
@@ -49,12 +55,21 @@ export function useWithdrawals(kind: CommissionKind) {
                 return { ok: false, code: 'exceeds' };
             }
 
+            // Hybrid payout rule: a request is auto-approved only when the
+            // account is fully KYC-verified AND the amount is at or below the
+            // auto limit. Anything above the limit (or unverified) goes to the
+            // manual admin review queue. Auto-approval keeps an audit trail
+            // via reviewedBy: 'auto-kyc'.
+            const isFastPath = kycLevel === 'full' && amount <= WITHDRAWAL_AUTO_LIMIT;
             const request: WithdrawalRequest = {
                 id: `wd-${Date.now()}`,
                 amount: Math.round(amount * 100) / 100,
                 method,
-                status: 'requested',
+                kycStatus: kycLevel,
+                status: isFastPath ? 'approved' : 'requested',
                 requestedAt: new Date().toISOString(),
+                reviewedAt: isFastPath ? new Date().toISOString() : undefined,
+                reviewedBy: isFastPath ? 'auto-kyc' : undefined,
             };
             persist([request, ...withdrawals]);
             return { ok: true };
@@ -71,18 +86,19 @@ export function useWithdrawals(kind: CommissionKind) {
                 const now = Date.now();
                 let changed = false;
                 const next = prev.map((w) => {
-                    if (w.status === 'approved' && now - new Date(w.reviewedAt ?? w.requestedAt).getTime() >= WITHDRAWAL_PROCESSING_MS) {
+                    const settleMs = w.kycStatus === 'full' ? WITHDRAWAL_FAST_PATH_MS : WITHDRAWAL_PROCESSING_MS;
+                    if (w.status === 'approved' && now - new Date(w.reviewedAt ?? w.requestedAt).getTime() >= settleMs) {
                         changed = true;
-                        return { ...w, status: 'completed' as const, completedAt: new Date().toISOString() };
+                        return { ...w, status: 'paid' as const, paidAt: new Date().toISOString() };
                     }
                     return w;
                 });
                 if (changed) {
                     persistWithdrawals(kind, next);
-                    const completed = next.find(
-                        (w, i) => prev[i]?.status === 'approved' && w.status === 'completed',
+                    const paid = next.find(
+                        (w, i) => prev[i]?.status === 'approved' && w.status === 'paid',
                     );
-                    if (completed) setCompletionNotice(completed);
+                    if (paid) setPaymentNotice(paid);
                 }
                 return next;
             });
@@ -91,11 +107,11 @@ export function useWithdrawals(kind: CommissionKind) {
         return () => clearInterval(timer);
     }, [kind]);
 
-    const dismissCompletionNotice = useCallback(() => setCompletionNotice(null), []);
+    const dismissPaymentNotice = useCallback(() => setPaymentNotice(null), []);
 
     /**
      * Balance still available to withdraw given the current pending total.
-     * Every withdrawal — requested, approved, rejected or completed — leaves
+     * Every withdrawal — requested, approved, rejected or paid — leaves
      * the available pool, so paid-out amounts never become withdrawable
      * again. (Rejected requests are kept in history for the admin audit but
      * the earner can still re-request the same funds.)
@@ -108,8 +124,8 @@ export function useWithdrawals(kind: CommissionKind) {
 
     return {
         withdrawals,
-        completionNotice,
-        dismissCompletionNotice,
+        paymentNotice,
+        dismissPaymentNotice,
         requestWithdrawal,
         availableBalance,
         loaded: loadedRef.current,

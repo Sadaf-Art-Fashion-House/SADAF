@@ -27,9 +27,25 @@ export const WITHDRAWAL_ROLE_KINDS: CommissionKind[] = ['designer', 'sales-partn
 export const withdrawalSync = (kind: CommissionKind) =>
     createLocalStorageSync<WithdrawalRequest[]>(withdrawalStorageKey(kind), withdrawalStorageEventName(kind));
 
+/** A stored row before the legacy `completed` state is migrated to `paid`. */
+type LegacyWithdrawalRow = Omit<WithdrawalRequest, 'status' | 'paidAt'> & {
+    status?: string;
+    paidAt?: string;
+    completedAt?: string;
+};
+
+/**
+ * Reads the ledger, migrating legacy sandbox rows: the terminal state used
+ * to be `completed` — it is now `paid` (transfer executed) with `paidAt`.
+ */
 export function readWithdrawals(kind: CommissionKind): WithdrawalRequest[] {
     const parsed = withdrawalSync(kind).load();
-    return Array.isArray(parsed) ? parsed : [];
+    const rows: LegacyWithdrawalRow[] = Array.isArray(parsed) ? parsed : [];
+    return rows.map((row): WithdrawalRequest =>
+        row.status === 'completed'
+            ? { ...row, status: 'paid', paidAt: row.paidAt ?? row.completedAt }
+            : (row as WithdrawalRequest),
+    );
 }
 
 export function persistWithdrawals(kind: CommissionKind, next: WithdrawalRequest[]): void {
