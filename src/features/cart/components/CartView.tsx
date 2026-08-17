@@ -19,7 +19,7 @@ import SuccessToast from '@/shared/components/SuccessToast';
 import type { CartItem } from '@/shared/types';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
 import type { TranslationKey } from '@/features/i18n/dictionaries';
-import { localizedAiItemName, localizedArtTitle, localizedProductName, localizedFabricName, localizedPrintingName } from '@/features/i18n/productNames';
+import { localizedAiItemName, localizedArtTitle, localizedColorLabel, localizedProductName, localizedFabricName, localizedPrintingName } from '@/features/i18n/productNames';
 
 interface CartViewProps {
     items: CartItem[];
@@ -237,7 +237,7 @@ export default function CartView({
                                                     <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-[10px] font-mono text-[#E8E0D5]/50">
                                                         <span>{t('store.cart.size')}: {item.selectedSize}</span>
                                                         {item.selectedColor && (
-                                                            <span>{t('store.cart.colorLabel')}: {item.selectedColor}</span>
+                                                            <span>{t('store.cart.colorLabel')}: {localizedColorLabel(item.selectedColor, language)}</span>
                                                         )}
                                                         {item.selectedFabric && (
                                                             <span>{t('store.cart.fabricLabel')}: {localizedFabricName(item.selectedFabric, language)}</span>

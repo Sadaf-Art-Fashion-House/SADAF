@@ -20,7 +20,7 @@ import type { ArtPiece } from '@/shared/types';
 import type { ExhibitionRoom } from '../types';
 import { useTextToSpeech, type TtsLang } from '../hooks/useTextToSpeech';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
-import { localizedArtTitle } from '@/features/i18n/productNames';
+import { localizedArtDescription, localizedArtTitle } from '@/features/i18n/productNames';
 
 interface ExhibitionViewProps {
     artworks: ArtPiece[];
@@ -34,6 +34,7 @@ const ROOMS: ExhibitionRoom[] = [
         arabicName: 'فناء الهندسة الفاطمية',
         tagline: "Cairo's golden history, structural stone carvings, and symmetric star alignments",
         description: 'Explore pieces designed on traditional symmetric star grids. Witness the interplay of raw red copper, dense desert sandstone, and 18k golden wire meshes representing cosmic order.',
+        descriptionAr: 'استكشف قطعاً مصممة على شبكات النجوم المتماثلة التقليدية. شاهد التفاعل بين النحاس الأحمر الخام والحجر الرملي الصحراوي الكثيف وشبكات الأسلاك الذهبية عيار ١٨ قيراطاً التي تمثل النظام الكوني.',
         ambiance: 'Warm sandstone lights, desert dusk echoes, slow spatial glow',
         materials: 'Hand-hammered Red Copper, Saltwater Mother-of-Pearl & Fine Silver',
         accentColor: '#C9A84C',
@@ -46,6 +47,7 @@ const ROOMS: ExhibitionRoom[] = [
         arabicName: 'جناح الخط السكندري',
         tagline: 'Rhythmic ink scripts, liquid gold leaf parchment, and coastal sea wind drafts',
         description: 'Step into the coastal sanctuary celebrating Diwani and Thuluth calligraphy lineages. Here, fluid calligraphic sweeps represent respiratory breathing loops and marine drapes.',
+        descriptionAr: 'ادخل إلى الملاذ الساحلي الذي يحتفي بخطي الديواني والثلث. هنا، تمثل الانسيابات الخطية السائلة حلقات تنفسية وستائر بحرية.',
         ambiance: 'Royal Indigo shadows, maritime gold reflections, coastal breeze drafts',
         materials: '24k Gold Leaf, Calligraphy Reed-Pen inks, Indigo Parchment Paper',
         accentColor: '#4FC3F7',
@@ -429,7 +431,7 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                             <span className="text-[8px] sm:text-[9px] font-mono text-[#C9A84C] uppercase tracking-widest block font-bold">
                                 {t('exh.curatorial')}
                             </span>
-                            <p className="text-[11px] sm:text-xs text-slate-300 mt-1 leading-relaxed font-sans">{activeRoom.description}</p>
+                            <p className="text-[11px] sm:text-xs text-slate-300 mt-1 leading-relaxed font-sans">{language === 'ar' && activeRoom.descriptionAr ? activeRoom.descriptionAr : activeRoom.description}</p>
                             <div className="mt-3 flex flex-wrap gap-4 text-[9px] sm:text-[10px] text-gray-400 font-mono">
                                 <div>
                                     <strong className="text-white">{t('exh.activeMaterials')}</strong> {activeRoom.materials}
@@ -509,7 +511,7 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                         </div>
                                         <h4 className="font-serif text-white text-base sm:text-lg font-bold leading-tight uppercase mb-1">{localizedArtTitle(zoomedArt, language)}</h4>
                                         <p className="text-xs text-[#C9A84C] font-mono italic mb-4">{t('exh.artist', { name: zoomedArt.artist })}</p>
-                                        <p className="text-[11px] sm:text-xs text-slate-300 leading-relaxed mb-4 font-sans">{zoomedArt.description}</p>
+                                        <p className="text-[11px] sm:text-xs text-slate-300 leading-relaxed mb-4 font-sans">{localizedArtDescription(zoomedArt, language)}</p>
                                         <div className="space-y-1.5 text-[9px] sm:text-[10px] font-mono text-gray-400 border-t border-b border-white/10 py-3 mb-4">
                                             <div className="flex justify-between">
                                                 <span>{t('exh.heritageAge')}</span>

@@ -30,6 +30,8 @@ export interface ArtPiece {
     price: number;
     image: string;
     description: string;
+    /** Arabic display description — falls back to `description` when absent. */
+    descriptionAr?: string;
     dimensions: string;
     year: string;
     medium: string;
@@ -45,7 +47,7 @@ export interface FashionProduct {
     description: string;
     fabric: string;
     sizes: string[];
-    colors: { name: string; hex: string }[];
+    colors: { name: string; nameAr?: string; hex: string }[];
     details: string[];
     rating: number;
 }

@@ -52,6 +52,39 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
 
     // Invite state
     const [inviteName, setInviteName] = useState('');
+    // Localized labels for founder data (values stay canonical English).
+    const txTypeLabel: Record<string, string> = {
+        'Haute Abaya Purchase': t('founder.tx.hauteAbaya'),
+        'Golden Diwani Fine Artwork': t('founder.tx.goldenDiwani'),
+        'Calligraphy Streetcoach Jacket': t('founder.tx.calligraphyJacket'),
+        'Nile Oil Reflections Fine Art': t('founder.tx.nileOils'),
+    };
+    const teamRoleLabel: Record<string, string> = {
+        'Apprentice Weaver': t('founder.role.apprenticeWeaver'),
+        'Master Calligrapher': t('founder.role.masterCalligrapher'),
+        'Auteur Painter': t('founder.role.auteurPainter'),
+        'AI Tech Director': t('founder.role.aiTechDirector'),
+        'Atelier Administrator': t('founder.role.atelierAdministrator'),
+    };
+    const specialtyLabel: Record<string, string> = {
+        'Haute Imperial Couture': t('founder.specialty.imperial'),
+        'Liquid Golden Diwani': t('founder.specialty.diwani'),
+        'Sacred Nile Oils': t('founder.specialty.nile'),
+        'Logistics & Weaving Pact': t('founder.specialty.logistics'),
+        'Gemini Embroidery Prototyping': t('founder.specialty.gemini'),
+    };
+    const locationLabel: Record<string, string> = {
+        'Zamalik Quarters, Cairo': t('founder.location.zamalik'),
+        'El-Hussein Workshop': t('founder.location.hussein'),
+        'Alexandria Seafront': t('founder.location.alexandria'),
+        'Giza Central Studio': t('founder.location.giza'),
+        'Global Silicon Sandbox': t('founder.location.global'),
+    };
+    const statusLabel: Record<string, string> = {
+        'Online': t('founder.status.online'),
+        'In-Atelier': t('founder.status.inAtelier'),
+    };
+
     const [inviteRole, setInviteRole] = useState('Apprentice Weaver');
     const [transactions, setTransactions] = useState([
         { ref: 'TXN-9021-X', client: 'Layla Al-Khouri', value: '$1,250', type: 'Haute Abaya Purchase', details: 'Cairo central credit card auth' },
@@ -290,7 +323,7 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
                                                         <td className="py-2.5 font-mono text-[#C9A84C] text-[10px] font-bold">{tx.ref}</td>
                                                         <td>{tx.client}</td>
                                                         <td className="font-mono font-bold">{tx.value}</td>
-                                                        <td className="text-xs">{tx.type}</td>
+                                                        <td className="text-xs">{txTypeLabel[tx.type] ?? tx.type}</td>
                                                         <td className="text-[10px] text-gray-500">{tx.details}</td>
                                                     </tr>
                                                 ))}
@@ -331,14 +364,14 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
                                                             member.status === 'Online' ? 'bg-green-400' : member.status === 'In-Atelier' ? 'bg-yellow-400' : 'bg-gray-500'
                                                         }`} />
                                                     </div>
-                                                    <p className="text-[10px] font-mono text-[#C9A84C]">{member.role}</p>
-                                                    <p className="text-[9px] text-slate-500 font-mono">{member.specialty}</p>
+                                                    <p className="text-[10px] font-mono text-[#C9A84C]">{teamRoleLabel[member.role] ?? member.role}</p>
+                                                    <p className="text-[9px] text-slate-500 font-mono">{specialtyLabel[member.specialty] ?? member.specialty}</p>
                                                 </div>
                                                 <div className="text-right">
                                                     <span className="text-[9px] font-mono text-slate-400 flex items-center gap-1">
-                                                        <MapPin size={8} className="text-[#C9A84C]" /> {member.location}
+                                                        <MapPin size={8} className="text-[#C9A84C]" /> {locationLabel[member.location] ?? member.location}
                                                     </span>
-                                                    <span className="text-[8px] font-mono text-slate-500 uppercase">{member.status}</span>
+                                                    <span className="text-[8px] font-mono text-slate-500 uppercase">{statusLabel[member.status] ?? member.status}</span>
                                                 </div>
                                             </div>
                                         ))}
@@ -364,11 +397,11 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
                                                 onChange={(e) => setInviteRole(e.target.value)}
                                                 className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white outline-none cursor-pointer"
                                             >
-                                                <option value="Apprentice Weaver">Apprentice Weaver</option>
-                                                <option value="Master Calligrapher">Master Calligrapher</option>
-                                                <option value="Auteur Painter">Auteur Painter</option>
-                                                <option value="AI Tech Director">AI Tech Director</option>
-                                                <option value="Atelier Administrator">Atelier Administrator</option>
+                                                <option value="Apprentice Weaver">{teamRoleLabel['Apprentice Weaver']}</option>
+                                                <option value="Master Calligrapher">{teamRoleLabel['Master Calligrapher']}</option>
+                                                <option value="Auteur Painter">{teamRoleLabel['Auteur Painter']}</option>
+                                                <option value="AI Tech Director">{teamRoleLabel['AI Tech Director']}</option>
+                                                <option value="Atelier Administrator">{teamRoleLabel['Atelier Administrator']}</option>
                                             </select>
                                             <button
                                                 type="submit"

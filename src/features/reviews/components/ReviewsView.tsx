@@ -7,12 +7,15 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { Review, ReviewSortOption, ReviewRatingFilter } from '../types';
 import { RATING_FILTER_MIN } from '../types';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
+import { localizedReviewerName, localizedReviewTitle } from '@/features/i18n/productNames';
 
 interface ReviewsViewProps {
     reviews: Review[];
 }
 
 export default function ReviewsView({ reviews }: ReviewsViewProps) {
+    const { language } = useLanguage();
     const [sortBy, setSortBy] = useState<ReviewSortOption>('newest');
     const [filterVerified, setFilterVerified] = useState(false);
     const [ratingFilter, setRatingFilter] = useState<ReviewRatingFilter>('all');
@@ -309,6 +312,7 @@ export default function ReviewsView({ reviews }: ReviewsViewProps) {
 // ─── Review Card Component ────────────────────────────────────────────────────
 
 function ReviewCard({ review }: { review: Review }) {
+    const { language } = useLanguage();
     const [liked, setLiked] = useState(false);
 
     return (
@@ -349,7 +353,7 @@ function ReviewCard({ review }: { review: Review }) {
                 </div>
 
                 {/* Title */}
-                <h3 className="font-serif text-white text-sm font-semibold mb-1">{review.title}</h3>
+                <h3 className="font-serif text-white text-sm font-semibold mb-1">{localizedReviewTitle(review, language)}</h3>
 
                 {/* Comment */}
                 <p className="text-xs text-slate-400 leading-relaxed mb-3">{review.comment}</p>
@@ -361,11 +365,11 @@ function ReviewCard({ review }: { review: Review }) {
                             {review.userAvatar ? (
                                 <img src={review.userAvatar} alt="" className="w-full h-full object-cover" />
                             ) : (
-                                review.userName.charAt(0).toUpperCase()
+                                localizedReviewerName(review, language).charAt(0).toUpperCase()
                             )}
                         </div>
                         <div>
-                            <span className="text-[10px] text-slate-300 font-medium">{review.userName}</span>
+                            <span className="text-[10px] text-slate-300 font-medium">{localizedReviewerName(review, language)}</span>
                             {review.isMine && (
                                 <span className="ml-2 px-1.5 py-0.5 rounded bg-[#A78BFA]/20 text-[#C9A84C] text-[8px] font-mono uppercase tracking-wider border border-[#A78BFA]/40 font-bold">
                                     You

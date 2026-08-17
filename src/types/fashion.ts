@@ -14,7 +14,7 @@ export interface FashionProduct {
     /** Arabic fabric label — falls back to `fabric` when absent. */
     fabricAr?: string;
     sizes: string[];
-    colors: { name: string; hex: string }[];
+    colors: { name: string; nameAr?: string; hex: string }[];
     details: string[];
     /** Arabic bullet-point details — falls back to `details` when absent. */
     detailsAr?: string[];

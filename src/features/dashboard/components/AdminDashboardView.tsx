@@ -61,6 +61,43 @@ interface AdminDashboardViewProps {
 
 export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps) {
     const { t, language } = useLanguage();
+
+    // Localized labels for catalog categories (values stay canonical English).
+    const productCategoryLabel: Record<string, string> = {
+        'Women': t('admin.category.women'),
+        'Men': t('admin.category.men'),
+        'Kids': t('admin.category.kids'),
+        'Traditional Fusion': t('admin.category.traditionalFusion'),
+        'Limited Edition': t('admin.category.limitedEdition'),
+    };
+    const artCategoryLabel: Record<string, string> = {
+        'Handmade': t('admin.category.handmade'),
+        'Oil Paintings': t('admin.category.oilPaintings'),
+        'Calligraphy': t('admin.category.calligraphy'),
+        'Digital Art': t('admin.category.digitalArt'),
+        'Fashion Sketches': t('admin.category.fashionSketches'),
+        'Women': t('admin.category.women'),
+        'Men': t('admin.category.men'),
+        'Kids': t('admin.category.kids'),
+        'Traditional Fusion': t('admin.category.traditionalFusion'),
+        'Limited Edition': t('admin.category.limitedEdition'),
+    };
+    const artistLabel: Record<string, string> = {
+        'Dr. Farida Hammad': t('admin.art.artist.farida'),
+        'Karim Abdel-Malik': t('admin.art.artist.karim'),
+        'Master Calligrapher Ahmed El-Saeed': t('admin.art.artist.master'),
+        'Sadaf Atelier': t('admin.art.artist.atelier'),
+        'Tariq Al-Faisal': t('admin.art.artist.tariq'),
+        'The Saad Workshop (Old Cairo)': t('admin.art.artist.saadWorkshop'),
+    };
+    const artMediumLabel: Record<string, string> = {
+        '24k Gold Leaf & Calligraphy Ink': t('admin.art.medium.goldLeaf'),
+        'Copper, Mother-of-Pearl & Fine Silver': t('admin.art.medium.copper'),
+        'Gold Gouache & Charcoal': t('admin.art.medium.gouache'),
+        'High-Fidelity Archival Giclée Print': t('admin.art.medium.giclee'),
+        'Impasto Oil on Linen': t('admin.art.medium.impasto'),
+        'Oil & Sand Texture on Linen': t('admin.art.medium.oilSand'),
+    };
     const [mainTab, setMainTab] = useState<'analytics' | 'products' | 'arts' | 'ai-logs' | 'orders' | 'customers' | 'designs' | 'atelier'>('analytics');
 
     // Product management
@@ -454,11 +491,11 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                                 onChange={(e) => setNewProdCategory(e.target.value as any)}
                                                 className="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-white outline-none focus:border-[#C9A84C] cursor-pointer"
                                             >
-                                                <option value="Traditional Fusion">Traditional Fusion</option>
-                                                <option value="Women">Women</option>
-                                                <option value="Men">Men</option>
-                                                <option value="Kids">Kids</option>
-                                                <option value="Limited Edition">Limited Edition</option>
+                                                <option value="Traditional Fusion">{productCategoryLabel['Traditional Fusion']}</option>
+                                                <option value="Women">{productCategoryLabel['Women']}</option>
+                                                <option value="Men">{productCategoryLabel['Men']}</option>
+                                                <option value="Kids">{productCategoryLabel['Kids']}</option>
+                                                <option value="Limited Edition">{productCategoryLabel['Limited Edition']}</option>
                                             </select>
                                         </div>
                                     </div>
@@ -600,11 +637,11 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                                 onChange={(e) => setNewArtCategory(e.target.value as any)}
                                                 className="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-white outline-none focus:border-[#C9A84C] cursor-pointer"
                                             >
-                                                <option value="Calligraphy">Calligraphy</option>
-                                                <option value="Handmade">Handmade</option>
-                                                <option value="Oil Paintings">Oil Paintings</option>
-                                                <option value="Digital Art">Digital Art</option>
-                                                <option value="Fashion Sketches">Fashion Sketches</option>
+                                                <option value="Calligraphy">{artCategoryLabel['Calligraphy']}</option>
+                                                <option value="Handmade">{artCategoryLabel['Handmade']}</option>
+                                                <option value="Oil Paintings">{artCategoryLabel['Oil Paintings']}</option>
+                                                <option value="Digital Art">{artCategoryLabel['Digital Art']}</option>
+                                                <option value="Fashion Sketches">{artCategoryLabel['Fashion Sketches']}</option>
                                             </select>
                                         </div>
                                     </div>
@@ -646,10 +683,10 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                                 <tr key={art.id} className="h-12 hover:text-white transition">
                                                     <td className="py-2 leading-tight">
                                                         <span className="font-semibold block text-[#E8E0D5]">{localizedArtTitle(art, language)}</span>
-                                                        <span className="text-[10px] text-gray-600 block">{art.medium}</span>
+                                                        <span className="text-[10px] text-gray-600 block">{artMediumLabel[art.medium] ?? art.medium}</span>
                                                     </td>
-                                                    <td>{art.category}</td>
-                                                    <td>{art.artist}</td>
+                                                    <td>{artCategoryLabel[art.category] ?? art.category}</td>
+                                                    <td>{artistLabel[art.artist] ?? art.artist}</td>
                                                     <td className="font-mono text-[#C9A84C]">${art.price}</td>
                                                 </tr>
                                             ))}

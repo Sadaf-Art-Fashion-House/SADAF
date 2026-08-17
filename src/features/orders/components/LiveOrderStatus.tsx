@@ -37,6 +37,7 @@ const FEED_MESSAGE_KEYS: Readonly<Record<string, TranslationKey>> = {
     'Your piece has entered the atelier — our artisans are sewing it by hand.': 'orders.feed.tailoring',
     'Your order has shipped from the atelier and is on its way.': 'orders.feed.shipped',
     'Delivered! We hope your piece brings you joy.': 'orders.feed.delivered',
+    'Your new order has been placed — our artisans will begin tailoring it soon.': 'orders.feed.placed',
 };
 
 function localizeEventMessage(message: string, t: (key: TranslationKey) => string): string {
@@ -72,6 +73,11 @@ export default function LiveOrderStatus({
         ...order,
         status: statuses[order.id] ?? order.status,
     }));
+
+    // Fresh orders that arrived live (kind: 'placed') and are not yet part of
+    // the static order list — rendered as NEW cards below the tracked orders.
+    const knownOrderIds = new Set(orders.map((order) => order.id));
+    const newOrders = events.filter((event) => event.kind === 'placed' && !knownOrderIds.has(event.orderId));
 
     return (
         <div className="mb-10 p-5 bg-[#05081A]/90 border border-[#C9A84C]/10 rounded-2xl">
@@ -118,11 +124,32 @@ export default function LiveOrderStatus({
                                     transition={{ duration: 0.4, delay: index * 0.08 }}
                                     className="p-4 bg-[#0A0F2C]/60 border border-white/[0.05] rounded-2xl"
                                 >
-                                    <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center justify-between mb-3">
                                         <span className="text-[10px] font-mono font-bold text-[#C9A84C]">{order.id}</span>
                                         <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-mono border font-bold ${style.color}`}>
                                             {t(style.labelKey)}
                                         </span>
+                                    </div>
+
+                                    {/* Item + fulfilment summary */}
+                                    <div className="flex items-center gap-3 mb-4">
+                                        {order.items[0]?.image && (
+                                            <img
+                                                src={order.items[0].image}
+                                                alt={order.items[0].name}
+                                                className="w-10 h-10 rounded-lg object-cover border border-white/10 shrink-0"
+                                            />
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-[10px] font-serif text-white font-semibold truncate">{order.items[0]?.name ?? t('orders.orderLabel')}</p>
+                                            <p className="text-[8px] font-mono text-[#E8E0D5]/40">
+                                                {t('orders.total')} ${order.total.toLocaleString()}
+                                                {order.estimatedDelivery ? ` · ${t('orders.eta')}: ${order.estimatedDelivery}` : ''}
+                                            </p>
+                                        </div>
+                                        {order.trackingId && (
+                                            <span className="text-[8px] font-mono text-[#E8E0D5]/35 shrink-0">{order.trackingId}</span>
+                                        )}
                                     </div>
 
                                     {/* Stepper */}
@@ -156,6 +183,24 @@ export default function LiveOrderStatus({
                             );
                         })
                     )}
+
+                    {/* Live new-order cards */}
+                    {newOrders.map((event) => (
+                        <motion.div
+                            key={event.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="p-4 bg-[#0A0F2C]/60 border border-[#C9A84C]/25 rounded-2xl"
+                        >
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-[10px] font-mono font-bold text-[#C9A84C]">{event.orderId}</span>
+                                <span className="px-2.5 py-0.5 rounded-full text-[9px] font-mono border border-emerald-500/30 text-emerald-400 font-bold uppercase">
+                                    {t('orders.newOrder')}
+                                </span>
+                            </div>
+                            <p className="text-[9px] text-[#E8E0D5]/60 leading-relaxed">{localizeEventMessage(event.message, t)}</p>
+                        </motion.div>
+                    ))}
                 </div>
 
                 {/* Transition feed */}
@@ -203,13 +248,21 @@ export default function LiveOrderStatus({
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-1.5 mb-1">
-                                                <span className={`text-[8px] font-mono uppercase border px-1.5 py-px rounded ${prevStyle.color}`}>
-                                                    {t(prevStyle.labelKey)}
-                                                </span>
-                                                <RefreshCw size={8} className="text-[#E8E0D5]/40 shrink-0" />
-                                                <span className={`text-[8px] font-mono uppercase border px-1.5 py-px rounded ${nextStyle.color}`}>
-                                                    {t(nextStyle.labelKey)}
-                                                </span>
+                                                {event.kind === 'placed' ? (
+                                                    <span className="text-[8px] font-mono uppercase border px-1.5 py-px rounded border-emerald-500/30 text-emerald-400 font-bold">
+                                                        {t('orders.newOrder')}
+                                                    </span>
+                                                ) : (
+                                                    <>
+                                                        <span className={`text-[8px] font-mono uppercase border px-1.5 py-px rounded ${prevStyle.color}`}>
+                                                            {t(prevStyle.labelKey)}
+                                                        </span>
+                                                        <RefreshCw size={8} className="text-[#E8E0D5]/40 shrink-0" />
+                                                        <span className={`text-[8px] font-mono uppercase border px-1.5 py-px rounded ${nextStyle.color}`}>
+                                                            {t(nextStyle.labelKey)}
+                                                        </span>
+                                                    </>
+                                                )}
                                             </div>
                                             <p className="text-[8px] text-[#E8E0D5]/50 leading-relaxed">
                                                 {localizeEventMessage(event.message, t)}

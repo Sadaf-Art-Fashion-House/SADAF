@@ -37,7 +37,7 @@ import { ROUTES } from '@/config/routes';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
 import { pdpReviewCountWord, reviewCountWord } from '@/shared/utils/countWord';
 import StarRatingRow from '@/shared/components/StarRatingRow';
-import { localizedProductDescription, localizedProductDetails, localizedProductFabric, localizedProductName } from '@/features/i18n/productNames';
+import { localizedColorLabel, localizedColorName, localizedProductDescription, localizedProductDetails, localizedProductFabric, localizedProductName, localizedReviewerName, localizedReviewTitle } from '@/features/i18n/productNames';
 
 interface ProductViewProps {
     product: FashionProduct;
@@ -435,7 +435,7 @@ export default function ProductView({
                                                 </div>
                                                 {myReview.title && (
                                                     <p className="text-[11px] font-medium text-white/90 mb-0.5">
-                                                        {myReview.title}
+                                                        {localizedReviewTitle(myReview, language)}
                                                     </p>
                                                 )}
                                                 <p className="text-[11px] text-slate-400 leading-relaxed">{myReview.comment}</p>
@@ -517,7 +517,7 @@ export default function ProductView({
                                                 </span>
                                             </div>
                                             <h4 className="font-serif text-white text-xs font-semibold mb-1">
-                                                {review.title}
+                                                {localizedReviewTitle(review, language)}
                                             </h4>
                                             <p className="text-[11px] text-slate-400 leading-relaxed mb-2">
                                                 {review.comment}
@@ -528,11 +528,11 @@ export default function ProductView({
                                                         // Same avatar pattern as the /reviews cards
                                                         <img src={review.userAvatar} alt="" className="w-full h-full object-cover" />
                                                     ) : (
-                                                        review.userName.charAt(0).toUpperCase()
+                                                        localizedReviewerName(review, language).charAt(0).toUpperCase()
                                                     )}
                                                 </div>
                                                 <span className="text-[10px] text-slate-300 font-medium">
-                                                    {review.userName}
+                                                    {localizedReviewerName(review, language)}
                                                 </span>
                                                 {review.verified && (
                                                     <span className="px-1.5 py-0.5 rounded bg-[#C9A84C]/10 text-[#C9A84C] text-[8px] font-mono uppercase tracking-wider">
@@ -583,7 +583,7 @@ export default function ProductView({
                         {/* Color selector */}
                         <div>
                             <span className="text-[9px] uppercase tracking-wider text-slate-400 block mb-2">
-                                {t('pdp.color')} <span className="text-[#E8E0D5]/80">{selectedColor}</span>
+                                {t('pdp.color')} <span className="text-[#E8E0D5]/80">{localizedColorLabel(selectedColor, language)}</span>
                             </span>
                             <div className="flex gap-2">
                                 {product.colors.map((color) => (
@@ -591,8 +591,8 @@ export default function ProductView({
                                         key={color.name}
                                         onClick={() => setSelectedColor(color.name)}
                                         aria-pressed={selectedColor === color.name}
-                                        aria-label={color.name}
-                                        title={color.name}
+                                        aria-label={localizedColorName(color, language)}
+                                        title={localizedColorName(color, language)}
                                         style={{ backgroundColor: color.hex }}
                                         className={`w-9 h-9 rounded-full border-2 transition-all duration-200 cursor-pointer ${
                                             selectedColor === color.name

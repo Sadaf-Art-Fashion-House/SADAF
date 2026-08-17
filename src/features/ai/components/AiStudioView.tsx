@@ -10,7 +10,9 @@ import { fabricsList, printingMethods } from '@/features/ai/data';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
 import {
     localizedClothingType,
+    localizedDesignDescription,
     localizedDesignName,
+    localizedDesignStory,
     localizedFabricDescription,
     localizedFabricName,
     localizedPrintingName,
@@ -302,7 +304,7 @@ export default function AiStudioView({
                                     <h3 className="font-serif text-2xl text-white mt-1 uppercase tracking-wide">
                                         {localizedDesignName(activeDesign, language)}
                                     </h3>
-                                    <p className="text-xs text-slate-400 mt-2 leading-relaxed">{activeDesign.description}</p>
+                                    <p className="text-xs text-slate-400 mt-2 leading-relaxed">{localizedDesignDescription(activeDesign, language)}</p>
                                 </div>
 
                                 {/* Cultural Narrative Box */}
@@ -310,7 +312,7 @@ export default function AiStudioView({
                                     <h4 className="font-serif text-[#C9A84C] mb-1.5 flex items-center gap-1.5">
                                         🏺 CULTURAL NARRATIVE &bull; سرد ثقافي
                                     </h4>
-                                    <p className="text-gray-300 leading-relaxed italic pr-2 font-serif">{activeDesign.story}</p>
+                                    <p className="text-gray-300 leading-relaxed italic pr-2 font-serif">{localizedDesignStory(activeDesign, language)}</p>
                                 </div>
 
                                 {/* Configure colors */}

@@ -16,6 +16,7 @@ import type { AIClothingDesign, ArtPiece, FashionProduct, LookbookItem } from '@
 import type { SiteLanguage } from '@/features/settings/store/usePreferencesStore';
 import { artDatabase, fashionDatabase, fabricsList, printingMethods } from '@/data';
 import type { OrderItem } from '@/features/orders/types';
+import type { Review } from '@/features/reviews/types';
 
 /** The display name of a product for the active language. */
 export function localizedProductName(product: FashionProduct, language: SiteLanguage): string {
@@ -45,6 +46,56 @@ export function localizedArtTitle(art: ArtPiece, language: SiteLanguage): string
 /** The display name of an AI Studio design for the active language. */
 export function localizedDesignName(design: AIClothingDesign, language: SiteLanguage): string {
     return language === 'ar' && design.patternNameAr ? design.patternNameAr : design.patternName;
+}
+
+/** The display description of an artwork for the active language. */
+export function localizedArtDescription(art: ArtPiece, language: SiteLanguage): string {
+    return language === 'ar' && art.descriptionAr ? art.descriptionAr : art.description;
+}
+
+/** The display description of an AI design for the active language. */
+export function localizedDesignDescription(design: AIClothingDesign, language: SiteLanguage): string {
+    return language === 'ar' && design.descriptionAr ? design.descriptionAr : design.description;
+}
+
+/** The display story (narrative) of an AI design for the active language. */
+export function localizedDesignStory(design: AIClothingDesign, language: SiteLanguage): string {
+    return language === 'ar' && design.storyAr ? design.storyAr : design.story;
+}
+
+/** Canonical color name → Arabic display label (covers catalog + AI custom designs). */
+const COLOR_LABELS_AR: Record<string, string> = {
+    'Royal Navy': 'كحلي ملكي',
+    'Midnight Charcoal': 'فحم منتصف الليل',
+    'Deep Midnight Onyx': 'أونيكس منتصف الليل العميق',
+    'Sadaf Pearl': 'لؤلؤة صدف',
+    'Royal Navy Blue': 'أزرق كحلي ملكي',
+    'Iridescent Pearl': 'لؤلؤة قزحية',
+    'Deep Navy': 'كحلي عميق',
+    'Alabaster Salt': 'ملح الألباستر',
+    'Desert Sand Pearl': 'لؤلؤة رمل الصحراء',
+    'Egyptian Sky': 'سماء مصرية',
+    'Custom Layer Gradient': 'تدرج طبقات مخصص',
+};
+
+/** The display name of a product color swatch for the active language. */
+export function localizedColorName(color: { name: string; nameAr?: string }, language: SiteLanguage): string {
+    return language === 'ar' && color.nameAr ? color.nameAr : color.name;
+}
+
+/** The display label of a stored color value (cart lines, pickers) for the active language. */
+export function localizedColorLabel(name: string, language: SiteLanguage): string {
+    return language === 'ar' ? (COLOR_LABELS_AR[name] ?? name) : name;
+}
+
+/** The display name of a review's author for the active language. */
+export function localizedReviewerName(review: Review, language: SiteLanguage): string {
+    return language === 'ar' && review.userNameAr ? review.userNameAr : review.userName;
+}
+
+/** The display title of a review for the active language. */
+export function localizedReviewTitle(review: Review, language: SiteLanguage): string {
+    return language === 'ar' && review.titleAr ? review.titleAr : review.title;
 }
 
 /** The display title of a lookbook item for the active language. */

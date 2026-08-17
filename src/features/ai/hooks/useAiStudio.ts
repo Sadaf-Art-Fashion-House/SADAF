@@ -20,7 +20,9 @@ const DEFAULT_DESIGN: AIClothingDesign = {
     patternName: 'Fatimid Imperial Geometry',
     patternNameAr: 'الهندسة الفاطمية الإمبراطورية',
     description: 'Intricately detailed Fatimid geometries merged with modern flowing drapes.',
+    descriptionAr: 'هندسات فاطمية دقيقة التفاصيل ممزوجة بأقمشة عصرية منسدلة.',
     story: 'Woven under Alexandria\'s golden sea dusk, this design traces Fatimid architectural star patterns. It represents geometric perfection aligned with calligraphy rhythms.',
+    storyAr: 'نُسج هذا التصميم عند غروب البحر الذهبي بالإسكندرية، ويتتبع أنماط النجوم المعمارية الفاطمية. إنه يمثل الكمال الهندسي المتوافق مع إيقاعات الخط العربي.',
     fabrics: ['Premium Mulberry Silk', 'Luxury Italian Velvet'],
     printingOption: 'Embroidery',
 };

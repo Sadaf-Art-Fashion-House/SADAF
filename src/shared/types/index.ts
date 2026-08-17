@@ -150,6 +150,8 @@ export interface ArtPiece {
     price: number;
     image: string;
     description: string;
+    /** Arabic display description — falls back to `description` when absent. */
+    descriptionAr?: string;
     dimensions: string;
     year: string;
     medium: string;
@@ -181,7 +183,7 @@ export interface FashionProduct {
     /** Arabic fabric label — falls back to `fabric` when absent. */
     fabricAr?: string;
     sizes: string[];
-    colors: { name: string; hex: string }[];
+    colors: { name: string; nameAr?: string; hex: string }[];
     details: string[];
     /** Arabic bullet-point details — falls back to `details` when absent. */
     detailsAr?: string[];
@@ -231,8 +233,12 @@ export interface AIClothingDesign {
     /** Arabic display name for the bilingual catalog — falls back to `patternName` when absent. */
     patternNameAr?: string;
     description: string;
+    /** Arabic display description — falls back to `description` when absent. */
+    descriptionAr?: string;
     /** Gemini-generated narrative for the design. */
     story: string;
+    /** Arabic narrative for the design — falls back to `story` when absent. */
+    storyAr?: string;
     fabrics: string[];
     printingOption: 'DTG' | 'Embroidery' | 'Screen Print' | 'Puff Print';
 }

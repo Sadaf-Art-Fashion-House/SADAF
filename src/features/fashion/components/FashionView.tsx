@@ -10,6 +10,7 @@ import { useLanguage } from "@/features/i18n/LanguageProvider";
 import {
     localizedLookbookDescription,
     localizedLookbookSubtitle,
+    localizedColorName,
     localizedLookbookTitle,
     localizedProductName,
 } from "@/features/i18n/productNames";
@@ -334,7 +335,7 @@ export default function FashionView({
                                                         style={{ backgroundColor: color.hex }}
                                                         className="w-2.5 h-2.5 rounded-full inline-block border border-white/10"
                                                     />
-                                                    <span>{color.name}</span>
+                                                    <span>{localizedColorName(color, language)}</span>
                                                 </button>
                                             ))}
                                         </div>
