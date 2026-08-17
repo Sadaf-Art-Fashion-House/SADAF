@@ -8,14 +8,15 @@ import Link from 'next/link';
 import type { Review, ReviewSortOption, ReviewRatingFilter } from '../types';
 import { RATING_FILTER_MIN } from '../types';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
-import { localizedReviewerName, localizedReviewTitle } from '@/features/i18n/productNames';
+import { localizedReviewComment, localizedReviewerName, localizedReviewTitle } from '@/features/i18n/productNames';
+import { pdpReviewCountWord } from '@/shared/utils/countWord';
 
 interface ReviewsViewProps {
     reviews: Review[];
 }
 
 export default function ReviewsView({ reviews }: ReviewsViewProps) {
-    const { language } = useLanguage();
+    const { t } = useLanguage();
     const [sortBy, setSortBy] = useState<ReviewSortOption>('newest');
     const [filterVerified, setFilterVerified] = useState(false);
     const [ratingFilter, setRatingFilter] = useState<ReviewRatingFilter>('all');
@@ -74,9 +75,9 @@ export default function ReviewsView({ reviews }: ReviewsViewProps) {
     }, [reviews]);
 
     const sortLabels: Record<ReviewSortOption, string> = {
-        newest: 'Newest First',
-        highest: 'Highest Rated',
-        lowest: 'Lowest Rated',
+        newest: t('reviews.sort.newest'),
+        highest: t('reviews.sort.highest'),
+        lowest: t('reviews.sort.lowest'),
     };
 
     return (
@@ -87,13 +88,13 @@ export default function ReviewsView({ reviews }: ReviewsViewProps) {
                 <div className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full bg-[#4FC3F7]/5 blur-[120px] pointer-events-none" />
 
                 <span className="text-xs font-semibold text-[#C9A84C] tracking-[0.45em] uppercase mb-3 block">
-                    SADAF CLIENT VOICES
+                    {t('reviews.page.kicker')}
                 </span>
                 <h1 className="text-3xl md:text-5xl font-serif text-white uppercase tracking-tight leading-none mb-4">
-                    CUSTOMER <span className="text-gold-gradient italic font-serif">Reviews</span>
+                    {t('reviews.page.titleBefore')} <span className="text-gold-gradient italic font-serif">{t('reviews.page.titleAccent')}</span>
                 </h1>
                 <p className="text-sm md:text-base text-[#E8E0D5]/70 max-w-2xl mx-auto font-sans tracking-wide leading-relaxed">
-                    Hear from our collectors, patrons, and atelier visitors about their SADAF experience.
+                    {t('reviews.page.subtitle')}
                 </p>
             </section>
 
@@ -102,7 +103,7 @@ export default function ReviewsView({ reviews }: ReviewsViewProps) {
                 <section className="py-10 grid grid-cols-1 md:grid-cols-12 gap-8 border-b border-[#C9A84C]/5">
                     {/* Overall Rating */}
                     <div className="md:col-span-4 flex flex-col items-center md:items-start justify-center text-center md:text-left p-6 rounded-xl bg-gradient-to-br from-[#0A0F2C] to-[#1B2A6B]/30 border border-[#C9A84C]/10">
-                        <span className="text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-2">Overall Rating</span>
+                        <span className="text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-2">{t('reviews.overallRating')}</span>
                         <div className="flex items-center gap-3">
                             <span className="text-5xl font-serif text-white font-bold">
                                 {reviews.length === 0 ? '—' : averageRating.toFixed(1)}
@@ -119,7 +120,7 @@ export default function ReviewsView({ reviews }: ReviewsViewProps) {
                                     ))}
                                 </div>
                                 <span className="text-[10px] text-slate-500 font-mono">
-                                    {reviews.length === 0 ? 'No reviews yet' : `${reviews.length} reviews`}
+                                    {reviews.length === 0 ? t('reviews.noReviewsYet') : `${reviews.length} ${pdpReviewCountWord(t, reviews.length)}`}
                                 </span>
                             </div>
                         </div>
@@ -143,7 +144,7 @@ export default function ReviewsView({ reviews }: ReviewsViewProps) {
                                     key={star}
                                     onClick={() => toggleExactStar(star)}
                                     aria-pressed={active}
-                                    title={active ? 'Clear this star filter' : `Show only ${star}-star reviews`}
+                                    title={active ? t('pdp.filterClear') : t('pdp.filterShow', { star })}
                                     className={`flex items-center gap-3 text-xs w-full rounded-lg px-2 py-1 transition-all duration-300 cursor-pointer ${
                                         active
                                             ? 'bg-[#C9A84C]/10 ring-1 ring-[#C9A84C]/40'
@@ -186,7 +187,7 @@ export default function ReviewsView({ reviews }: ReviewsViewProps) {
                     <div className="md:col-span-3 flex flex-col items-center md:items-start justify-center p-6 rounded-xl bg-[#0A0F2C]/80 border border-white/5">
                         <Quote size={20} className="text-[#C9A84C]/40 mb-2" />
                         <p className="text-xs text-slate-400 italic leading-relaxed">
-                            &ldquo;SADAF truly captures the spirit of Egyptian heritage with modern luxury.&rdquo;
+                            &ldquo;{t('reviews.quote')}&rdquo;
                         </p>
                     </div>
                 </section>
@@ -238,9 +239,9 @@ export default function ReviewsView({ reviews }: ReviewsViewProps) {
                         <div className="flex items-center gap-1.5">
                             {(
                                 [
-                                    { value: 'all', label: 'All Stars' },
-                                    { value: 'fourPlus', label: '4★ & Up' },
-                                    { value: 'threePlus', label: '3★ & Up' },
+                                    { value: 'all', label: t('reviews.rating.all') },
+                                    { value: 'fourPlus', label: t('reviews.rating.fourPlus') },
+                                    { value: 'threePlus', label: t('reviews.rating.threePlus') },
                                 ] as { value: ReviewRatingFilter; label: string }[]
                             ).map((option) => (
                                 <button
@@ -267,12 +268,12 @@ export default function ReviewsView({ reviews }: ReviewsViewProps) {
                             }`}
                         >
                             <CheckCircle size={12} />
-                            Verified Only
+                            {t('reviews.verifiedOnly')}
                         </button>
                     </div>
 
                     <span className="text-[10px] text-slate-500 font-mono">
-                        Showing {sortedAndFiltered.length} of {reviews.length} reviews
+                        {t('reviews.showing', { shown: sortedAndFiltered.length, total: reviews.length, word: pdpReviewCountWord(t, reviews.length) })}
                     </span>
                 </section>
 
@@ -289,10 +290,10 @@ export default function ReviewsView({ reviews }: ReviewsViewProps) {
                                 <MessageSquare size={24} className="mx-auto text-slate-500 mb-4" />
                                 <p className="text-sm text-slate-400">
                                     {filterVerified
-                                        ? 'No verified reviews match the current filters. Clear a filter to see more.'
+                                        ? t('reviews.empty.verified')
                                         : exactStarFilter !== null
-                                            ? `No ${exactStarFilter}-star reviews match the current filters.`
-                                            : 'No reviews to display yet.'}
+                                            ? t('reviews.empty.star', { star: exactStarFilter })
+                                            : t('reviews.empty.all')}
                                 </p>
                             </motion.div>
                         ) : (
@@ -312,7 +313,7 @@ export default function ReviewsView({ reviews }: ReviewsViewProps) {
 // ─── Review Card Component ────────────────────────────────────────────────────
 
 function ReviewCard({ review }: { review: Review }) {
-    const { language } = useLanguage();
+    const { t, language } = useLanguage();
     const [liked, setLiked] = useState(false);
 
     return (
@@ -356,7 +357,7 @@ function ReviewCard({ review }: { review: Review }) {
                 <h3 className="font-serif text-white text-sm font-semibold mb-1">{localizedReviewTitle(review, language)}</h3>
 
                 {/* Comment */}
-                <p className="text-xs text-slate-400 leading-relaxed mb-3">{review.comment}</p>
+                <p className="text-xs text-slate-400 leading-relaxed mb-3">{localizedReviewComment(review, language)}</p>
 
                 {/* Footer: User + Date + Actions */}
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-white/5">
@@ -372,12 +373,12 @@ function ReviewCard({ review }: { review: Review }) {
                             <span className="text-[10px] text-slate-300 font-medium">{localizedReviewerName(review, language)}</span>
                             {review.isMine && (
                                 <span className="ml-2 px-1.5 py-0.5 rounded bg-[#A78BFA]/20 text-[#C9A84C] text-[8px] font-mono uppercase tracking-wider border border-[#A78BFA]/40 font-bold">
-                                    You
+                                    {t('reviews.you')}
                                 </span>
                             )}
                             {review.verified && (
                                 <span className="ml-1.5 px-1.5 py-0.5 rounded bg-[#C9A84C]/10 text-[#C9A84C] text-[8px] font-mono uppercase tracking-wider">
-                                    Verified
+                                    {t('reviews.verified')}
                                 </span>
                             )}
                         </div>
@@ -388,7 +389,7 @@ function ReviewCard({ review }: { review: Review }) {
                                 day: 'numeric',
                             })}
                             {review.editedAt && (
-                                <span className="text-[#C9A84C]/70"> · Edited</span>
+                                <span className="text-[#C9A84C]/70"> · {t('reviews.edited')}</span>
                             )}
                         </span>
                     </div>
@@ -400,7 +401,7 @@ function ReviewCard({ review }: { review: Review }) {
                         }`}
                     >
                         <ThumbsUp size={11} fill={liked ? '#C9A84C' : 'none'} />
-                        <span>{liked ? 'Helpful' : 'Mark Helpful'}</span>
+                        <span>{liked ? t('reviews.helpful') : t('reviews.markHelpful')}</span>
                     </button>
                 </div>
             </div>

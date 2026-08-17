@@ -39,7 +39,7 @@ import { useLanguage } from '@/features/i18n/LanguageProvider';
 import { pdpReviewCountWord, reviewCountWord } from '@/shared/utils/countWord';
 import StarRatingRow from '@/shared/components/StarRatingRow';
 import { ShareLinks } from '@/shared/components/ShareLinks';
-import { localizedColorLabel, localizedColorName, localizedProductDescription, localizedProductDetails, localizedProductFabric, localizedProductName, localizedReviewerName, localizedReviewTitle } from '@/features/i18n/productNames';
+import { localizedColorLabel, localizedColorName, localizedProductDescription, localizedProductDetails, localizedProductFabric, localizedProductName, localizedReviewComment, localizedReviewerName, localizedReviewTitle } from '@/features/i18n/productNames';
 
 interface ProductViewProps {
     product: FashionProduct;
@@ -532,7 +532,7 @@ export default function ProductView({
                                                 {localizedReviewTitle(review, language)}
                                             </h4>
                                             <p className="text-[11px] text-slate-400 leading-relaxed mb-2">
-                                                {review.comment}
+                                                {localizedReviewComment(review, language)}
                                             </p>
                                             <div className="flex items-center gap-2">
                                                 <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#C9A84C] to-[#4FC3F7] flex items-center justify-center text-[8px] font-bold text-white overflow-hidden shrink-0">

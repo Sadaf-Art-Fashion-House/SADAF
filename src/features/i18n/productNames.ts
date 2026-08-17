@@ -102,6 +102,11 @@ export function localizedReviewTitle(review: Review, language: SiteLanguage): st
     return language === 'ar' && review.titleAr ? review.titleAr : review.title;
 }
 
+/** The display comment of a review for the active language (falls back to the original text for user-written reviews). */
+export function localizedReviewComment(review: Review, language: SiteLanguage): string {
+    return language === 'ar' && review.commentAr ? review.commentAr : review.comment;
+}
+
 /** The display title of a lookbook item for the active language. */
 export function localizedLookbookTitle(item: LookbookItem, language: SiteLanguage): string {
     return language === 'ar' && item.titleAr ? item.titleAr : item.title;

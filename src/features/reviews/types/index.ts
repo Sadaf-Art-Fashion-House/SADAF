@@ -17,6 +17,8 @@ export interface Review {
     /** Arabic review title — falls back to `title` when absent. */
     titleAr?: string;
     comment: string;
+    /** Arabic review comment — falls back to `comment` when absent (user-written reviews have none). */
+    commentAr?: string;
     createdAt: string;
     verified: boolean;
     /**

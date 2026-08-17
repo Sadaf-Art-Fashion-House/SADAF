@@ -17,6 +17,7 @@ export function getMockReviews(): Review[] {
             productHref: '/store', userName: 'Layla M.', userNameAr: 'ليلى م.', userAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80', rating: 5,
             title: 'Absolutely breathtaking craftsmanship', titleAr: 'حرفية تخطف الأنفاس',
             comment: 'The gold calligraphy embroidery is even more stunning in person. Wore it to a gala and received countless compliments. The velvet drapes perfectly.',
+            commentAr: 'التطريز الخطي الذهبي أجمل بكثير على الطبيعة. ارتديته في حفل سهرة ونلت إطراءات لا تُعد. المخمل ينسدل بشكل مثالي.',
             createdAt: '2026-06-15T10:30:00Z', verified: true,
         },
         {
@@ -25,6 +26,7 @@ export function getMockReviews(): Review[] {
             productHref: '/store', userName: 'Karim A.', userNameAr: 'كريم أ.', userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80', rating: 5,
             title: 'The finest tuxedo I have ever owned', titleAr: 'أفضل توكسيدو امتلكته في حياتي',
             comment: 'The mother-of-pearl inlay buttons are a work of art. The wool is incredibly soft yet structured. Worth every penny for a true gentleman.',
+            commentAr: 'أزرار الصدف المطعّمة تحفة فنية. الصوف ناعم للغاية مع بنية محكمة. يستحق كل قرش لمن يقدّر الأناقة.',
             createdAt: '2026-05-28T14:00:00Z', verified: true,
         },
         {
@@ -33,6 +35,7 @@ export function getMockReviews(): Review[] {
             productHref: '/store', userName: 'Nadia H.', userNameAr: 'نادية هـ.', userAvatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=100&q=80', rating: 5,
             title: 'Like wearing liquid gold', titleAr: 'كأنك ترتدي ذهبًا سائلًا',
             comment: 'The silk is divine — so smooth and luxurious. The Fatimid star pattern catches the light beautifully. A true statement piece.',
+            commentAr: 'الحرير إلهي — ناعم وفاخر للغاية. نقش نجمة الفاطمية يلتقط الضوء بجمال. قطعة تُبرز حضورًا حقيقيًا.',
             createdAt: '2026-06-02T09:00:00Z', verified: true,
         },
         {
@@ -41,6 +44,7 @@ export function getMockReviews(): Review[] {
             productHref: '/store', userName: 'Omar S.', userNameAr: 'عمر س.', userAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=100&q=80', rating: 5,
             title: 'Streetwear meets heritage — perfect', titleAr: 'ستريت وير يلتقي بالتراث — مثالي',
             comment: 'The puff print Cairo grid details are incredible. Heavy weight fabric feels premium. Got the limited edition — proud to own piece #47.',
+            commentAr: 'تفاصيل شبكة القاهرة المطبوعة بارزة مذهلة. القماش الثقيل يعطي إحساسًا فاخرًا. حصلت على الإصدار المحدود — فخور بامتلاك القطعة رقم 47.',
             createdAt: '2026-06-10T16:45:00Z', verified: true,
         },
         {
@@ -49,6 +53,7 @@ export function getMockReviews(): Review[] {
             productHref: '/store', userName: 'Fatima R.', userNameAr: 'فاطمة ر.', userAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=100&q=80', rating: 4,
             title: 'Beautiful set for my daughter', titleAr: 'طقم جميل لابنتي',
             comment: 'The linen is incredibly soft and the gold stitching is exquisite. Runs slightly large but that means she can grow into it.',
+            commentAr: 'الكتان ناعم بشكل لا يُصدق والخياطة الذهبية راقية. المقاس أكبر قليلًا لكن هذا يعني أنها ستنمو عليه.',
             createdAt: '2026-05-20T11:30:00Z', verified: true,
         },
         {
@@ -57,6 +62,7 @@ export function getMockReviews(): Review[] {
             productHref: '/artworks', userName: 'Yasmin F.', userNameAr: 'ياسمين ف.', userAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80', rating: 5,
             title: 'A masterpiece for my collection', titleAr: 'تحفة فنية لمجموعتي',
             comment: 'Master El-Saeed\'s calligraphy is unparalleled. The 24k gold leaf catches the light differently throughout the day. A treasure.',
+            commentAr: 'خط الأستاذ السعيد لا يُضاهى. ورق الذهب عيار 24 يلتقط الضوء بشكل مختلف طوال اليوم. كنز حقيقي.',
             createdAt: '2026-04-15T08:00:00Z', verified: true,
         },
         {
@@ -65,6 +71,7 @@ export function getMockReviews(): Review[] {
             productHref: '/artworks', userName: 'Amir K.', userNameAr: 'أمير ك.', userAvatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=100&q=80', rating: 5,
             title: 'Heritage craftsmanship at its finest', titleAr: 'حرفية تراثية في أبهى صورها',
             comment: 'You can see the 50 hours of work in every detail. The mother-of-pearl inlay is mesmerizing. Centerpiece of my dining room.',
+            commentAr: 'يمكنك رؤية 50 ساعة من العمل في كل تفصيلة. ترصيع الصدف ساحر. قطعة وسط غرفة طعامي.',
             createdAt: '2026-03-22T13:15:00Z', verified: true,
         },
         {
@@ -73,6 +80,7 @@ export function getMockReviews(): Review[] {
             productHref: '/artworks', userName: 'Dr. Farida H.', userNameAr: 'د. فريدة هـ.', userAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80', rating: 5,
             title: 'Breathtaking impasto technique', titleAr: 'تقنية إمباستو تخطف الأنفاس',
             comment: 'The texture is incredible — you can feel the movement of the Nile in the thick oil strokes. Colors are even richer in person.',
+            commentAr: 'الملمس مذهل — يمكنك الإحساس بحركة النيل في ضربات الزيت الكثيفة. الألوان أغنى بكثير على الطبيعة.',
             createdAt: '2026-05-08T10:00:00Z', verified: false,
         },
         {
@@ -81,6 +89,7 @@ export function getMockReviews(): Review[] {
             productHref: '/store', userName: 'Samira L.', userNameAr: 'سميرة ل.', userAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80', rating: 4,
             title: 'Elegant but needs careful handling', titleAr: 'أنيق لكن يحتاج عناية دقيقة',
             comment: 'Stunning design and the gold thread work is impeccable. However the velvet is delicate — dry clean only as stated. Worth the care.',
+            commentAr: 'تصميم مذهل وعمل الخيوط الذهبية لا تشوبه شائبة. لكن المخمل رقيق — تنظيف جاف فقط كما هو مذكور. يستحق العناية.',
             createdAt: '2026-06-18T15:20:00Z', verified: true,
         },
         {
@@ -89,6 +98,7 @@ export function getMockReviews(): Review[] {
             productHref: '/store', userName: 'Hana Z.', userNameAr: 'هناء ز.', userAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=100&q=80', rating: 5,
             title: 'Perfect for summer weddings', titleAr: 'مثالي لأعراس الصيف',
             comment: 'The silk is weightless and the geometric print is stunning. I felt like royalty wearing this to a garden wedding.',
+            commentAr: 'الحرير خفيف كالريشة والطباعة الهندسية مذهلة. شعرت كأنني ملكة وأنا أرتديه في حفل زفاف في حديقة.',
             createdAt: '2026-06-05T12:00:00Z', verified: true,
         },
     ];
