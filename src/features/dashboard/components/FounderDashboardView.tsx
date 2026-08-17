@@ -13,6 +13,7 @@ import {
 import Link from 'next/link';
 import type { UserProfile } from '@/shared/types';
 import { useWSFounderDashboardData } from '@/features/dashboard/hooks/useDashboardData';
+import { localizedKpiValue } from '@/features/dashboard/utils/kpiLocalization';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
 import type { TranslationKey } from '@/features/i18n/dictionaries';
 import { ErrorBanner } from '@/shared/ui/ErrorGuidance';
@@ -33,7 +34,7 @@ interface FounderDashboardViewProps {
 }
 
 export default function FounderDashboardView({ user, onLogout }: FounderDashboardViewProps) {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const [founderTab, setFounderTab] = useState<'analytics' | 'revenue' | 'team'>('analytics');
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
@@ -83,6 +84,13 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
     const statusLabel: Record<string, string> = {
         'Online': t('founder.status.online'),
         'In-Atelier': t('founder.status.inAtelier'),
+    };
+    const kpiLabel: Record<string, string> = {
+        'GROSS COUTURE REVENUE': t('founder.kpi.grossRevenue'),
+        'FINE ART SALES': t('founder.kpi.fineArt'),
+        'AI CREATED SHAPES': t('founder.kpi.aiShapes'),
+        'CATALOG TOTAL': t('founder.kpi.catalogTotal'),
+        'CURATOR RETENTION': t('founder.kpi.curatorRetention'),
     };
 
     const [inviteRole, setInviteRole] = useState('Apprentice Weaver');
@@ -265,9 +273,9 @@ export default function FounderDashboardView({ user, onLogout }: FounderDashboar
                                                 key={kpi.label}
                                                 className="p-5 rounded-xl bg-[#0F1435]/80 border border-white/5 shadow flex flex-col"
                                             >
-                                                <span className="text-[10px] uppercase font-mono text-gray-400 tracking-wider">{kpi.label}</span>
-                                                <span className="text-2xl font-serif text-white font-bold block mt-2">{kpi.val}</span>
-                                                <span className={`text-[10px] font-mono mt-0.5 ${kpi.color}`}>{kpi.pct}</span>
+                                                <span className="text-[10px] uppercase font-mono text-gray-400 tracking-wider">{kpiLabel[kpi.label] ?? kpi.label}</span>
+                                                <span className="text-2xl font-serif text-white font-bold block mt-2">{localizedKpiValue(kpi.val, language)}</span>
+                                                <span className={`text-[10px] font-mono mt-0.5 ${kpi.color}`}>{localizedKpiValue(kpi.pct, language)}</span>
                                             </div>
                                         ))}
                                     </div>

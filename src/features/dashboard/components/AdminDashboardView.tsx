@@ -26,6 +26,7 @@ import { fashionDatabase, artDatabase, collections } from '@/data';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
 import type { TranslationKey } from '@/features/i18n/dictionaries';
 import { localizedArtTitle, localizedDesignName, localizedProductFabric, localizedProductName } from '@/features/i18n/productNames';
+import { localizedKpiValue } from '@/features/dashboard/utils/kpiLocalization';
 import { useDesignDraftStore } from '@/features/ai/store/useDesignDraftStore';
 import { designPublisher } from '@/features/ai/services/designPublisher';
 import { useWSAdminDashboardData } from '@/features/dashboard/hooks/useDashboardData';
@@ -98,6 +99,13 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
         'High-Fidelity Archival Giclée Print': t('admin.art.medium.giclee'),
         'Impasto Oil on Linen': t('admin.art.medium.impasto'),
         'Oil & Sand Texture on Linen': t('admin.art.medium.oilSand'),
+    };
+    const kpiLabel: Record<string, string> = {
+        'Bespoke Sales Vol': t('admin.kpi.bespokeSales'),
+        'AI Generations': t('admin.kpi.aiGenerations'),
+        'Museum Registries': t('admin.kpi.museumRegistries'),
+        'Catalog Items': t('admin.kpi.catalogItems'),
+        'VIP Active Collectors': t('admin.kpi.vipCollectors'),
     };
     const [mainTab, setMainTab] = useState<'analytics' | 'products' | 'arts' | 'ai-logs' | 'orders' | 'customers' | 'designs' | 'atelier' | 'withdrawals'>('analytics');
 
@@ -361,9 +369,9 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                             className="p-5 rounded-xl bg-[#0F1435]/80 border border-white/5 shadow flex justify-between items-center"
                                         >
                                             <div>
-                                                <span className="text-[10px] uppercase font-mono text-gray-400 tracking-wider block">{kpi.label}</span>
-                                                <span className="text-2xl font-serif text-white font-bold block mt-1.5">{kpi.value}</span>
-                                                <span className="text-[10px] text-green-400 font-mono mt-0.5 inline-block">{t('admin.vsPrevMonth', { growth: kpi.growth })}</span>
+                                                <span className="text-[10px] uppercase font-mono text-gray-400 tracking-wider block">{kpiLabel[kpi.label] ?? kpi.label}</span>
+                                                <span className="text-2xl font-serif text-white font-bold block mt-1.5">{localizedKpiValue(kpi.value, language)}</span>
+                                                <span className="text-[10px] text-green-400 font-mono mt-0.5 inline-block">{t('admin.vsPrevMonth', { growth: localizedKpiValue(kpi.growth, language) })}</span>
                                             </div>
                                             <div className="p-3 rounded-full bg-white/5 border border-white/10 shrink-0">
                                                 <DynamicKpiIcon name={kpi.icon} size={18} className={kpi.color} />
