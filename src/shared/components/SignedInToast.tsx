@@ -15,11 +15,13 @@
 
 import { useEffect, useState } from 'react';
 import SuccessToast from './SuccessToast';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 
 /** How long the welcome toast stays before auto-dismissing. */
 const TOAST_DURATION_MS = 6_000;
 
 export default function SignedInToast() {
+    const { t } = useLanguage();
     const [visible, setVisible] = useState(false);
 
     useEffect(() => {
@@ -45,8 +47,8 @@ export default function SignedInToast() {
     return (
         <SuccessToast
             visible={visible}
-            title="Welcome back"
-            message="Login successful — welcoming you to SADAF."
+            title={t('common.welcomeBack')}
+            message={t('common.loginWelcomeMessage')}
             onDismiss={() => setVisible(false)}
         />
     );

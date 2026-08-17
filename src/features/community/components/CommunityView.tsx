@@ -566,7 +566,7 @@ export default function CommunityView({
                                                         ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                                                         : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                                                 }`}>
-                                                    {conn.type}
+                                                    {conn.type === 'family' ? t('community.family') : t('community.friend')}
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-2 mt-0.5">
@@ -586,7 +586,7 @@ export default function CommunityView({
                                             </div>
                                             <p className="text-[8px] font-mono text-[#E8E0D5]/30 mt-0.5">
                                                 {t('community.connected', { date: formatDate(conn.connectedSince) })}
-                                                {conn.referredVia ? ` · ${t('community.via', { ref: conn.referredVia })}` : ''}
+                                                {conn.referredVia ? ` · ${t('community.via', { ref: conn.referredVia === 'Username' ? t('community.referral.username') : t('community.referral.code') })}` : ''}
                                             </p>
                                         </div>
 

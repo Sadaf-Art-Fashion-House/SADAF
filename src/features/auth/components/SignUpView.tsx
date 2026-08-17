@@ -13,8 +13,9 @@ import {
 } from 'lucide-react';
 import SadafLogo from '@/components/common/SadafLogo';
 import type { UserRole } from '@/features/auth/types';
-import { ELEVATED_ROLES, ROLE_LABELS, REFERRAL_REQUIRED_ROLES, APPLICATION_REQUIRED_ROLES, APPLICATION_FIELDS } from '@/features/auth/types';
+import { ELEVATED_ROLES, REFERRAL_REQUIRED_ROLES, APPLICATION_REQUIRED_ROLES, APPLICATION_FIELDS } from '@/features/auth/types';
 import { ErrorBanner } from '@/shared/ui/ErrorGuidance';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 
 interface SignUpViewProps {
     onSignUp: (data: {
@@ -40,6 +41,7 @@ export default function SignUpView({
     const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const { t } = useLanguage();
     const [role, setRole] = useState<UserRole>('customer_individual');
     const [secretPasscode, setSecretPasscode] = useState('');
     const [showPasscodeField, setShowPasscodeField] = useState(false);
@@ -52,6 +54,23 @@ export default function SignUpView({
 
     // Local validation error (specific field names) — shown INSIDE the component
     const [localError, setLocalError] = useState<string | null>(null);
+
+    // Localized label per role — ROLE_LABELS stays English for data usage,
+    // the UI renders through the dictionary.
+    const roleLabelKeys: Record<UserRole, string> = {
+        customer_individual: t('auth.role.customerIndividual'),
+        customer_family: t('auth.role.customerFamily'),
+        customer_friend: t('auth.role.customerFriend'),
+        designer: t('auth.role.designerFull'),
+        company: t('auth.role.companyBrand'),
+        sales_partner: t('auth.role.salesPartner'),
+        admin_sales: t('auth.role.adminSales'),
+        admin_media: t('auth.role.adminMedia'),
+        admin_sales_media: t('auth.role.adminSalesMedia'),
+        admin_software: t('auth.role.adminSoftware'),
+        admin_super: t('auth.role.adminSuper'),
+        founder: t('auth.role.founderFull'),
+    };
 
     const needsReferral = REFERRAL_REQUIRED_ROLES.includes(role);
     const needsApplication = APPLICATION_REQUIRED_ROLES.includes(role);
@@ -81,12 +100,12 @@ export default function SignUpView({
 
         // ── Client-side validation with specific field names ─────────────
         const missing: string[] = [];
-        if (!fullName.trim()) missing.push('Full legal name');
-        if (!email.trim()) missing.push('Email coordinate');
-        if (!password.trim()) missing.push('Password');
+        if (!fullName.trim()) missing.push(t('auth.fullLegalName'));
+        if (!email.trim()) missing.push(t('auth.emailLabel'));
+        if (!password.trim()) missing.push(t('auth.passwordField'));
 
         if (needsReferral && !referralCode.trim()) {
-            missing.push('Referral Code or Username');
+            missing.push(t('auth.referralRequired'));
         }
 
         if (needsApplication) {
@@ -99,7 +118,7 @@ export default function SignUpView({
 
         if (missing.length > 0) {
             setLocalError(
-                `Please fill in the following required fields: ${missing.join(', ')}`,
+                t('auth.requiredFields', { fields: missing.join(', ') }),
             );
             return;
         }
@@ -118,15 +137,15 @@ export default function SignUpView({
     // Role groups for the selector UI
     const roleGroups: { label: string; roles: UserRole[] }[] = [
         {
-            label: 'Customer',
+            label: t('auth.roleGroup.customer'),
             roles: ['customer_individual', 'customer_family', 'customer_friend'],
         },
         {
-            label: 'Creative & Business',
+            label: t('auth.roleGroup.creative'),
             roles: ['designer', 'company', 'sales_partner'],
         },
         {
-            label: 'Administration',
+            label: t('auth.roleGroup.admin'),
             roles: ['admin_sales', 'admin_media', 'admin_sales_media', 'admin_software', 'admin_super', 'founder'],
         },
     ];
@@ -148,10 +167,10 @@ export default function SignUpView({
                 <div className="flex flex-col items-center text-center mb-6 relative z-10">
                     <SadafLogo size={36} withMarbleBackground={false} />
                     <h2 className="text-xl md:text-2xl font-serif text-[#C9A84C] font-semibold mt-4 uppercase tracking-widest">
-                        SADAF IDENTITY SIGN UP
+                        {t('auth.signUpTitle')}
                     </h2>
                     <p className="text-xs text-slate-400 mt-1 font-sans">
-                        Acquire your exclusive heritage connection interface.
+                        {t('auth.signUpSubtitle')}
                     </p>
                 </div>
 
@@ -161,7 +180,7 @@ export default function SignUpView({
 
                 {success && (
                     <ErrorBanner tone="green" icon={CheckCircle} showGuidance={false}
-                        message={<><strong className="text-white block mb-0.5">Registration Registered!</strong><span>{success}</span></>}
+                        message={<><strong className="text-white block mb-0.5">{t('auth.registrationRegistered')}</strong><span>{success}</span></>}
                     />
                 )}
 
@@ -169,7 +188,7 @@ export default function SignUpView({
                     {/* Full Name */}
                     <div>
                         <label className="block text-[10px] font-mono uppercase tracking-widest text-[#E8E0D5]/60 mb-1.5">
-                            Full legal name
+                            {t('auth.fullLegalName')}
                         </label>
                         <div className="relative">
                             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500">
@@ -181,7 +200,7 @@ export default function SignUpView({
                                 required
                                 value={fullName}
                                 onChange={(e) => setFullName(e.target.value)}
-                                placeholder="Layla Al-Khouri"
+                                placeholder={t('auth.namePlaceholder')}
                                 className="w-full bg-black/40 border border-[#C9A84C]/25 text-xs text-white placeholder-slate-600 rounded-xl pl-10 pr-4 py-3 outline-none focus:border-[#4FC3F7] transition"
                             />
                         </div>
@@ -190,7 +209,7 @@ export default function SignUpView({
                     {/* Email */}
                     <div>
                         <label className="block text-[10px] font-mono uppercase tracking-widest text-[#E8E0D5]/60 mb-1.5">
-                            Email coordinate
+                            {t('auth.emailLabel')}
                         </label>
                         <div className="relative">
                             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500">
@@ -211,7 +230,7 @@ export default function SignUpView({
                     {/* Password */}
                     <div>
                         <label className="block text-[10px] font-mono uppercase tracking-widest text-[#E8E0D5]/60 mb-1.5">
-                            Lustrous cipher key
+                            {t('auth.passwordLabel')}
                         </label>
                         <div className="relative">
                             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500">
@@ -232,7 +251,7 @@ export default function SignUpView({
                     {/* Role selection — grouped by category */}
                     <div>
                         <label className="block text-[10px] font-mono uppercase tracking-widest text-[#E8E0D5]/60 mb-1.5">
-                            Select Role Authorization Link
+                            {t('auth.selectRole')}
                         </label>
 
                         {roleGroups.map((group) => (
@@ -257,11 +276,11 @@ export default function SignUpView({
                                                 }`}
                                             >
                                                 <span className="text-[10px] font-serif font-bold leading-tight">
-                                                    {ROLE_LABELS[r]}
+                                                    {roleLabelKeys[r]}
                                                 </span>
                                                 {ELEVATED_ROLES.includes(r) && (
                                                     <span className="text-[7px] font-mono tracking-wider text-[#C9A84C]/60 uppercase">
-                                                        🔒 Elevated
+                                                        {t('auth.elevated')}
                                                     </span>
                                                 )}
                                             </button>
@@ -280,22 +299,22 @@ export default function SignUpView({
                             className="p-3 bg-[#111A45]/40 border border-[#C9A84C]/20 rounded-xl space-y-2"
                         >
                             <div className="flex justify-between items-center text-[10px] text-[#C9A84C] font-mono uppercase tracking-wider font-semibold">
-                                <span>Referral Code or Username (Required)</span>
+                                <span>{t('auth.referralRequired')}</span>
                                 <span className="text-slate-500 text-[8px] italic">
-                                    Ask your referrer for their code or email
+                                    {t('auth.referrerHint')}
                                 </span>
                             </div>
                             <p className="text-[9px] text-[#E8E0D5]/50 leading-relaxed">
                                 {role === 'customer_family'
-                                    ? 'Family accounts receive shared benefits and discounts. You need a referral code OR username (email) from an existing SADAF customer who sponsors your family membership.'
-                                    : 'Friend accounts earn rewards through referrals. You need a referral code OR username (email) from an existing SADAF customer who invites you to the network.'}
+                                    ? t('auth.familyBenefits')
+                                    : t('auth.friendBenefits')}
                             </p>
                             <input
                                 type="text"
                                 required
                                 value={referralCode}
                                 onChange={(e) => setReferralCode(e.target.value)}
-                                placeholder="e.g. SADAF-LAYLA-7X2 or layla@sadaf.luxury"
+                                placeholder={t('auth.referralPlaceholder')}
                                 className="w-full bg-black/60 border border-[#C9A84C]/20 text-[11px] text-white placeholder-slate-600 rounded-lg p-2 outline-none focus:border-[#4FC3F7] transition"
                             />
                         </motion.div>
@@ -309,14 +328,14 @@ export default function SignUpView({
                             className="p-3 bg-[#111A45]/40 border border-[#C9A84C]/20 rounded-xl space-y-3"
                         >
                             <div className="text-[10px] text-[#C9A84C] font-mono uppercase tracking-wider font-semibold">
-                                Application Details
+                                {t('auth.applicationDetails')}
                             </div>
                             <p className="text-[9px] text-[#E8E0D5]/50 leading-relaxed">
                                 {role === 'designer'
-                                    ? 'Submit your design credentials for review. Our curation team will verify your portfolio before approving your designer account.'
+                                    ? t('auth.designerDetails')
                                     : role === 'company'
-                                    ? 'Register your business for brand partnerships. We verify company details before approving bulk ordering and AI Studio access.'
-                                    : 'Apply to become a SADAF sales partner. Our partnerships team will review your application and contact you.'}
+                                    ? t('auth.companyDetails')
+                                    : t('auth.salesDetails')}
                             </p>
                             {applicationFields.map((field) => (
                                 <div key={field.key}>
@@ -367,9 +386,9 @@ export default function SignUpView({
                             className="p-3 bg-[#111A45]/40 border border-[#C9A84C]/20 rounded-xl space-y-2"
                         >
                             <div className="flex justify-between items-center text-[10px] text-[#C9A84C] font-mono uppercase tracking-wider font-semibold">
-                                <span>Passcode key authorization</span>
+                                <span>{t('auth.passcodeAuth')}</span>
                                 <span className="text-slate-500 text-[8px] italic">
-                                    demo use: &quot;sadaf123&quot;
+                                    {t('auth.demoUse')}
                                 </span>
                             </div>
                             <input
@@ -377,7 +396,7 @@ export default function SignUpView({
                                 required
                                 value={secretPasscode}
                                 onChange={(e) => setSecretPasscode(e.target.value)}
-                                placeholder="Enter specialized passcode coordinate"
+                                placeholder={t('auth.passcodeHint')}
                                 className="w-full bg-black/60 border border-[#C9A84C]/20 text-[11px] text-white placeholder-slate-600 rounded-lg p-2 outline-none focus:border-red-400 transition"
                             />
                         </motion.div>
@@ -393,7 +412,7 @@ export default function SignUpView({
                                 <span className="w-4 h-4 border-2 border-[#0A0F2C] border-t-transparent rounded-full animate-spin" />
                             ) : (
                                 <>
-                                    Register Secure Persona <Award size={13} />
+                                    {t('auth.registerCta')} <Award size={13} />
                                 </>
                             )}
                         </button>
@@ -402,13 +421,13 @@ export default function SignUpView({
 
                 <div className="mt-6 text-center border-t border-white/5 pt-4 w-full text-xs">
                     <span className="text-slate-500">
-                        Already have an elite coordinate?
+                        {t('auth.alreadyHaveAccount')}
                     </span>{' '}
                     <Link
                         href="/auth"
                         className="text-[#C9A84C] hover:text-[#4FC3F7] font-semibold underline"
                     >
-                        Access account link
+                        {t('auth.accessAccount')}
                     </Link>
                 </div>
             </motion.div>

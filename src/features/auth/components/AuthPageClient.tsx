@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 import SuccessToast from '@/shared/components/SuccessToast';
 import LoginView from './LoginView';
 import SignUpView from './SignUpView';
@@ -61,6 +62,7 @@ export default function AuthPageClient({ mode }: AuthPageClientProps) {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [signedOutToast, setSignedOutToast] = useState(false);
+    const { t } = useLanguage();
 
     // Show a green confirmation toast when the user arrives here right after
     // signing out (SignOutButton pushes /auth?signedOut=1). Read lazily in a
@@ -84,10 +86,10 @@ export default function AuthPageClient({ mode }: AuthPageClientProps) {
                 // visible for its full duration instead of a 1.5s squish here.
                 router.push(getPostAuthDestination(result.role ?? 'customer_individual'));
             } else {
-                setError(result.error || 'Authentication failed.');
+                setError(result.error || t('auth.authFailed'));
             }
         },
-        [login, router],
+        [login, router, t],
     );
 
     const handleSignUp = useCallback(
@@ -105,9 +107,9 @@ export default function AuthPageClient({ mode }: AuthPageClientProps) {
 
             // ── Validate basic fields ──
             const basicMissing: string[] = [];
-            if (!data.fullName.trim()) basicMissing.push('Full legal name');
-            if (!data.email.trim()) basicMissing.push('Email coordinate');
-            if (!data.password.trim()) basicMissing.push('Password');
+            if (!data.fullName.trim()) basicMissing.push(t('auth.fullLegalName'));
+            if (!data.email.trim()) basicMissing.push(t('auth.emailLabel'));
+            if (!data.password.trim()) basicMissing.push(t('auth.passwordField'));
 
             // ── Validate application required fields ──
             if (APPLICATION_REQUIRED_ROLES.includes(data.role) && data.applicationData) {
@@ -120,7 +122,7 @@ export default function AuthPageClient({ mode }: AuthPageClientProps) {
             }
 
             if (basicMissing.length > 0) {
-                setError(`Please fill in the following required fields: ${basicMissing.join(', ')}`);
+                setError(t('auth.requiredFields', { fields: basicMissing.join(', ') }));
                 return;
             }
 
@@ -130,7 +132,7 @@ export default function AuthPageClient({ mode }: AuthPageClientProps) {
                 data.secretPasscode !== 'Cairo99' &&
                 data.secretPasscode !== 'sadaf123'
             ) {
-                setError('Invalid authorization token for elevated access.');
+                setError(t('auth.invalidPasscode'));
                 return;
             }
 
@@ -139,7 +141,7 @@ export default function AuthPageClient({ mode }: AuthPageClientProps) {
                 REFERRAL_REQUIRED_ROLES.includes(data.role) &&
                 !data.referralCode?.trim()
             ) {
-                setError('A valid referral code or username is required to register as Family or Friend.');
+                setError(t('auth.referralRequiredError'));
                 return;
             }
 
@@ -150,7 +152,7 @@ export default function AuthPageClient({ mode }: AuthPageClientProps) {
                 !data.applicationData.website?.trim() &&
                 !data.applicationData.socialMediaUrl?.trim()
             ) {
-                setError('Please provide a company website OR a social media page (at least one is required for verification).');
+                setError(t('auth.companyVerificationError'));
                 return;
             }
 
@@ -159,17 +161,17 @@ export default function AuthPageClient({ mode }: AuthPageClientProps) {
                 const isApplicationRole = APPLICATION_REQUIRED_ROLES.includes(data.role);
                 setSuccess(
                     isApplicationRole
-                        ? `Your ${data.role} application has been submitted for review. We will contact you soon.`
-                        : `Exclusive ${data.role} successfully registered. Welcome to SADAF.`,
+                        ? t('auth.applicationSubmitted', { role: data.role })
+                        : t('auth.registeredWelcome', { role: data.role }),
                 );
                 setTimeout(() => {
                     router.push(getPostAuthDestination(data.role));
                 }, 1800);
             } else {
-                setError(result.error || 'Registration failed.');
+                setError(result.error || t('auth.registrationFailed'));
             }
         },
-        [signup, router],
+        [signup, router, t],
     );
 
     const handleGoogleSignIn = useCallback(async () => {
@@ -183,9 +185,9 @@ export default function AuthPageClient({ mode }: AuthPageClientProps) {
             // toast shows on the landing dashboard via ?signedIn=1.
             router.push(getPostAuthDestination(result.role ?? 'customer_individual'));
         } else {
-            setError(result.error || 'Google Sign-In failed.');
+            setError(result.error || t('auth.googleFailed'));
         }
-    }, [signInWithGoogle, router]);
+    }, [signInWithGoogle, router, t]);
 
     if (mode === 'signup') {
         return (
@@ -206,8 +208,8 @@ export default function AuthPageClient({ mode }: AuthPageClientProps) {
                 (SignedInToast reads ?signedIn=1) so it stays visible longer. */}
             <SuccessToast
                 visible={signedOutToast}
-                title="Signed out"
-                message="Your session has ended — see you soon at SADAF."
+                title={t('common.signedOut')}
+                message={t('common.signedOutMessage')}
                 onDismiss={() => setSignedOutToast(false)}
             />
             <LoginView

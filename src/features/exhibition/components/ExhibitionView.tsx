@@ -251,8 +251,8 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                 <div className="w-full md:w-auto">
                     <span className="text-[8px] sm:text-[10px] uppercase font-mono tracking-widest text-[#C9A84C] font-bold flex items-center gap-1.5">
                         <Compass size={12} className="animate-pulse shrink-0" />
-                        <span className="hidden sm:inline">SADAF METAVERSE ATELIER &bull; المعرض التفاعلي ثلاثي الأبعاد</span>
-                        <span className="sm:hidden">SADAF EXHIBITION</span>
+                        <span className="hidden sm:inline">{t('common.metaverseAtelier')}</span>
+                        <span className="sm:hidden">{t('common.exhibitionShort')}</span>
                     </span>
                     <div className="flex flex-col sm:flex-row sm:gap-3 sm:items-baseline mt-1.5">
                         <h2 className="text-lg sm:text-xl md:text-3xl font-serif text-white font-semibold leading-tight tracking-tight">

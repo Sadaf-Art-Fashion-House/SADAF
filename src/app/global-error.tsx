@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { ErrorFallback } from '@/shared/ui/ErrorFallback';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 import { logError } from '@/features/error-logging';
 
 interface GlobalErrorProps {
@@ -24,6 +25,8 @@ interface GlobalErrorProps {
  * toggle does).
  */
 export default function GlobalError({ error, reset }: GlobalErrorProps) {
+    const { t } = useLanguage();
+
     useEffect(() => {
         console.error('[GlobalError]', error);
         logError(error).catch(() => {
@@ -37,9 +40,9 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
                 <ErrorFallback
                     error={error}
                     onReset={reset}
-                    subtitle="APP ERROR"
-                    title="THE LOOM STALLED"
-                    description="A critical error prevented the app shell from loading. Try again, or return in a moment."
+                    subtitle={t('error.appSubtitle')}
+                    title={t('error.loomTitle')}
+                    description={t('error.appDescription')}
                     size="screen"
                 />
             </body>
