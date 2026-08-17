@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import type { AIClothingDesign, MaqasaqRecommendation } from '@/shared/types';
 import { fabricsList, printingMethods } from '@/features/ai/data';
+import { generateFallbackPattern } from '@/features/ai/utils/fallbackPattern';
 
 const DEFAULT_DESIGN: AIClothingDesign = {
     prompt: 'Fatimid octagonal stars intersecting with luxurious gold calligraphic brushstrokes',
@@ -83,6 +84,7 @@ export function useAiStudio({ onAddCustomToCart }: UseAiStudioOptions = {}) {
     const [uploadedBase64, setUploadedBase64] = useState<string | null>(null);
     const [isGeneratingPattern, setIsGeneratingPattern] = useState(false);
     const [generationError, setGenerationError] = useState<string | null>(null);
+    const [generationProgress, setGenerationProgress] = useState(0);
     const [activeDesign, setActiveDesign] = useState<AIClothingDesign>(DEFAULT_DESIGN);
     const [selectedFabric, setSelectedFabric] = useState<string>(fabricsList[0].name);
     const [selectedPrinting, setSelectedPrinting] = useState<string>(printingMethods[0].name);
@@ -94,6 +96,26 @@ export function useAiStudio({ onAddCustomToCart }: UseAiStudioOptions = {}) {
     const [posture, setPosture] = useState('Fluid Grace fit');
     const [isCalculatingSize, setIsCalculatingSize] = useState(false);
     const [sizeRecommendation, setSizeRecommendation] = useState<MaqasaqRecommendation>(DEFAULT_SIZE);
+
+    /**
+     * Simulated progress while the external image API (Pollinations) is
+     * generating — the API reports no progress, so the bar eases toward 95%
+     * and resets when generation finishes or fails.
+     */
+    useEffect(() => {
+        if (!isGeneratingPattern) {
+            setGenerationProgress(0);
+            return;
+        }
+        setGenerationProgress(6);
+        const timer = setInterval(() => {
+            setGenerationProgress((previous) => {
+                const next = previous + Math.max(1, (95 - previous) * 0.06);
+                return Math.min(95, Math.round(next));
+            });
+        }, 350);
+        return () => clearInterval(timer);
+    }, [isGeneratingPattern]);
 
     const presets = useMemo(() => PRESETS, []);
 
@@ -116,36 +138,59 @@ export function useAiStudio({ onAddCustomToCart }: UseAiStudioOptions = {}) {
     const handleGenerateDesign = useCallback(async () => {
         setIsGeneratingPattern(true);
         setGenerationError(null);
+
+        const preset = PRESETS.find((p) => p.name === flavorPreset);
+        const fallbackPattern = generateFallbackPattern(prompt, baseColor, '#C9A84C');
+
+        const buildDesign = (generatedImageUrl?: string): AIClothingDesign => ({
+            prompt,
+            clothingType,
+            primaryColor: baseColor,
+            svgPattern: fallbackPattern,
+            generatedImageUrl,
+            accentColor: '#C9A84C',
+            patternName: preset?.name || 'Imperial Symmetrical Geometry',
+            patternNameAr: preset?.nameAr || 'الهندسة المتناظرة الإمبراطورية',
+            description: DEFAULT_DESIGN.description,
+            story: DEFAULT_DESIGN.story,
+            fabrics: DEFAULT_DESIGN.fabrics,
+            printingOption: 'Embroidery',
+        });
+
         try {
             const response = await fetch('/api/gemini/generate-pattern', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt, clothingType, styleModifier: flavorPreset }),
+                body: JSON.stringify({
+                    prompt,
+                    clothingType,
+                    styleModifier: flavorPreset,
+                    primaryColor: baseColor,
+                    accentColor: '#C9A84C',
+                }),
             });
-            if (!response.ok) throw new Error('Server responded with error status');
-            const data = await response.json();
-            setActiveDesign({
-                prompt,
-                clothingType,
-                primaryColor: data.primaryColor || '#0A0F2C',
-                svgPattern: data.customSvg || DEFAULT_DESIGN.svgPattern,
-                accentColor: data.accentColor || '#C9A84C',
-                patternName: data.patternName || 'Imperial Symmetrical Geometry',
-                patternNameAr: data.patternNameAr || 'الهندسة المتناظرة الإمبراطورية',
-                description: data.description || 'Sophisticated high-contrast textile pattern.',
-                story: data.story || 'A tale of cultural resonance woven on modern silhouettes.',
-                fabrics: data.matchingFabrics || ['Luxury Italian Velvet'],
-                printingOption: data.printingOption || 'Embroidery',
-            });
-            setBaseColor(data.primaryColor || '#0A0F2C');
+            const data = await response.json().catch(() => null);
+            if (!response.ok) {
+                throw new Error(data?.error || `Server responded with status ${response.status}`);
+            }
+
+            setActiveDesign(buildDesign(data?.generatedImageUrl));
             setActiveStep(2);
         } catch (error) {
-            console.error(error);
-            setGenerationError('Failed to reach Gemini creative pipeline. Running high-integrity backup loop.');
+            // Safe fallback: a seeded procedural pattern keeps the studio fully
+            // usable when the Gemini pipeline is unreachable (no key / quota /
+            // network). The banner below makes the degradation explicit — the
+            // user stays on the pattern step and can proceed manually.
+            setActiveDesign(buildDesign());
+            setGenerationError(
+                error instanceof Error && error.message
+                    ? `Gemini pipeline unavailable — showing a procedural preview instead. (${error.message})`
+                    : 'Gemini pipeline unavailable — showing a procedural preview instead.'
+            );
         } finally {
             setIsGeneratingPattern(false);
         }
-    }, [prompt, clothingType, flavorPreset]);
+    }, [prompt, clothingType, flavorPreset, baseColor]);
 
     const handleCalculateSize = useCallback(async () => {
         setIsCalculatingSize(true);
@@ -189,7 +234,7 @@ export function useAiStudio({ onAddCustomToCart }: UseAiStudioOptions = {}) {
         clothingType, setClothingType,
         flavorPreset,
         uploadedBase64,
-        isGeneratingPattern, generationError,
+        isGeneratingPattern, generationProgress, generationError,
         activeDesign, setActiveDesign,
         selectedFabric, setSelectedFabric,
         selectedPrinting, setSelectedPrinting,

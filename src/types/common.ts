@@ -55,6 +55,8 @@ export interface AIClothingDesign {
     clothingType: string;
     primaryColor: string;
     svgPattern: string;
+    /** Real AI-generated image (Gemini/Imagen) as a data URL — replaces svgPattern. */
+    generatedImageUrl?: string;
     accentColor: string;
     patternName: string;
     description: string;

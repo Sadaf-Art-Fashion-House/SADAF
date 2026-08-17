@@ -52,7 +52,13 @@ function CartItemThumbnail({ item }: { item: CartItem }) {
         );
     }
     if (item.aiCustomDesign) {
-        return (
+        return item.aiCustomDesign.generatedImageUrl ? (
+            <img
+                src={item.aiCustomDesign.generatedImageUrl}
+                alt={item.aiCustomDesign.patternName}
+                className="w-full h-full object-cover bg-[#12193E]"
+            />
+        ) : (
             <div
                 className="w-full h-full flex items-center justify-center p-1 bg-[#12193E]"
                 dangerouslySetInnerHTML={{

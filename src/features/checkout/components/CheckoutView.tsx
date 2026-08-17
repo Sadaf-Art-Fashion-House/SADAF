@@ -720,9 +720,16 @@ export default function CheckoutView({
                                                     <div className="relative w-10 h-12 rounded overflow-hidden shrink-0 bg-black/30">
                                                         {item.product && <Image src={item.product.image} alt={localizedProductName(item.product, language)} fill className="object-cover" />}
                                                         {item.artPiece && <Image src={item.artPiece.image} alt={localizedArtTitle(item.artPiece, language)} fill className="object-cover" />}
-                                                        {item.aiCustomDesign && (
-                                                            <div className="w-full h-full flex items-center justify-center p-1 bg-[#12193E]" dangerouslySetInnerHTML={{ __html: item.aiCustomDesign.svgPattern }} />
-                                                        )}
+                                                        {item.aiCustomDesign &&
+                                                            (item.aiCustomDesign.generatedImageUrl ? (
+                                                                <img
+                                                                    src={item.aiCustomDesign.generatedImageUrl}
+                                                                    alt={item.aiCustomDesign.patternName}
+                                                                    className="w-full h-full object-cover bg-[#12193E]"
+                                                                />
+                                                            ) : (
+                                                                <div className="w-full h-full flex items-center justify-center p-1 bg-[#12193E]" dangerouslySetInnerHTML={{ __html: item.aiCustomDesign.svgPattern }} />
+                                                            ))}
                                                     </div>
                                                     <div className="flex-1 min-w-0">
                                                         <p className="text-xs text-white truncate">{getItemName(item, language)}</p>

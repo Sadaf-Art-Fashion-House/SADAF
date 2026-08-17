@@ -925,12 +925,20 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                                             className="cursor-pointer accent-[#C9A84C]"
                                                         />
                                                     )}
-                                                    <div
-                                                        className="w-12 h-12 rounded-lg border border-white/10 overflow-hidden shrink-0 bg-[#0A0F2C]"
-                                                        dangerouslySetInnerHTML={{
-                                                            __html: `<svg viewBox="0 0 100 100" width="48" height="48">${draft.design.svgPattern.replace(/<svg[^>]*>|<\/svg>/g, '')}</svg>`,
-                                                        }}
-                                                    />
+                                                    {draft.design.generatedImageUrl ? (
+                                                        <img
+                                                            src={draft.design.generatedImageUrl}
+                                                            alt={localizedDesignName(draft.design, language)}
+                                                            className="w-12 h-12 rounded-lg border border-white/10 overflow-hidden shrink-0 bg-[#0A0F2C] object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div
+                                                            className="w-12 h-12 rounded-lg border border-white/10 overflow-hidden shrink-0 bg-[#0A0F2C]"
+                                                            dangerouslySetInnerHTML={{
+                                                                __html: `<svg viewBox="0 0 100 100" width="48" height="48">${draft.design.svgPattern.replace(/<svg[^>]*>|<\/svg>/g, '')}</svg>`,
+                                                            }}
+                                                        />
+                                                    )}
                                                     <div className="min-w-0">
                                                         <h4 className="text-xs font-serif text-white font-semibold truncate">{localizedDesignName(draft.design, language)}</h4>
                                                         <p className="text-[9px] font-mono text-slate-500">

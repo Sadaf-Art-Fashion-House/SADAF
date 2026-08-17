@@ -500,14 +500,21 @@ export default function StoreView({
                                                         className="object-cover"
                                                     />
                                                 )}
-                                                {item.aiCustomDesign && (
-                                                    <div
-                                                        className="w-full h-full shrink-0 flex items-center justify-center p-1 bg-[#12193E] text-center"
-                                                        dangerouslySetInnerHTML={{
-                                                            __html: item.aiCustomDesign.svgPattern,
-                                                        }}
-                                                    />
-                                                )}
+                                                {item.aiCustomDesign &&
+                                                    (item.aiCustomDesign.generatedImageUrl ? (
+                                                        <img
+                                                            src={item.aiCustomDesign.generatedImageUrl}
+                                                            alt={item.aiCustomDesign.patternName}
+                                                            className="w-full h-full shrink-0 object-cover bg-[#12193E]"
+                                                        />
+                                                    ) : (
+                                                        <div
+                                                            className="w-full h-full shrink-0 flex items-center justify-center p-1 bg-[#12193E] text-center"
+                                                            dangerouslySetInnerHTML={{
+                                                                __html: item.aiCustomDesign.svgPattern,
+                                                            }}
+                                                        />
+                                                    ))}
                                             </div>
 
                                             {/* item text */}

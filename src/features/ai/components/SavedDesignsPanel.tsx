@@ -69,13 +69,21 @@ export default function SavedDesignsPanel({ onClose }: SavedDesignsPanelProps) {
                                 className="p-4 bg-[#05081A]/80 border border-white/5 rounded-xl flex items-center justify-between gap-4"
                             >
                                 <div className="flex items-center gap-3 min-w-0">
-                                    {/* Mini SVG preview */}
-                                    <div
-                                        className="w-12 h-12 rounded-lg border border-white/10 overflow-hidden shrink-0 bg-[#0A0F2C]"
-                                        dangerouslySetInnerHTML={{
-                                            __html: `<svg viewBox="0 0 100 100" width="48" height="48">${draft.design.svgPattern.replace(/<svg[^>]*>|<\/svg>/g, '')}</svg>`,
-                                        }}
-                                    />
+                                    {/* Mini preview — real AI image when available, procedural SVG otherwise */}
+                                    {draft.design.generatedImageUrl ? (
+                                        <img
+                                            src={draft.design.generatedImageUrl}
+                                            alt={localizedDesignName(draft.design, language)}
+                                            className="w-12 h-12 rounded-lg border border-white/10 overflow-hidden shrink-0 bg-[#0A0F2C] object-cover"
+                                        />
+                                    ) : (
+                                        <div
+                                            className="w-12 h-12 rounded-lg border border-white/10 overflow-hidden shrink-0 bg-[#0A0F2C]"
+                                            dangerouslySetInnerHTML={{
+                                                __html: `<svg viewBox="0 0 100 100" width="48" height="48">${draft.design.svgPattern.replace(/<svg[^>]*>|<\/svg>/g, '')}</svg>`,
+                                            }}
+                                        />
+                                    )}
                                     <div className="min-w-0">
                                         <h4 className="text-xs font-serif text-white font-semibold truncate">
                                             {localizedDesignName(draft.design, language)}
