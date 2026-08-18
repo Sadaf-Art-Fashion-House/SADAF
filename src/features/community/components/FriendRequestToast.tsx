@@ -3,6 +3,7 @@
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserPlus, Check, X } from 'lucide-react';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
 import type { ConnectionRequest } from '../types';
 
@@ -70,9 +71,12 @@ export default function FriendRequestToast({
                             duplicate the translated line above (name + wantsToJoin
                             + relationship), so it is shown for English only. */}
                         {language === 'en' && request.message && (
-                            <p className="text-[9px] text-[#E8E0D5]/45 mt-0.5 italic line-clamp-1">
-                                “{request.message}”
-                            </p>
+                            <SmartClamp
+                                as="p"
+                                maxLines={1}
+                                className="text-[9px] text-[#E8E0D5]/45 mt-0.5 italic"
+                                text={`“${request.message}”`}
+                            />
                         )}
 
                         <div className="flex items-center gap-1.5 mt-2">

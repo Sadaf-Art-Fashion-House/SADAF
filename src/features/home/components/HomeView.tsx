@@ -2,8 +2,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'motion/react';
 import { ArrowRight, Star, Compass, Sparkles, Feather } from 'lucide-react';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import type { Collection, ArtPiece, FashionProduct } from '@/shared/types';
 import SadafLogo from '@/components/common/SadafLogo';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
 import { localizedArtTitle, localizedProductDescription, localizedProductName } from '@/features/i18n/productNames';
 
@@ -83,9 +85,9 @@ export default function HomeView({ featuredProducts, featuredArtwork, collection
                             <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-[#0A0F2C]/95 via-[#0A0F2C]/80 to-transparent flex flex-col justify-end min-h-[50%]">
                                 <span className="text-xs text-[#C9A84C] tracking-[0.2em] font-medium font-mono uppercase mb-1">{t('home.collectionYear', { year: col.year })}</span>
                                 <h3 className="text-xl font-serif text-white tracking-wide group-hover:text-[#4FC3F7] transition-all duration-300 md:text-2xl mb-2">{col.name}</h3>
-                                <p className="text-xs text-[#E8E0D5]/70 line-clamp-2 leading-relaxed mb-4">{col.description}</p>
+                                <SmartClamp as="p" maxLines={2} className="text-xs text-[#E8E0D5]/70 leading-relaxed mb-4" text={col.description} />
                                 <Link href="/fashion" className="flex items-center gap-1.5 text-xs text-[#E8E0D5] hover:text-[#C9A84C] transition-colors duration-300 font-medium tracking-[0.1em] uppercase mt-1 text-left w-fit cursor-pointer">
-                                    {t('home.viewLookbook')} <ArrowRight size={12} />
+                                    {t('home.viewLookbook')} <DirectionalIcon icon={ArrowRight} size={12} />
                                 </Link>
                             </div>
                         </motion.div>
@@ -112,7 +114,7 @@ export default function HomeView({ featuredProducts, featuredArtwork, collection
                                 <div className="relative aspect-[4/5] overflow-hidden rounded mb-4">
                                     <Image src={art.image} alt={localizedArtTitle(art, language)} fill className="object-cover filter brightness-90 hover:brightness-100 transition-all duration-500" />
                                 </div>
-                                <h4 className="font-serif text-[#E8E0D5] text-sm md:text-base truncate">{localizedArtTitle(art, language)}</h4>
+                                <SmartClamp as="h4" maxLines={1} className="font-serif text-[#E8E0D5] text-sm md:text-base" text={localizedArtTitle(art, language)} />
                                 <p className="text-xs text-[#C9A84C] font-mono mt-1">${art.price.toLocaleString()}</p>
                             </motion.div>
                         ))}
@@ -145,7 +147,7 @@ export default function HomeView({ featuredProducts, featuredArtwork, collection
                     </div>
 
                     <Link href="/ai" className="px-8 py-4 rounded-full bg-gradient-to-r from-[#C9A84C] to-[#E8E0D5]/90 text-[#0A0F2C] hover:scale-105 active:scale-95 transition-all duration-300 font-medium text-xs tracking-[0.15em] uppercase flex items-center gap-2 cursor-pointer shadow-lg shadow-black/40">
-                        {t('home.ai.cta')} <ArrowRight size={14} />
+                        {t('home.ai.cta')} <DirectionalIcon icon={ArrowRight} size={14} />
                     </Link>
                 </div>
             </section>
@@ -158,7 +160,7 @@ export default function HomeView({ featuredProducts, featuredArtwork, collection
                             <h2 className="text-2xl md:text-4xl font-serif text-white">{t('home.drops.title')}</h2>
                         </div>
                         <Link href="/store" className="text-xs text-[#ebd083] hover:text-[#4FC3F7] transition-all duration-300 tracking-[0.1em] uppercase font-semibold flex items-center gap-1.5 mt-4 md:mt-0 cursor-pointer">
-                            {t('home.drops.shopAll')} <ArrowRight size={12} />
+                            {t('home.drops.shopAll')} <DirectionalIcon icon={ArrowRight} size={12} />
                         </Link>
                     </div>
 
@@ -177,12 +179,12 @@ export default function HomeView({ featuredProducts, featuredArtwork, collection
                                         <Link href="/store">
                                             <h3 className="font-serif text-white hover:text-[#C9A84C] transition-colors duration-300 text-lg mb-1.5 cursor-pointer">{localizedProductName(product, language)}</h3>
                                         </Link>
-                                        <p className="text-xs text-[#E8E0D5]/70 line-clamp-2 leading-relaxed mb-4">{localizedProductDescription(product, language)}</p>
+                                        <SmartClamp as="p" maxLines={2} className="text-xs text-[#E8E0D5]/70 leading-relaxed mb-4" text={localizedProductDescription(product, language)} />
                                     </div>
                                     <div className="flex justify-between items-center border-t border-[#E8E0D5]/10 pt-4 mt-auto">
                                         <span className="font-mono text-sm text-[#C9A84C] font-semibold">${product.price.toLocaleString()}</span>
                                         <Link href="/store" className="text-xs text-[#4FC3F7] group-hover:text-[#F0D080] font-mono tracking-wider font-medium flex items-center gap-1 cursor-pointer transition-all duration-300">
-                                            {t('home.configureBuy')} <ArrowRight size={10} className="transition-transform group-hover:translate-x-1 rtl:-scale-x-100" />
+                                            {t('home.configureBuy')} <DirectionalIcon icon={ArrowRight} size={10} className="transition-transform group-hover:translate-x-1" />
                                         </Link>
                                     </div>
                                 </div>

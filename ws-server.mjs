@@ -235,19 +235,39 @@ function generateDemoPersonalActivity(userId) {
 const DEMO_ORDER_STATUS_ENABLED = !process.env.DISABLE_DEMO_ORDER_STATUS;
 let orderStatusCounter = 0;
 
+// Demo orders that receive live transitions — cycles so every tracked order
+// animates instead of only the first one.
+const DEMO_ORDER_IDS = ['SDF-2026-9041', 'SDF-2026-4412', 'SDF-2026-2287', 'SDF-2026-1053'];
+
 const ORDER_STATUS_FLOW = [
     { previousStatus: 'Pending', status: 'Tailoring', message: 'Your piece has entered the atelier — our artisans are sewing it by hand.' },
     { previousStatus: 'Tailoring', status: 'Shipped', message: 'Your order has shipped from the atelier and is on its way.' },
     { previousStatus: 'Shipped', status: 'Delivered', message: 'Delivered! We hope your piece brings you joy.' },
 ];
 
+const PLACED_MESSAGE = 'Your new order has been placed — our artisans will begin tailoring it soon.';
+
 function generateDemoOrderStatus(userId) {
-    const step = orderStatusCounter % ORDER_STATUS_FLOW.length;
     orderStatusCounter++;
+    // Every fourth update a brand-new order enters tracking (kind: 'placed').
+    if (orderStatusCounter % 4 === 0) {
+        return {
+            id: 'os-demo-' + Date.now() + '-' + orderStatusCounter,
+            orderId: 'SDF-2026-' + (9100 + orderStatusCounter),
+            kind: 'placed',
+            previousStatus: 'Pending',
+            status: 'Pending',
+            message: PLACED_MESSAGE,
+            timestamp: new Date().toISOString(),
+            userId,
+        };
+    }
+    const step = orderStatusCounter % ORDER_STATUS_FLOW.length;
     const transition = ORDER_STATUS_FLOW[step];
     return {
         id: 'os-demo-' + Date.now() + '-' + orderStatusCounter,
-        orderId: 'SDF-2026-9041',
+        orderId: DEMO_ORDER_IDS[orderStatusCounter % DEMO_ORDER_IDS.length],
+        kind: 'transition',
         previousStatus: transition.previousStatus,
         status: transition.status,
         message: transition.message,

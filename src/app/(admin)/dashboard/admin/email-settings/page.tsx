@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'motion/react';
 import { ArrowLeft, Mail, Plus, Trash2, Save, Check, AlertCircle, Wifi, WifiOff } from 'lucide-react';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import { ROUTES } from '@/config/routes';
 import {
     getEmailSettings,
@@ -62,7 +63,7 @@ export default function AdminEmailSettingsPage() {
                         href={backHref}
                         className="text-[10px] text-[#4FC3F7]/50 hover:text-[#4FC3F7] transition-colors font-mono uppercase tracking-wider flex items-center gap-1 mb-3 cursor-pointer"
                     >
-                        <ArrowLeft size={11} />
+                        <DirectionalIcon icon={ArrowLeft} size={11} />
                         {t('emailSettings.backToDashboard')}
                     </Link>
                     <h1 className="text-2xl md:text-3xl font-serif text-white tracking-wide flex items-center gap-3">

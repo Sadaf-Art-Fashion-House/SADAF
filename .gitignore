@@ -44,3 +44,7 @@ next-env.d.ts
 *.log
 
 nul
+
+# internal tooling & review artifacts (not part of the app)
+.freebuff/
+screenshots-home/

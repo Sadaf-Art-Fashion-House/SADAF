@@ -15,11 +15,13 @@ import {
     Palette,
     Shirt,
 } from 'lucide-react';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import SuccessToast from '@/shared/components/SuccessToast';
 import type { CartItem } from '@/shared/types';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
 import type { TranslationKey } from '@/features/i18n/dictionaries';
-import { localizedAiItemName, localizedArtTitle, localizedProductName, localizedFabricName, localizedPrintingName } from '@/features/i18n/productNames';
+import { localizedAiItemName, localizedArtTitle, localizedColorLabel, localizedProductName, localizedFabricName, localizedPrintingName } from '@/features/i18n/productNames';
 
 interface CartViewProps {
     items: CartItem[];
@@ -52,7 +54,13 @@ function CartItemThumbnail({ item }: { item: CartItem }) {
         );
     }
     if (item.aiCustomDesign) {
-        return (
+        return item.aiCustomDesign.generatedImageUrl ? (
+            <img
+                src={item.aiCustomDesign.generatedImageUrl}
+                alt={item.aiCustomDesign.patternName}
+                className="w-full h-full object-cover bg-[#12193E]"
+            />
+        ) : (
             <div
                 className="w-full h-full flex items-center justify-center p-1 bg-[#12193E]"
                 dangerouslySetInnerHTML={{
@@ -144,7 +152,7 @@ export default function CartView({
                         href="/store"
                         className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-[#C9A84C] hover:text-[#4FC3F7] transition-colors duration-300"
                     >
-                        <ArrowLeft size={12} />
+                        <DirectionalIcon icon={ArrowLeft} size={12} />
                         {t('orders.continueShopping')}
                     </Link>
                 </div>
@@ -208,9 +216,12 @@ export default function CartView({
                                                 <div>
                                                     <div className="flex justify-between items-start gap-2">
                                                         <div className="min-w-0">
-                                                            <h3 className="font-serif text-sm md:text-base text-white truncate">
-                                                                {getItemName(item, language, t)}
-                                                            </h3>
+                                                            <SmartClamp
+                                                                as="h3"
+                                                                maxLines={1}
+                                                                className="font-serif text-sm md:text-base text-white"
+                                                                text={getItemName(item, language, t)}
+                                                            />
                                                             <div className="flex items-center gap-2 mt-1">
                                                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-mono uppercase tracking-wider bg-[#C9A84C]/10 text-[#C9A84C] border border-[#C9A84C]/20">
                                                                     <ItemTypeIcon type={item.itemType} />
@@ -231,7 +242,7 @@ export default function CartView({
                                                     <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-[10px] font-mono text-[#E8E0D5]/50">
                                                         <span>{t('store.cart.size')}: {item.selectedSize}</span>
                                                         {item.selectedColor && (
-                                                            <span>{t('store.cart.colorLabel')}: {item.selectedColor}</span>
+                                                            <span>{t('store.cart.colorLabel')}: {localizedColorLabel(item.selectedColor, language)}</span>
                                                         )}
                                                         {item.selectedFabric && (
                                                             <span>{t('store.cart.fabricLabel')}: {localizedFabricName(item.selectedFabric, language)}</span>
@@ -376,7 +387,7 @@ export default function CartView({
                             href="/store"
                             className="text-[#C9A84C] hover:text-[#4FC3F7] transition-colors duration-300 flex items-center gap-1.5"
                         >
-                            <ArrowLeft size={11} />
+                            <DirectionalIcon icon={ArrowLeft} size={11} />
                             {t('orders.continueShopping')}
                         </Link>
                         <span className="text-[#C9A84C]/30">&bull;</span>

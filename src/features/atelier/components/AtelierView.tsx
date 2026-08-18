@@ -3,6 +3,7 @@
 import { motion } from 'motion/react';
 import Link from 'next/link';
 import { Sparkles, Feather, Palette, Scissors, ArrowRight, Star, Shirt, Brush, Gem, Compass } from 'lucide-react';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import { fabricsList, printingMethods } from '@/data';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
 import { localizedFabricName, localizedFabricDescription, localizedPrintingName, localizedPrintingDescription } from '@/features/i18n/productNames';
@@ -211,7 +212,7 @@ export default function AtelierView() {
                             href="/exhibition"
                             className="px-6 py-3 rounded-md border border-[#C9A84C] hover:bg-[#C9A84C] text-white hover:text-[#0A0F2C] text-xs tracking-[0.15em] uppercase transition-all duration-300 active:scale-95 flex items-center gap-2 group"
                         >
-                            {t('atelier.visitExhibition')} <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                            {t('atelier.visitExhibition')} <DirectionalIcon icon={ArrowRight} size={14} className="group-hover:translate-x-1 transition-transform" />
                         </Link>
                     </div>
 

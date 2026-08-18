@@ -9,6 +9,7 @@ import {
     Gem,
     Percent,
 } from 'lucide-react';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import { formatCurrency } from '@/utils/formatCurrency';
 import type { ProductRecommendation } from '../types';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
@@ -110,7 +111,7 @@ export default function SmartRecommendations({ recommendations }: SmartRecommend
                                 className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[9px] font-mono uppercase tracking-widest font-bold text-[#C9A84C] bg-[#C9A84C]/10 hover:bg-[#C9A84C] hover:text-black border border-[#C9A84C]/25 transition-all duration-300 cursor-pointer"
                             >
                                 {t('rec.viewOffer')}
-                                <ArrowRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
+                                <DirectionalIcon icon={ArrowRight} size={10} className="group-hover:translate-x-0.5 transition-transform" />
                             </Link>
                         </motion.div>
                     );

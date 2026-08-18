@@ -8,6 +8,8 @@ export interface ArtPiece {
     price: number;
     image: string;
     description: string;
+    /** Arabic display description — falls back to `description` when absent. */
+    descriptionAr?: string;
     dimensions: string;
     year: string;
     medium: string;

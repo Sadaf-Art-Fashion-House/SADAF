@@ -23,6 +23,8 @@ import {
     X,
     CheckCircle2,
 } from 'lucide-react';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import type { DesignCollaborator, DesignSubmission } from '../types';
 import type { TranslationKey } from '@/features/i18n/dictionaries';
 import { DESIGN_STATUS_STYLES, COLLABORATOR_PRESETS } from '../constants';
@@ -75,7 +77,7 @@ export default function DesignerPortfolioDetailView({
                         href={ROUTES.DASHBOARD_DESIGNER}
                         className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#A78BFA] to-[#4FC3F7] text-[#0A0F2C] text-xs font-mono font-bold uppercase tracking-widest transition-all duration-300 hover:scale-105"
                     >
-                        <ArrowLeft size={13} /> {t('designer.detail.backDashboard')}
+                        <DirectionalIcon icon={ArrowLeft} size={13} /> {t('designer.detail.backDashboard')}
                     </Link>
                 </div>
             </div>
@@ -151,7 +153,7 @@ export default function DesignerPortfolioDetailView({
                     href={ROUTES.DASHBOARD_DESIGNER}
                     className="inline-flex items-center gap-2 text-[10px] font-mono uppercase tracking-wider text-[#A78BFA] hover:text-white transition-colors mb-6"
                 >
-                    <ArrowLeft size={12} /> {t('designer.detail.backPortfolio')}
+                    <DirectionalIcon icon={ArrowLeft} size={12} /> {t('designer.detail.backPortfolio')}
                 </Link>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -424,10 +426,10 @@ export default function DesignerPortfolioDetailView({
                                                 key={share.memberId}
                                                 className="flex items-center justify-between text-[10px]"
                                             >
-                                                <span className="text-slate-300 truncate">
-                                                    {member.name}
+                                                <span className="text-slate-300 flex items-center min-w-0">
+                                                    <SmartClamp as="span" maxLines={1} className="min-w-0" text={member.name} />
                                                     {member.id === ownerId && (
-                                                        <span className="ml-1.5 text-[8px] font-mono uppercase text-[#C9A84C]/80">
+                                                        <span className="ml-1.5 shrink-0 text-[8px] font-mono uppercase text-[#C9A84C]/80">
                                                             {t('designer.detail.ownerTag')}
                                                         </span>
                                                     )}

@@ -29,6 +29,8 @@ export interface OrderStatusEvent {
     id: string;
     /** Order this transition belongs to. */
     orderId: string;
+    /** 'placed' = a brand-new order entered tracking; 'transition' = a status change. */
+    kind?: 'placed' | 'transition';
     /** Status before the update. */
     previousStatus: OrderStatus;
     /** New status after the update. */

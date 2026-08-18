@@ -25,6 +25,7 @@ import {
     AlertTriangle,
     Info,
 } from 'lucide-react';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import type { SalesPartnerOverview, ReferralStatus } from '../types';
 import { COMMISSION_RATE, REFERRAL_STATUS_STYLES } from '../constants';
 import { formatRelativeTime } from '@/features/notifications/utils/formatRelativeTime';
@@ -382,12 +383,12 @@ export default function SalesPartnerDashboardView({
                                                     return (
                                                         <li key={r.id} className="flex flex-col gap-0.5">
                                                             <div className="flex items-center justify-between gap-2">
-                                                                <span
-                                                                    className="text-[10px] text-[#E8E0D5]/80 truncate min-w-0"
-                                                                    title={r.name}
-                                                                >
-                                                                    {r.name}
-                                                                </span>
+                                                                <SmartClamp
+                                                                    as="span"
+                                                                    maxLines={1}
+                                                                    className="text-[10px] text-[#E8E0D5]/80 min-w-0"
+                                                                    text={r.name}
+                                                                />
                                                                 <span className="text-[10px] font-mono text-emerald-400 font-semibold shrink-0">
                                                                     est. $
                                                                     {estimate.toLocaleString(undefined, {

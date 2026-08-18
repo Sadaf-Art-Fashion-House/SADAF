@@ -20,6 +20,8 @@ import {
     Inbox,
     ChevronRight,
 } from 'lucide-react';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import type { CommunityOverviewData, PlatformPendingRequest, ReferredMember } from '../types';
 import { useCityFilter } from '@/features/customer/hooks/useCityFilter';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
@@ -373,9 +375,12 @@ export default function CommunityOverviewView({
                                                             {referrer.name.charAt(0)}
                                                         </div>
                                                         <div className="flex-1 min-w-0">
-                                                            <p className="text-xs text-white font-medium truncate">
-                                                                {referrer.name}
-                                                            </p>
+                                                            <SmartClamp
+                                                                as="p"
+                                                                maxLines={1}
+                                                                className="text-xs text-white font-medium"
+                                                                text={referrer.name}
+                                                            />
                                                             <p className="text-[8px] font-mono text-[#C9A84C]/70 truncate">
                                                                 {referrer.referralCode}
                                                             </p>
@@ -388,7 +393,8 @@ export default function CommunityOverviewView({
                                                                 ${referrer.rewards.toLocaleString()}
                                                             </p>
                                                         </div>
-                                                        <ChevronRight
+                                                        <DirectionalIcon
+                                                            icon={ChevronRight}
                                                             size={12}
                                                             className="shrink-0 text-[#E8E0D5]/20 group-hover/referrer:text-[#C9A84C] transition-colors"
                                                         />
@@ -401,9 +407,12 @@ export default function CommunityOverviewView({
                                                                     <span className="w-4 h-4 shrink-0 rounded-full bg-[#C9A84C]/15 text-[#C9A84C] flex items-center justify-center text-[7px] font-bold">
                                                                         {member.name.charAt(0)}
                                                                     </span>
-                                                                    <span className="flex-1 min-w-0 text-[9px] text-[#E8E0D5]/70 truncate">
-                                                                        {member.name}
-                                                                    </span>
+                                                                    <SmartClamp
+                                                                        as="span"
+                                                                        maxLines={1}
+                                                                        className="flex-1 min-w-0 text-[9px] text-[#E8E0D5]/70"
+                                                                        text={member.name}
+                                                                    />
                                                                     <span className="shrink-0 inline-flex items-center gap-0.5 text-[8px] font-mono text-[#E8E0D5]/40">
                                                                         <MapPin size={7} /> {member.city}
                                                                     </span>
@@ -581,9 +590,12 @@ export default function CommunityOverviewView({
                                                             {request.name.charAt(0)}
                                                         </div>
                                                         <div className="flex-1 min-w-0">
-                                                            <p className="text-xs text-white font-medium truncate">
-                                                                {request.name}
-                                                            </p>
+                                                            <SmartClamp
+                                                                as="p"
+                                                                maxLines={1}
+                                                                className="text-xs text-white font-medium"
+                                                                text={request.name}
+                                                            />
                                                             <p className="text-[9px] font-mono text-[#E8E0D5]/50 truncate">
                                                                 {request.email}
                                                             </p>
@@ -710,7 +722,7 @@ export default function CommunityOverviewView({
                                             {member.name.charAt(0)}
                                         </span>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-[11px] text-white font-medium truncate">{member.name}</p>
+                                            <SmartClamp as="p" maxLines={1} className="text-[11px] text-white font-medium" text={member.name} />
                                             <p className="text-[8px] font-mono text-[#E8E0D5]/40">
                                                 {daysAgoLabel(member.joinedAt, t, language)}
                                             </p>

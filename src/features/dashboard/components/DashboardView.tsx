@@ -16,7 +16,9 @@ import {
     Image as ImageIcon,
     Camera,
     Bot,
+    ArrowRight,
 } from 'lucide-react';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import type { UserProfile } from '@/shared/types';
 import { isCustomerRole, isAdminRole, getRoleCategory } from '@/shared/types';
 import { ROLE_BADGES, ROLE_BADGE_COLORS } from '@/features/auth/types';
@@ -312,7 +314,7 @@ export default function DashboardView({
                                 {t(section.descKey)}
                             </p>
                             <div className="mt-3 text-[9px] font-mono uppercase tracking-wider text-[#C9A84C]/60 group-hover:text-[#C9A84C] transition-colors">
-                                {t('dashboardHome.openPanel')}
+                                {t('dashboardHome.openPanel')} <DirectionalIcon icon={ArrowRight} size={9} className="inline" />
                             </div>
                         </Link>
                     ))}

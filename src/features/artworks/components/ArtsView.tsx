@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ShoppingCart, Eye, Compass, Grid } from 'lucide-react';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import type { ArtPiece } from '@/shared/types';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
-import { localizedArtTitle } from '@/features/i18n/productNames';
+import { localizedArtDescription, localizedArtTitle } from '@/features/i18n/productNames';
 
 interface ArtsViewProps {
     artworks: ArtPiece[];
@@ -117,7 +118,7 @@ export default function ArtsView({ artworks, onAddToCart, onSelectArtPiece }: Ar
                                     <div className="absolute inset-0 bg-linear-to-t from-[#0A0F2C] via-[#0A0F2C]/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
                                         <span className="text-[#C9A84C] text-[10px] font-mono tracking-widest uppercase mb-1">{art.category}</span>
                                         <h3 className="text-xl font-serif text-white mb-2">{localizedArtTitle(art, language)}</h3>
-                                        <p className="text-xs text-[#E8E0D5]/80 mb-4 line-clamp-3">{art.description}</p>
+                                        <SmartClamp as="p" maxLines={3} className="text-xs text-[#E8E0D5]/80 mb-4" text={localizedArtDescription(art, language)} />
 
                                         <div className="flex gap-3">
                                             <button onClick={() => onSelectArtPiece(art)} className="flex-1 px-4 py-2 rounded bg-white/10 hover:bg-[#4FC3F7] hover:text-[#0A0F2C] text-xs text-white uppercase tracking-wider font-semibold transition-all duration-300 flex items-center justify-center gap-1 cursor-pointer">

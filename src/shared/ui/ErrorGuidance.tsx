@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { motion } from 'motion/react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 import { ROUTES } from '@/config/routes';
 import { SUPPORT_EMAIL } from '@/shared/constants';
 import type { ReactNode, ElementType } from 'react';
@@ -23,6 +24,7 @@ import type { ReactNode, ElementType } from 'react';
  * `className` to override the font size per banner (e.g. `text-[9px]`).
  */
 export function ErrorGuidance({ className = '' }: { className?: string }) {
+    const { t } = useLanguage();
     const { user } = useAuth();
     const role = user?.role;
 
@@ -39,7 +41,7 @@ export function ErrorGuidance({ className = '' }: { className?: string }) {
                 <Link
                     href={href}
                     className="text-[#C9A84C]/80 hover:text-[#C9A84C] hover:underline transition-colors"
-                    aria-label="Open the Error Logs dashboard"
+                    aria-label={t('common.errorLogsDashboard')}
                 >
                     Error Logs
                 </Link>

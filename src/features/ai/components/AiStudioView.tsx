@@ -7,10 +7,13 @@ import {
 } from 'lucide-react';
 import type { AIClothingDesign, MaqasaqRecommendation } from '@/shared/types';
 import { fabricsList, printingMethods } from '@/features/ai/data';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
 import {
     localizedClothingType,
+    localizedDesignDescription,
     localizedDesignName,
+    localizedDesignStory,
     localizedFabricDescription,
     localizedFabricName,
     localizedPrintingName,
@@ -28,6 +31,8 @@ interface AiStudioViewProps {
     uploadedBase64: string | null;
     isGeneratingPattern: boolean;
     generationError: string | null;
+    /** 0-100 simulated progress while the external image API generates. */
+    generationProgress: number;
     activeDesign: AIClothingDesign;
     selectedFabric: string;
     setSelectedFabric: (v: string) => void;
@@ -67,7 +72,7 @@ export default function AiStudioView({
     clothingType, setClothingType,
     flavorPreset,
     uploadedBase64,
-    isGeneratingPattern, generationError,
+    isGeneratingPattern, generationProgress, generationError,
     activeDesign,
     selectedFabric, setSelectedFabric,
     selectedPrinting, setSelectedPrinting,
@@ -192,9 +197,12 @@ export default function AiStudioView({
                                                 <strong className="block text-[#C9A84C] font-serif mb-1">
                                                     {language === 'ar' && pr.nameAr ? pr.nameAr : pr.name}
                                                 </strong>
-                                                <span className="text-[10px] text-gray-500 line-clamp-1">
-                                                    {language === 'ar' && pr.textAr ? pr.textAr : pr.text}
-                                                </span>
+                                                <SmartClamp
+                                                    as="span"
+                                                    maxLines={1}
+                                                    className="text-[10px] text-gray-500"
+                                                    text={language === 'ar' && pr.textAr ? pr.textAr : pr.text}
+                                                />
                                             </button>
                                         ))}
                                     </div>
@@ -257,9 +265,25 @@ export default function AiStudioView({
                                     className="w-full py-4 mt-2 rounded bg-gradient-to-r from-[#C9A84C] via-[#E8E0D5]/90 to-[#4FC3F7]/50 text-[#0A0F2C] text-sm tracking-[0.15em] uppercase font-bold hover:scale-101 active:scale-98 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-[#0A0F2C]/60"
                                 >
                                     {isGeneratingPattern ? (
-                                        <>
-                                            <RefreshCw size={14} className="animate-spin" /> {t('ai.generating')}
-                                        </>
+                                        <span className="w-full flex flex-col items-center gap-1.5">
+                                            <span className="flex items-center justify-center gap-2">
+                                                <RefreshCw size={14} className="animate-spin" />
+                                                {generationProgress < 30
+                                                    ? t('ai.generatingStage1')
+                                                    : generationProgress < 70
+                                                        ? t('ai.generatingStage2')
+                                                        : t('ai.generatingStage3')}
+                                                <span className="font-mono text-[11px] tracking-normal">
+                                                    {generationProgress}%
+                                                </span>
+                                            </span>
+                                            <span className="w-full h-1 rounded bg-[#0A0F2C]/20 overflow-hidden">
+                                                <span
+                                                    className="block h-full rounded bg-[#0A0F2C]/70 transition-all duration-300"
+                                                    style={{ width: `${generationProgress}%` }}
+                                                />
+                                            </span>
+                                        </span>
                                     ) : (
                                         <>
                                             <Sparkles size={14} /> {t('ai.generate')}
@@ -284,7 +308,7 @@ export default function AiStudioView({
                                     <h3 className="font-serif text-2xl text-white mt-1 uppercase tracking-wide">
                                         {localizedDesignName(activeDesign, language)}
                                     </h3>
-                                    <p className="text-xs text-slate-400 mt-2 leading-relaxed">{activeDesign.description}</p>
+                                    <p className="text-xs text-slate-400 mt-2 leading-relaxed">{localizedDesignDescription(activeDesign, language)}</p>
                                 </div>
 
                                 {/* Cultural Narrative Box */}
@@ -292,7 +316,7 @@ export default function AiStudioView({
                                     <h4 className="font-serif text-[#C9A84C] mb-1.5 flex items-center gap-1.5">
                                         🏺 CULTURAL NARRATIVE &bull; سرد ثقافي
                                     </h4>
-                                    <p className="text-gray-300 leading-relaxed italic pr-2 font-serif">{activeDesign.story}</p>
+                                    <p className="text-gray-300 leading-relaxed italic pr-2 font-serif">{localizedDesignStory(activeDesign, language)}</p>
                                 </div>
 
                                 {/* Configure colors */}
@@ -591,11 +615,19 @@ export default function AiStudioView({
                                     </div>
                                 )}
 
-                                {/* Projecting dynamic vector map */}
-                                <div
-                                    className="absolute inset-0 opacity-40 mix-blend-screen overflow-hidden flex items-center justify-center pointer-events-none"
-                                    dangerouslySetInnerHTML={{ __html: activeDesign.svgPattern }}
-                                />
+                                {/* Projecting dynamic vector map — real Gemini image when available, seeded procedural SVG otherwise */}
+                                {activeDesign.generatedImageUrl ? (
+                                    <img
+                                        src={activeDesign.generatedImageUrl}
+                                        alt={localizedDesignName(activeDesign, language)}
+                                        className="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-screen pointer-events-none"
+                                    />
+                                ) : (
+                                    <div
+                                        className="absolute inset-0 opacity-40 mix-blend-screen overflow-hidden flex items-center justify-center pointer-events-none"
+                                        dangerouslySetInnerHTML={{ __html: activeDesign.svgPattern }}
+                                    />
+                                )}
 
                                 {/* Branding ribbon */}
                                 <div className="absolute bottom-2 inset-x-0 mx-4 py-1 border-t border-b border-[#C9A84C]/30 bg-black/40 text-center select-none">

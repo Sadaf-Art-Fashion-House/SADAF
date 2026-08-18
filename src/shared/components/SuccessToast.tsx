@@ -22,6 +22,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle2, XCircle, X } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { useLanguage } from '@/features/i18n/LanguageProvider';
 
 interface SuccessToastProps {
     /** Whether the toast is currently shown. */
@@ -55,6 +56,7 @@ export default function SuccessToast({
     position = 'top-right',
     animationKey = 'success-toast',
 }: SuccessToastProps) {
+    const { t } = useLanguage();
     const isSuccess = tone === 'success';
     const Icon = isSuccess ? CheckCircle2 : XCircle;
     const cornerClass =
@@ -90,7 +92,7 @@ export default function SuccessToast({
                     <button
                         onClick={onDismiss}
                         className="p-0.5 rounded text-[#E8E0D5]/40 hover:text-white transition-colors cursor-pointer shrink-0"
-                        aria-label="Dismiss"
+                        aria-label={t('common.dismiss')}
                     >
                         <X size={12} />
                     </button>

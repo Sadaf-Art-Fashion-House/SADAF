@@ -12,6 +12,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import { motion, AnimatePresence } from 'motion/react';
 import {
     ChevronRight,
@@ -20,6 +21,7 @@ import {
     Minus,
     Plus,
     ShoppingBag,
+    Share2,
     Star,
     PenLine,
     CheckCircle2,
@@ -28,6 +30,7 @@ import {
     AlertTriangle,
     X,
 } from 'lucide-react';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import type { FashionProduct } from '@/shared/types';
 import type { Review } from '@/features/reviews/types';
 import type { RatingCounts } from './ProductPageClient';
@@ -37,7 +40,8 @@ import { ROUTES } from '@/config/routes';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
 import { pdpReviewCountWord, reviewCountWord } from '@/shared/utils/countWord';
 import StarRatingRow from '@/shared/components/StarRatingRow';
-import { localizedProductDescription, localizedProductDetails, localizedProductFabric, localizedProductName } from '@/features/i18n/productNames';
+import { ShareLinks } from '@/shared/components/ShareLinks';
+import { localizedColorLabel, localizedColorName, localizedProductDescription, localizedProductDetails, localizedProductFabric, localizedProductName, localizedReviewComment, localizedReviewerName, localizedReviewTitle } from '@/features/i18n/productNames';
 
 interface ProductViewProps {
     product: FashionProduct;
@@ -108,6 +112,16 @@ export default function ProductView({
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [deleteToast, setDeleteToast] = useState<'removed' | 'error' | null>(null);
 
+    // Share popover — the URL is built lazily on open (client-only window
+    // access, SSR-safe); the popover closes via a fixed backdrop.
+    const [showShare, setShowShare] = useState(false);
+    const [shareUrl, setShareUrl] = useState('');
+
+    const openShare = () => {
+        setShareUrl(`${window.location.origin}${ROUTES.STORE}/${product.id}`);
+        setShowShare(true);
+    };
+
     const handleConfirmDelete = async () => {
         if (!myReview) return;
         const result = await onDeleteReview(myReview.id);
@@ -142,9 +156,9 @@ export default function ProductView({
                     <Link href={ROUTES.STORE} className="hover:text-[#C9A84C] transition-colors">
                         {t('pdp.breadcrumb')}
                     </Link>
-                    <ChevronRight size={11} />
+                    <DirectionalIcon icon={ChevronRight} size={11} />
                     <span className="text-[#E8E0D5]/60">{product.category}</span>
-                    <ChevronRight size={11} />
+                    <DirectionalIcon icon={ChevronRight} size={11} />
                     <span className="text-[#C9A84C]">{localizedProductName(product, language)}</span>
                 </nav>
 
@@ -253,7 +267,7 @@ export default function ProductView({
                                         href={ROUTES.REVIEWS}
                                         className="ml-auto inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-wider text-[#4FC3F7] hover:text-[#C9A84C] transition-colors"
                                     >
-                                        {t('pdp.viewAll')} <ChevronRight size={10} />
+                                        {t('pdp.viewAll')} <DirectionalIcon icon={ChevronRight} size={10} />
                                     </Link>
                                 </div>
 
@@ -353,7 +367,8 @@ export default function ProductView({
                                             {showAllReviews
                                                 ? t('pdp.showFewer')
                                                 : t('pdp.showAllReviews', { count: reviews.length })}
-                                            <ChevronRight
+                                            <DirectionalIcon
+                                                icon={ChevronRight}
                                                 size={10}
                                                 className={`transition-transform duration-300 ${showAllReviews ? 'rotate-90' : ''}`}
                                             />
@@ -435,7 +450,7 @@ export default function ProductView({
                                                 </div>
                                                 {myReview.title && (
                                                     <p className="text-[11px] font-medium text-white/90 mb-0.5">
-                                                        {myReview.title}
+                                                        {localizedReviewTitle(myReview, language)}
                                                     </p>
                                                 )}
                                                 <p className="text-[11px] text-slate-400 leading-relaxed">{myReview.comment}</p>
@@ -517,10 +532,10 @@ export default function ProductView({
                                                 </span>
                                             </div>
                                             <h4 className="font-serif text-white text-xs font-semibold mb-1">
-                                                {review.title}
+                                                {localizedReviewTitle(review, language)}
                                             </h4>
                                             <p className="text-[11px] text-slate-400 leading-relaxed mb-2">
-                                                {review.comment}
+                                                {localizedReviewComment(review, language)}
                                             </p>
                                             <div className="flex items-center gap-2">
                                                 <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#C9A84C] to-[#4FC3F7] flex items-center justify-center text-[8px] font-bold text-white overflow-hidden shrink-0">
@@ -528,11 +543,11 @@ export default function ProductView({
                                                         // Same avatar pattern as the /reviews cards
                                                         <img src={review.userAvatar} alt="" className="w-full h-full object-cover" />
                                                     ) : (
-                                                        review.userName.charAt(0).toUpperCase()
+                                                        localizedReviewerName(review, language).charAt(0).toUpperCase()
                                                     )}
                                                 </div>
                                                 <span className="text-[10px] text-slate-300 font-medium">
-                                                    {review.userName}
+                                                    {localizedReviewerName(review, language)}
                                                 </span>
                                                 {review.verified && (
                                                     <span className="px-1.5 py-0.5 rounded bg-[#C9A84C]/10 text-[#C9A84C] text-[8px] font-mono uppercase tracking-wider">
@@ -583,7 +598,7 @@ export default function ProductView({
                         {/* Color selector */}
                         <div>
                             <span className="text-[9px] uppercase tracking-wider text-slate-400 block mb-2">
-                                {t('pdp.color')} <span className="text-[#E8E0D5]/80">{selectedColor}</span>
+                                {t('pdp.color')} <span className="text-[#E8E0D5]/80">{localizedColorLabel(selectedColor, language)}</span>
                             </span>
                             <div className="flex gap-2">
                                 {product.colors.map((color) => (
@@ -591,8 +606,8 @@ export default function ProductView({
                                         key={color.name}
                                         onClick={() => setSelectedColor(color.name)}
                                         aria-pressed={selectedColor === color.name}
-                                        aria-label={color.name}
-                                        title={color.name}
+                                        aria-label={localizedColorName(color, language)}
+                                        title={localizedColorName(color, language)}
                                         style={{ backgroundColor: color.hex }}
                                         className={`w-9 h-9 rounded-full border-2 transition-all duration-200 cursor-pointer ${
                                             selectedColor === color.name
@@ -644,6 +659,59 @@ export default function ProductView({
                             >
                                 <Heart size={15} fill={isWishlisted ? 'currentColor' : 'none'} />
                             </button>
+
+                            {/* Share — opens the network share popover */}
+                            <div className="relative">
+                                <button
+                                    onClick={openShare}
+                                    aria-pressed={showShare}
+                                    title={t('share.product')}
+                                    className={`p-3.5 rounded-xl border transition-all duration-300 cursor-pointer ${
+                                        showShare
+                                            ? 'bg-[#4FC3F7]/10 border-[#4FC3F7]/40 text-[#4FC3F7]'
+                                            : 'bg-white/5 border-white/10 text-[#E8E0D5]/70 hover:border-[#4FC3F7]/40 hover:text-[#4FC3F7]'
+                                    }`}
+                                >
+                                    <Share2 size={15} />
+                                </button>
+
+                                <AnimatePresence>
+                                    {showShare && (
+                                        <>
+                                            <div
+                                                className="fixed inset-0 z-40"
+                                                onClick={() => setShowShare(false)}
+                                                aria-hidden="true"
+                                            />
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                                                transition={{ duration: 0.2, ease: 'easeOut' }}
+                                                className="absolute bottom-full right-0 mb-3 z-50 w-64 rounded-xl border border-white/10 bg-[#0F1535]/95 backdrop-blur-md shadow-2xl shadow-black/50 p-4"
+                                            >
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <span className="text-[9px] uppercase tracking-widest font-mono text-[#C9A84C] font-bold">
+                                                        {t('share.via')}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => setShowShare(false)}
+                                                        aria-label={t('pdp.cancel')}
+                                                        className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                </div>
+                                                <ShareLinks
+                                                    url={shareUrl}
+                                                    text={t('share.productTitle', { name: localizedProductName(product, language) })}
+                                                    ariaLabel={t('share.via')}
+                                                />
+                                            </motion.div>
+                                        </>
+                                    )}
+                                </AnimatePresence>
+                            </div>
                         </div>
 
                         {/* Add-to-cart feedback */}
@@ -688,9 +756,12 @@ export default function ProductView({
                                             <span className="text-[9px] uppercase font-mono text-gray-500 block mb-0.5">
                                                 {related.category}
                                             </span>
-                                            <h3 className="font-serif text-[#E8E0D5] text-sm group-hover:text-[#F0D080] transition-colors duration-300 leading-tight truncate">
-                                                {localizedProductName(related, language)}
-                                            </h3>
+                                            <SmartClamp
+                                                as="h3"
+                                                maxLines={1}
+                                                className="font-serif text-[#E8E0D5] text-sm group-hover:text-[#F0D080] transition-colors duration-300 leading-tight"
+                                                text={localizedProductName(related, language)}
+                                            />
                                             {related.rating && (
                                                 <div className="flex items-center gap-1 text-[9px] text-[#F0D080] font-mono mt-1">
                                                     <StarRatingRow

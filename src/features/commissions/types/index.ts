@@ -12,6 +12,8 @@
  * consume the same types, hook and view — only the API route differs.
  */
 
+import type { KycLevel } from '@/shared/types';
+
 /** Which earning role is viewing the history. */
 export type CommissionKind = 'designer' | 'sales-partner';
 
@@ -50,7 +52,7 @@ export interface CommissionHistory {
 // ─── Withdrawals ─────────────────────────────────────────────────────────────
 
 /** Lifecycle of a payout request. */
-export type WithdrawalStatus = 'requested' | 'completed';
+export type WithdrawalStatus = 'requested' | 'approved' | 'rejected' | 'paid';
 
 /** Payout destination the earner picks when requesting a withdrawal. */
 export type WithdrawalMethod = 'bank' | 'paypal';
@@ -58,8 +60,8 @@ export type WithdrawalMethod = 'bank' | 'paypal';
 /**
  * A payout request against the pending (earned) commission balance.
  * Sandbox note: stored in localStorage per role (`sadaf_withdrawals:{kind}`)
- * until the backend wires a real finance ledger — requested entries move to
- * completed after the simulated processing window.
+ * until the backend wires a real finance ledger — approved entries move to
+ * paid once the transfer executes (after the simulated processing window).
  */
 export interface WithdrawalRequest {
     id: string;
@@ -69,9 +71,23 @@ export interface WithdrawalRequest {
     status: WithdrawalStatus;
     /** ISO timestamp of when the request was created. */
     requestedAt: string;
-    /** ISO timestamp of the payout — present only when completed. */
-    completedAt?: string;
+    /** ISO timestamp of the admin review — present when approved or rejected. */
+    reviewedAt?: string;
+    /** Who reviewed the request ('admin', or 'auto-kyc' for the fast path). */
+    reviewedBy?: string;
+    /** Required admin note explaining why the request was rejected — shown to the earner. */
+    rejectionReason?: string;
+    /** Account verification (KYC) snapshot at request time — 'full' unlocks the fast path. Optional for legacy sandbox rows. */
+    kycStatus?: KycLevel;
+    /** ISO timestamp of when the transfer was executed — present only when paid. */
+    paidAt?: string;
 }
 
-/** How long a request stays in "requested" before the sandbox settles it. */
+/** Simulated transfer-execution window: approved requests become paid after this delay. */
 export const WITHDRAWAL_PROCESSING_MS = 20_000;
+
+/** Hybrid rule: only fully KYC-verified requests at or below this amount are auto-approved. */
+export const WITHDRAWAL_AUTO_LIMIT = 100;
+
+/** Fast-path settle window for auto-approved (KYC + under-limit) requests. */
+export const WITHDRAWAL_FAST_PATH_MS = 5_000;

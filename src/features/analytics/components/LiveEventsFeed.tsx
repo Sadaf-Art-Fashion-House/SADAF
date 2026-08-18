@@ -14,6 +14,7 @@ import {
     Trash2,
     ArrowDown,
 } from 'lucide-react';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import type { LiveEvent } from '../types';
 import { formatEventTime } from '@/utils/formatEventTime';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
@@ -202,16 +203,22 @@ export default function LiveEventsFeed({ events, isLive }: LiveEventsFeedProps) 
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between gap-2">
-                                            <span className="text-[10px] font-semibold text-white truncate">
-                                                {localizeEventTitle(event.title, t)}
-                                            </span>
+                                            <SmartClamp
+                                                as="span"
+                                                maxLines={1}
+                                                className="text-[10px] font-semibold text-white"
+                                                text={localizeEventTitle(event.title, t)}
+                                            />
                                             <span className="text-[8px] font-mono text-[#E8E0D5]/40 shrink-0 whitespace-nowrap">
                                                 {formatEventTime(event.timestamp, language)}
                                             </span>
                                         </div>
-                                        <p className="text-[9px] text-[#E8E0D5]/50 leading-relaxed truncate">
-                                            {localizeEventMessage(event.message, t)}
-                                        </p>
+                                        <SmartClamp
+                                            as="p"
+                                            maxLines={1}
+                                            className="text-[9px] text-[#E8E0D5]/50 leading-relaxed"
+                                            text={localizeEventMessage(event.message, t)}
+                                        />
                                     </div>
                                     <span className="text-[7px] font-mono uppercase tracking-wider text-[#E8E0D5]/25 shrink-0 mt-0.5">
                                         {t(style.labelKey)}

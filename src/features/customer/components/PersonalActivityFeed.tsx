@@ -17,6 +17,7 @@ import {
     Volume2,
     VolumeX,
 } from 'lucide-react';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import type { PersonalActivityEvent } from '../types';
 import { formatEventTime } from '@/utils/formatEventTime';
 import { useActivityAlerts } from '../hooks/useActivityAlerts';
@@ -230,16 +231,22 @@ export default function PersonalActivityFeed({ events, isLive, loading = false }
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between gap-2">
-                                            <span className="text-[10px] font-semibold text-white truncate">
-                                                {event.title}
-                                            </span>
+                                            <SmartClamp
+                                                as="span"
+                                                maxLines={1}
+                                                className="text-[10px] font-semibold text-white"
+                                                text={event.title}
+                                            />
                                             <span className="text-[8px] font-mono text-[#E8E0D5]/40 shrink-0 whitespace-nowrap">
                                                 {formatEventTime(event.timestamp, language)}
                                             </span>
                                         </div>
-                                        <p className="text-[9px] text-[#E8E0D5]/50 leading-relaxed truncate">
-                                            {event.message}
-                                        </p>
+                                        <SmartClamp
+                                            as="p"
+                                            maxLines={1}
+                                            className="text-[9px] text-[#E8E0D5]/50 leading-relaxed"
+                                            text={event.message}
+                                        />
                                     </div>
                                     <span className="text-[7px] font-mono uppercase tracking-wider text-[#E8E0D5]/25 shrink-0 mt-0.5">
                                         {tc(`activity.type.${event.type}`, style.label)}

@@ -30,6 +30,7 @@ import {
     FileText,
     X,
 } from 'lucide-react';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import type { DesignCollaboration, DesignStatus } from '@/features/designer/types';
 import { DESIGN_STATUS_STYLES } from '@/features/designer/constants';
 import { COMMISSION_POOL_RATE, computeCommissionSplit, participantsFor } from '@/features/designer/utils/commissionSplit';
@@ -186,9 +187,12 @@ function SubmissionCard({
                 </div>
             </div>
 
-            <p className="text-[10px] text-[#E8E0D5]/50 leading-relaxed line-clamp-2">
-                {description}
-            </p>
+            <SmartClamp
+                as="p"
+                maxLines={2}
+                className="text-[10px] text-[#E8E0D5]/50 leading-relaxed"
+                text={description}
+            />
 
             {adminNote && (
                 <p className="text-[9px] text-[#E8E0D5]/40 border-t border-white/5 pt-2 italic leading-relaxed">
@@ -219,10 +223,10 @@ function SubmissionCard({
                                     key={share.memberId}
                                     className="flex items-center justify-between text-[9px]"
                                 >
-                                    <span className="text-slate-300 truncate">
-                                        {member.name}
+                                    <span className="text-slate-300 flex items-center min-w-0">
+                                        <SmartClamp as="span" maxLines={1} className="min-w-0" text={member.name} />
                                         {member.id === collaboration?.ownerId && (
-                                            <span className="ml-1 text-[7px] font-mono uppercase text-[#C9A84C]/70">
+                                            <span className="ml-1 shrink-0 text-[7px] font-mono uppercase text-[#C9A84C]/70">
                                                 {t('atelierAdmin.owner')}
                                             </span>
                                         )}

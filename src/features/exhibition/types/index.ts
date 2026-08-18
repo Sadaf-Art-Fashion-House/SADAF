@@ -4,6 +4,7 @@ export interface ExhibitionRoom {
     arabicName: string;
     tagline: string;
     description: string;
+    descriptionAr?: string;
     ambiance: string;
     materials: string;
     accentColor: string;

@@ -20,18 +20,21 @@ import {
     Download,
     Hammer,
 } from 'lucide-react';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import Link from 'next/link';
 import type { FashionProduct, ArtPiece } from '@/shared/types';
 import { fashionDatabase, artDatabase, collections } from '@/data';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
 import type { TranslationKey } from '@/features/i18n/dictionaries';
 import { localizedArtTitle, localizedDesignName, localizedProductFabric, localizedProductName } from '@/features/i18n/productNames';
+import { localizedKpiValue } from '@/features/dashboard/utils/kpiLocalization';
 import { useDesignDraftStore } from '@/features/ai/store/useDesignDraftStore';
 import { designPublisher } from '@/features/ai/services/designPublisher';
 import { useWSAdminDashboardData } from '@/features/dashboard/hooks/useDashboardData';
 import { ErrorBanner } from '@/shared/ui/ErrorGuidance';
 import { ErrorBoundary } from '@/shared/ui/ErrorBoundary';
 import AtelierRequestsTab from '@/features/admin/components/AtelierRequestsTab';
+import AdminWithdrawalsTab from '@/features/admin/components/AdminWithdrawalsTab';
 
 // ─── Dynamic icon resolver for API-driven KPIs ────────────────────────────
 function DynamicKpiIcon({ name, size, className }: { name: string; size: number; className: string }) {
@@ -61,7 +64,51 @@ interface AdminDashboardViewProps {
 
 export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps) {
     const { t, language } = useLanguage();
-    const [mainTab, setMainTab] = useState<'analytics' | 'products' | 'arts' | 'ai-logs' | 'orders' | 'customers' | 'designs' | 'atelier'>('analytics');
+
+    // Localized labels for catalog categories (values stay canonical English).
+    const productCategoryLabel: Record<string, string> = {
+        'Women': t('admin.category.women'),
+        'Men': t('admin.category.men'),
+        'Kids': t('admin.category.kids'),
+        'Traditional Fusion': t('admin.category.traditionalFusion'),
+        'Limited Edition': t('admin.category.limitedEdition'),
+    };
+    const artCategoryLabel: Record<string, string> = {
+        'Handmade': t('admin.category.handmade'),
+        'Oil Paintings': t('admin.category.oilPaintings'),
+        'Calligraphy': t('admin.category.calligraphy'),
+        'Digital Art': t('admin.category.digitalArt'),
+        'Fashion Sketches': t('admin.category.fashionSketches'),
+        'Women': t('admin.category.women'),
+        'Men': t('admin.category.men'),
+        'Kids': t('admin.category.kids'),
+        'Traditional Fusion': t('admin.category.traditionalFusion'),
+        'Limited Edition': t('admin.category.limitedEdition'),
+    };
+    const artistLabel: Record<string, string> = {
+        'Dr. Farida Hammad': t('admin.art.artist.farida'),
+        'Karim Abdel-Malik': t('admin.art.artist.karim'),
+        'Master Calligrapher Ahmed El-Saeed': t('admin.art.artist.master'),
+        'Sadaf Atelier': t('admin.art.artist.atelier'),
+        'Tariq Al-Faisal': t('admin.art.artist.tariq'),
+        'The Saad Workshop (Old Cairo)': t('admin.art.artist.saadWorkshop'),
+    };
+    const artMediumLabel: Record<string, string> = {
+        '24k Gold Leaf & Calligraphy Ink': t('admin.art.medium.goldLeaf'),
+        'Copper, Mother-of-Pearl & Fine Silver': t('admin.art.medium.copper'),
+        'Gold Gouache & Charcoal': t('admin.art.medium.gouache'),
+        'High-Fidelity Archival Giclée Print': t('admin.art.medium.giclee'),
+        'Impasto Oil on Linen': t('admin.art.medium.impasto'),
+        'Oil & Sand Texture on Linen': t('admin.art.medium.oilSand'),
+    };
+    const kpiLabel: Record<string, string> = {
+        'Bespoke Sales Vol': t('admin.kpi.bespokeSales'),
+        'AI Generations': t('admin.kpi.aiGenerations'),
+        'Museum Registries': t('admin.kpi.museumRegistries'),
+        'Catalog Items': t('admin.kpi.catalogItems'),
+        'VIP Active Collectors': t('admin.kpi.vipCollectors'),
+    };
+    const [mainTab, setMainTab] = useState<'analytics' | 'products' | 'arts' | 'ai-logs' | 'orders' | 'customers' | 'designs' | 'atelier' | 'withdrawals'>('analytics');
 
     // Product management
     const [newProdName, setNewProdName] = useState('');
@@ -217,6 +264,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
         { id: 'designs', label: t('admin.tabs.designs'), icon: Bookmark },
         { id: 'atelier', label: t('admin.tabs.atelier'), icon: Hammer },
         { id: 'ai-logs', label: t('admin.tabs.aiLogs'), icon: Cpu },
+        { id: 'withdrawals', label: t('admin.tabs.withdrawals'), icon: Coins },
     ] as const;
 
     return (
@@ -322,9 +370,9 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                             className="p-5 rounded-xl bg-[#0F1435]/80 border border-white/5 shadow flex justify-between items-center"
                                         >
                                             <div>
-                                                <span className="text-[10px] uppercase font-mono text-gray-400 tracking-wider block">{kpi.label}</span>
-                                                <span className="text-2xl font-serif text-white font-bold block mt-1.5">{kpi.value}</span>
-                                                <span className="text-[10px] text-green-400 font-mono mt-0.5 inline-block">{t('admin.vsPrevMonth', { growth: kpi.growth })}</span>
+                                                <span className="text-[10px] uppercase font-mono text-gray-400 tracking-wider block">{kpiLabel[kpi.label] ?? kpi.label}</span>
+                                                <span className="text-2xl font-serif text-white font-bold block mt-1.5">{localizedKpiValue(kpi.value, language)}</span>
+                                                <span className="text-[10px] text-green-400 font-mono mt-0.5 inline-block">{t('admin.vsPrevMonth', { growth: localizedKpiValue(kpi.growth, language) })}</span>
                                             </div>
                                             <div className="p-3 rounded-full bg-white/5 border border-white/10 shrink-0">
                                                 <DynamicKpiIcon name={kpi.icon} size={18} className={kpi.color} />
@@ -454,11 +502,11 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                                 onChange={(e) => setNewProdCategory(e.target.value as any)}
                                                 className="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-white outline-none focus:border-[#C9A84C] cursor-pointer"
                                             >
-                                                <option value="Traditional Fusion">Traditional Fusion</option>
-                                                <option value="Women">Women</option>
-                                                <option value="Men">Men</option>
-                                                <option value="Kids">Kids</option>
-                                                <option value="Limited Edition">Limited Edition</option>
+                                                <option value="Traditional Fusion">{productCategoryLabel['Traditional Fusion']}</option>
+                                                <option value="Women">{productCategoryLabel['Women']}</option>
+                                                <option value="Men">{productCategoryLabel['Men']}</option>
+                                                <option value="Kids">{productCategoryLabel['Kids']}</option>
+                                                <option value="Limited Edition">{productCategoryLabel['Limited Edition']}</option>
                                             </select>
                                         </div>
                                     </div>
@@ -600,11 +648,11 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                                 onChange={(e) => setNewArtCategory(e.target.value as any)}
                                                 className="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-white outline-none focus:border-[#C9A84C] cursor-pointer"
                                             >
-                                                <option value="Calligraphy">Calligraphy</option>
-                                                <option value="Handmade">Handmade</option>
-                                                <option value="Oil Paintings">Oil Paintings</option>
-                                                <option value="Digital Art">Digital Art</option>
-                                                <option value="Fashion Sketches">Fashion Sketches</option>
+                                                <option value="Calligraphy">{artCategoryLabel['Calligraphy']}</option>
+                                                <option value="Handmade">{artCategoryLabel['Handmade']}</option>
+                                                <option value="Oil Paintings">{artCategoryLabel['Oil Paintings']}</option>
+                                                <option value="Digital Art">{artCategoryLabel['Digital Art']}</option>
+                                                <option value="Fashion Sketches">{artCategoryLabel['Fashion Sketches']}</option>
                                             </select>
                                         </div>
                                     </div>
@@ -646,10 +694,10 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                                 <tr key={art.id} className="h-12 hover:text-white transition">
                                                     <td className="py-2 leading-tight">
                                                         <span className="font-semibold block text-[#E8E0D5]">{localizedArtTitle(art, language)}</span>
-                                                        <span className="text-[10px] text-gray-600 block">{art.medium}</span>
+                                                        <span className="text-[10px] text-gray-600 block">{artMediumLabel[art.medium] ?? art.medium}</span>
                                                     </td>
-                                                    <td>{art.category}</td>
-                                                    <td>{art.artist}</td>
+                                                    <td>{artCategoryLabel[art.category] ?? art.category}</td>
+                                                    <td>{artistLabel[art.artist] ?? art.artist}</td>
                                                     <td className="font-mono text-[#C9A84C]">${art.price}</td>
                                                 </tr>
                                             ))}
@@ -925,14 +973,22 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                                             className="cursor-pointer accent-[#C9A84C]"
                                                         />
                                                     )}
-                                                    <div
-                                                        className="w-12 h-12 rounded-lg border border-white/10 overflow-hidden shrink-0 bg-[#0A0F2C]"
-                                                        dangerouslySetInnerHTML={{
-                                                            __html: `<svg viewBox="0 0 100 100" width="48" height="48">${draft.design.svgPattern.replace(/<svg[^>]*>|<\/svg>/g, '')}</svg>`,
-                                                        }}
-                                                    />
+                                                    {draft.design.generatedImageUrl ? (
+                                                        <img
+                                                            src={draft.design.generatedImageUrl}
+                                                            alt={localizedDesignName(draft.design, language)}
+                                                            className="w-12 h-12 rounded-lg border border-white/10 overflow-hidden shrink-0 bg-[#0A0F2C] object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div
+                                                            className="w-12 h-12 rounded-lg border border-white/10 overflow-hidden shrink-0 bg-[#0A0F2C]"
+                                                            dangerouslySetInnerHTML={{
+                                                                __html: `<svg viewBox="0 0 100 100" width="48" height="48">${draft.design.svgPattern.replace(/<svg[^>]*>|<\/svg>/g, '')}</svg>`,
+                                                            }}
+                                                        />
+                                                    )}
                                                     <div className="min-w-0">
-                                                        <h4 className="text-xs font-serif text-white font-semibold truncate">{localizedDesignName(draft.design, language)}</h4>
+                                                        <SmartClamp as="h4" maxLines={1} className="text-xs font-serif text-white font-semibold" text={localizedDesignName(draft.design, language)} />
                                                         <p className="text-[9px] font-mono text-slate-500">
                                                             {draft.design.clothingType} • {new Date(draft.savedAt).toLocaleDateString()}
                                                         </p>
@@ -1042,6 +1098,19 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                             <ErrorBoundary label="admin:atelier">
                             <AtelierRequestsTab />
                             </ErrorBoundary>
+                        </motion.div>
+                    )}
+
+                    {/* Withdrawals Tab — admin approval of payout requests */}
+                    {mainTab === 'withdrawals' && (
+                        <motion.div
+                            key="withdrawals"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="space-y-6"
+                        >
+                            <AdminWithdrawalsTab />
                         </motion.div>
                     )}
                 </AnimatePresence>

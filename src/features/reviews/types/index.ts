@@ -9,10 +9,16 @@ export interface Review {
     productImage: string;
     productHref: string;
     userName: string;
+    /** Arabic reviewer display name — falls back to `userName` when absent. */
+    userNameAr?: string;
     userAvatar?: string;
     rating: number; // 1–5
     title: string;
+    /** Arabic review title — falls back to `title` when absent. */
+    titleAr?: string;
     comment: string;
+    /** Arabic review comment — falls back to `comment` when absent (user-written reviews have none). */
+    commentAr?: string;
     createdAt: string;
     verified: boolean;
     /**

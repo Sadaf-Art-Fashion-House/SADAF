@@ -200,7 +200,7 @@ export default function Header() {
                     <Link
                         href="/search"
                         className="hidden sm:block p-2 text-slate-300 hover:text-[#C9A84C] relative transition-colors duration-300"
-                        title="Search Atelier"
+                        title={t('common.searchAtelier')}
                     >
                         <Search size={16} />
                     </Link>
@@ -212,7 +212,7 @@ export default function Header() {
                     <Link
                         href="/reviews"
                         className="hidden sm:block p-2 text-slate-300 hover:text-[#C9A84C] relative transition-colors duration-300"
-                        title="Customer Reviews"
+                        title={t('common.customerReviews')}
                     >
                         <MessageSquare size={16} />
                     </Link>
@@ -220,7 +220,7 @@ export default function Header() {
                     <Link
                         href="/wishlist"
                         className="p-2 text-slate-300 hover:text-red-400 relative transition-colors duration-300"
-                        title="View Wishlist"
+                        title={t('common.viewWishlist')}
                     >
                         <Heart
                             size={16}
@@ -235,7 +235,7 @@ export default function Header() {
                     <Link
                         href="/cart"
                         className="p-2 text-slate-300 hover:text-[#C9A84C] relative transition-colors duration-300"
-                        title="View Shopping Bag"
+                        title={t('common.viewBag')}
                     >
                         <ShoppingCart size={16} />
                         {cartItemCount > 0 && (

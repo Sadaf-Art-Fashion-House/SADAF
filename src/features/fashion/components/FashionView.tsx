@@ -4,13 +4,19 @@ import { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { Compass, ZoomIn, ArrowRight, Heart, ShoppingCart, X } from "lucide-react";
+import { DirectionalIcon } from "@/shared/ui/DirectionalIcon";
 import type { FashionCategory, FashionProduct, LookbookItem } from "@/shared/types";
+import { ROUTES } from "@/config/routes";
+import { SmartClamp } from "@/shared/ui/SmartClamp";
+import { ShareIconButton } from "@/shared/components/ShareIconButton";
 import { FASHION_CATEGORIES } from "../constants/fashionCategories";
 import { useLanguage } from "@/features/i18n/LanguageProvider";
 import {
     localizedLookbookDescription,
     localizedLookbookSubtitle,
+    localizedColorName,
     localizedLookbookTitle,
+    localizedProductDescription,
     localizedProductName,
 } from "@/features/i18n/productNames";
 
@@ -175,6 +181,14 @@ export default function FashionView({
                                         />
                                     )}
 
+                                    {/* Share — native share sheet or copy link */}
+                                    <ShareIconButton
+                                        path={`${ROUTES.STORE}/${product.id}`}
+                                        title={localizedProductName(product, language)}
+                                        label={t("share.product")}
+                                        className="absolute top-4 right-12 z-10"
+                                    />
+
                                     {/* Wishlist heart overlay */}
                                     <button
                                         onClick={(e) => {
@@ -213,9 +227,12 @@ export default function FashionView({
                                         >
                                             {localizedProductName(product, language)}
                                         </h3>
-                                        <p className="text-xs text-[#E8E0D5]/70 line-clamp-2 leading-relaxed mb-4">
-                                            {product.description}
-                                        </p>
+                                        <SmartClamp
+                                            as="p"
+                                            maxLines={2}
+                                            className="text-xs text-[#E8E0D5]/70 leading-relaxed mb-4"
+                                            text={localizedProductDescription(product, language)}
+                                        />
 
                                         <div className="flex flex-wrap gap-1 mb-4">
                                             {(product.sizes ?? []).map((size) => (
@@ -234,16 +251,19 @@ export default function FashionView({
                                             <span className="text-[10px] font-mono uppercase text-[#C9A84C]">
                                                 {t("fashion.fabric")}:
                                             </span>
-                                            <span className="text-[10px] text-gray-400 font-sans truncate max-w-[124px] inline-block">
-                                                {product.fabric}
-                                            </span>
+                                            <SmartClamp
+                                                as="span"
+                                                maxLines={1}
+                                                className="text-[10px] text-gray-400 font-sans max-w-[124px] inline-block"
+                                                text={product.fabric}
+                                            />
                                         </div>
 
                                         <button
                                             onClick={() => openProductDetail(product)}
                                             className="px-4 py-2 bg-[#1B2A6B] hover:bg-[#C9A84C] hover:text-[#0A0F2C] text-xs text-white uppercase tracking-wider font-semibold rounded transition-all duration-300 flex items-center gap-1 cursor-pointer"
                                         >
-                                            {t("fashion.configure")} <ArrowRight size={11} />
+                                            {t("fashion.configure")} <DirectionalIcon icon={ArrowRight} size={11} />
                                         </button>
                                     </div>
                                 </div>
@@ -334,7 +354,7 @@ export default function FashionView({
                                                         style={{ backgroundColor: color.hex }}
                                                         className="w-2.5 h-2.5 rounded-full inline-block border border-white/10"
                                                     />
-                                                    <span>{color.name}</span>
+                                                    <span>{localizedColorName(color, language)}</span>
                                                 </button>
                                             ))}
                                         </div>
@@ -399,9 +419,12 @@ export default function FashionView({
                                     <h3 className="font-serif text-lg font-bold mb-2">
                                         {localizedLookbookTitle(item, language)}
                                     </h3>
-                                    <p className="text-xs text-gray-400 line-clamp-2">
-                                        {localizedLookbookSubtitle(item, language)}
-                                    </p>
+                                    <SmartClamp
+                                        as="p"
+                                        maxLines={2}
+                                        className="text-xs text-gray-400"
+                                        text={localizedLookbookSubtitle(item, language)}
+                                    />
                                 </div>
                             ))}
                         </div>

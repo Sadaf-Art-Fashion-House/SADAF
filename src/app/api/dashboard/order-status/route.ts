@@ -36,15 +36,31 @@ const TRANSITION_TEMPLATES: ReadonlyArray<{ previousStatus: OrderStatus; status:
     { previousStatus: 'Shipped', status: 'Delivered', message: 'Delivered! We hope your piece brings you joy.' },
 ];
 
-/** The demo order tracked by the WS generator. */
-const DEMO_ORDER_ID = 'SDF-2026-9041';
+/** Demo orders that receive live transitions — cycles so every tracked order animates. */
+const DEMO_ORDER_IDS = ['SDF-2026-9041', 'SDF-2026-4412', 'SDF-2026-2287', 'SDF-2026-1053'];
+
+const PLACED_MESSAGE = 'Your new order has been placed — our artisans will begin tailoring it soon.';
 
 function buildDemoTransition(userId: string): OrderStatusEvent {
-    const template = TRANSITION_TEMPLATES[orderStatusCounter % TRANSITION_TEMPLATES.length];
     orderStatusCounter += 1;
+    // Every fourth update a brand-new order enters tracking (kind: 'placed').
+    if (orderStatusCounter % 4 === 0) {
+        return {
+            id: `os-api-${Date.now()}-${orderStatusCounter}`,
+            orderId: `SDF-2026-${9100 + orderStatusCounter}`,
+            kind: 'placed',
+            previousStatus: 'Pending',
+            status: 'Pending',
+            message: PLACED_MESSAGE,
+            timestamp: new Date().toISOString(),
+            userId,
+        };
+    }
+    const template = TRANSITION_TEMPLATES[orderStatusCounter % TRANSITION_TEMPLATES.length];
     return {
         id: `os-api-${Date.now()}-${orderStatusCounter}`,
-        orderId: DEMO_ORDER_ID,
+        orderId: DEMO_ORDER_IDS[orderStatusCounter % DEMO_ORDER_IDS.length],
+        kind: 'transition',
         previousStatus: template.previousStatus,
         status: template.status,
         message: template.message,

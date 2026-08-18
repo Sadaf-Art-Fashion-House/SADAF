@@ -3,6 +3,7 @@
 import { motion } from 'motion/react';
 import Link from 'next/link';
 import { Settings, ArrowLeft } from 'lucide-react';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import { ROUTES } from '@/config/routes';
 import SettingsView from '@/features/settings/components/SettingsView';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
@@ -28,7 +29,7 @@ export default function SettingsPageClient() {
                             href={ROUTES.DASHBOARD}
                             className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-[#E8E0D5]/50 hover:text-[#C9A84C] transition-colors mb-4"
                         >
-                            <ArrowLeft size={12} className="rtl:rotate-180" />
+                            <DirectionalIcon icon={ArrowLeft} size={12} />
                             {t('common.back')}
                         </Link>
                         <div className="flex items-center gap-3">

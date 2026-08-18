@@ -16,11 +16,13 @@ import {
     Play,
     AlertTriangle,
 } from 'lucide-react';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
+import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import type { ArtPiece } from '@/shared/types';
 import type { ExhibitionRoom } from '../types';
 import { useTextToSpeech, type TtsLang } from '../hooks/useTextToSpeech';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
-import { localizedArtTitle } from '@/features/i18n/productNames';
+import { localizedArtDescription, localizedArtTitle } from '@/features/i18n/productNames';
 
 interface ExhibitionViewProps {
     artworks: ArtPiece[];
@@ -34,6 +36,7 @@ const ROOMS: ExhibitionRoom[] = [
         arabicName: 'فناء الهندسة الفاطمية',
         tagline: "Cairo's golden history, structural stone carvings, and symmetric star alignments",
         description: 'Explore pieces designed on traditional symmetric star grids. Witness the interplay of raw red copper, dense desert sandstone, and 18k golden wire meshes representing cosmic order.',
+        descriptionAr: 'استكشف قطعاً مصممة على شبكات النجوم المتماثلة التقليدية. شاهد التفاعل بين النحاس الأحمر الخام والحجر الرملي الصحراوي الكثيف وشبكات الأسلاك الذهبية عيار ١٨ قيراطاً التي تمثل النظام الكوني.',
         ambiance: 'Warm sandstone lights, desert dusk echoes, slow spatial glow',
         materials: 'Hand-hammered Red Copper, Saltwater Mother-of-Pearl & Fine Silver',
         accentColor: '#C9A84C',
@@ -46,6 +49,7 @@ const ROOMS: ExhibitionRoom[] = [
         arabicName: 'جناح الخط السكندري',
         tagline: 'Rhythmic ink scripts, liquid gold leaf parchment, and coastal sea wind drafts',
         description: 'Step into the coastal sanctuary celebrating Diwani and Thuluth calligraphy lineages. Here, fluid calligraphic sweeps represent respiratory breathing loops and marine drapes.',
+        descriptionAr: 'ادخل إلى الملاذ الساحلي الذي يحتفي بخطي الديواني والثلث. هنا، تمثل الانسيابات الخطية السائلة حلقات تنفسية وستائر بحرية.',
         ambiance: 'Royal Indigo shadows, maritime gold reflections, coastal breeze drafts',
         materials: '24k Gold Leaf, Calligraphy Reed-Pen inks, Indigo Parchment Paper',
         accentColor: '#4FC3F7',
@@ -251,8 +255,8 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                 <div className="w-full md:w-auto">
                     <span className="text-[8px] sm:text-[10px] uppercase font-mono tracking-widest text-[#C9A84C] font-bold flex items-center gap-1.5">
                         <Compass size={12} className="animate-pulse shrink-0" />
-                        <span className="hidden sm:inline">SADAF METAVERSE ATELIER &bull; المعرض التفاعلي ثلاثي الأبعاد</span>
-                        <span className="sm:hidden">SADAF EXHIBITION</span>
+                        <span className="hidden sm:inline">{t('common.metaverseAtelier')}</span>
+                        <span className="sm:hidden">{t('common.exhibitionShort')}</span>
                     </span>
                     <div className="flex flex-col sm:flex-row sm:gap-3 sm:items-baseline mt-1.5">
                         <h2 className="text-lg sm:text-xl md:text-3xl font-serif text-white font-semibold leading-tight tracking-tight">
@@ -401,7 +405,7 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                     className="p-2 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition cursor-pointer"
                                     title={t('exh.prevRoom')}
                                 >
-                                    <ArrowLeft size={14} />
+                                    <DirectionalIcon icon={ArrowLeft} size={14} />
                                 </button>
                                 <span className="text-[9px] sm:text-[10px] font-mono text-white tracking-widest uppercase font-bold">
                                     {t('exh.roomCount', { current: activeRoomIndex + 1, total: ROOMS.length })}
@@ -414,7 +418,7 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                     className="p-2 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition cursor-pointer"
                                     title={t('exh.nextRoom')}
                                 >
-                                    <ArrowRight size={14} />
+                                    <DirectionalIcon icon={ArrowRight} size={14} />
                                 </button>
                             </div>
                         </div>
@@ -429,7 +433,7 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                             <span className="text-[8px] sm:text-[9px] font-mono text-[#C9A84C] uppercase tracking-widest block font-bold">
                                 {t('exh.curatorial')}
                             </span>
-                            <p className="text-[11px] sm:text-xs text-slate-300 mt-1 leading-relaxed font-sans">{activeRoom.description}</p>
+                            <p className="text-[11px] sm:text-xs text-slate-300 mt-1 leading-relaxed font-sans">{language === 'ar' && activeRoom.descriptionAr ? activeRoom.descriptionAr : activeRoom.description}</p>
                             <div className="mt-3 flex flex-wrap gap-4 text-[9px] sm:text-[10px] text-gray-400 font-mono">
                                 <div>
                                     <strong className="text-white">{t('exh.activeMaterials')}</strong> {activeRoom.materials}
@@ -463,7 +467,7 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                     }`}
                                 >
                                     <span>{t('exh.room', { n: idx + 1 })}</span>
-                                    <span className="truncate">{language === 'ar' ? rm.arabicName : rm.name}</span>
+                                    <SmartClamp as="span" maxLines={1} text={language === 'ar' ? rm.arabicName : rm.name} />
                                 </div>
                             ))}
                             <div
@@ -509,7 +513,7 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                         </div>
                                         <h4 className="font-serif text-white text-base sm:text-lg font-bold leading-tight uppercase mb-1">{localizedArtTitle(zoomedArt, language)}</h4>
                                         <p className="text-xs text-[#C9A84C] font-mono italic mb-4">{t('exh.artist', { name: zoomedArt.artist })}</p>
-                                        <p className="text-[11px] sm:text-xs text-slate-300 leading-relaxed mb-4 font-sans">{zoomedArt.description}</p>
+                                        <p className="text-[11px] sm:text-xs text-slate-300 leading-relaxed mb-4 font-sans">{localizedArtDescription(zoomedArt, language)}</p>
                                         <div className="space-y-1.5 text-[9px] sm:text-[10px] font-mono text-gray-400 border-t border-b border-white/10 py-3 mb-4">
                                             <div className="flex justify-between">
                                                 <span>{t('exh.heritageAge')}</span>
