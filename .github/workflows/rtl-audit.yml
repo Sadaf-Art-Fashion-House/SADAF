@@ -1,0 +1,48 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# SADAF RTL Audit Guard
+# ─────────────────────────────────────────────────────────────────────────────
+# Runs on every push/PR touching src/ and fails the build if the number of
+# physical (RTL-risky) layout utilities exceeds the limit.
+#
+# The baseline is the CURRENT count (487 after the SmartClamp/arrow passes).
+# If a change intentionally adds physical utilities, raise the limit by
+# editing `max_risks` below (and justify it in the PR description).
+#
+# Usage (manual):  node scripts/rtl-audit.mjs --json --no-report --max 487
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: RTL Audit
+
+on:
+  pull_request:
+    branches: [main, nextjs-clean]
+    paths: ['src/**']
+  push:
+    branches: [main, nextjs-clean]
+    paths: ['src/**']
+  workflow_dispatch:
+    inputs:
+      max_risks:
+        description: 'Maximum allowed RTL-risky matches'
+        required: false
+        default: '487'
+
+jobs:
+  rtl-audit:
+    name: RTL risk guard
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run RTL audit
+        run: |
+          MAX="${{ github.event.inputs.max_risks || 487 }}"
+          echo "RTL limit: $MAX"
+          node scripts/rtl-audit.mjs --json --no-report --max "$MAX"
