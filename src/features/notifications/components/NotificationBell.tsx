@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import { Bell, BellRing, BellOff, CheckCheck, ChevronRight, Globe, Wifi, WifiOff } from 'lucide-react';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
@@ -219,9 +220,12 @@ function BellItem({
                         {formatRelativeTime(notification.createdAt, language)}
                     </span>
                 </div>
-                <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed line-clamp-2">
-                    {message}
-                </p>
+                <SmartClamp
+                    as="p"
+                    maxLines={2}
+                    className="text-[10px] text-slate-400 mt-0.5 leading-relaxed"
+                    text={message}
+                />
             </div>
             {!notification.read && (
                 <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#C9A84C] shrink-0 animate-pulse" />

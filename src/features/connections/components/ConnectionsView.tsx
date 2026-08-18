@@ -30,6 +30,7 @@ import {
     Building2,
     Inbox,
 } from 'lucide-react';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import type { ConnectionsData, ConnectionResponse } from '../types';
 import { CONNECTION_STATUS_STYLES } from '../constants';
 import { formatRelativeTime } from '@/features/notifications/utils/formatRelativeTime';
@@ -298,9 +299,12 @@ function CompanySide({
                                             <MapPin size={9} /> {request.designerCity}
                                         </span>
                                     </div>
-                                    <p className="text-[10px] text-[#E8E0D5]/50 mt-1 line-clamp-2">
-                                        “{request.message}”
-                                    </p>
+                                    <SmartClamp
+                                        as="p"
+                                        maxLines={2}
+                                        className="text-[10px] text-[#E8E0D5]/50 mt-1"
+                                        text={`“${request.message}”`}
+                                    />
                                     <p className="text-[9px] font-mono uppercase tracking-wider text-[#E8E0D5]/30 mt-1">
                                         {formatRelativeTime(request.createdAt, language)}
                                         {request.respondedAt && t('connections.respondedAt', { time: formatRelativeTime(request.respondedAt, language) })}

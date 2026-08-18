@@ -25,6 +25,7 @@ import {
     History,
     Trash2,
 } from 'lucide-react';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import {
     BarChart,
     Bar,
@@ -852,7 +853,7 @@ export default function AnalyticsDashboard({ initialData }: AnalyticsDashboardPr
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-[8px] font-mono text-[#E8E0D5]/30 w-4 shrink-0">{i + 1}</span>
                                                     <img src={prod.image} alt={prod.name} className="w-7 h-7 rounded-lg object-cover border border-white/10 shrink-0" />
-                                                    <span className="text-[10px] text-white font-medium truncate max-w-[140px]">{prod.name}</span>
+                                                    <SmartClamp as="span" maxLines={1} className="text-[10px] text-white font-medium max-w-[140px]" text={prod.name} />
                                                 </div>
                                             </td>
                                             <td className="py-2.5 pr-2 text-[9px] text-[#E8E0D5]/50">{(CHANNEL_LABEL_KEYS[prod.category] ? t(CHANNEL_LABEL_KEYS[prod.category]) : prod.category)}</td>

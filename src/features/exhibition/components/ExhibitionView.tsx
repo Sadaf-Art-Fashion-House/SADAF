@@ -16,6 +16,7 @@ import {
     Play,
     AlertTriangle,
 } from 'lucide-react';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import type { ArtPiece } from '@/shared/types';
 import type { ExhibitionRoom } from '../types';
@@ -466,7 +467,7 @@ export default function ExhibitionView({ artworks, onAddToCart }: ExhibitionView
                                     }`}
                                 >
                                     <span>{t('exh.room', { n: idx + 1 })}</span>
-                                    <span className="truncate">{language === 'ar' ? rm.arabicName : rm.name}</span>
+                                    <SmartClamp as="span" maxLines={1} text={language === 'ar' ? rm.arabicName : rm.name} />
                                 </div>
                             ))}
                             <div

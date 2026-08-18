@@ -3,6 +3,7 @@
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Layers, X } from 'lucide-react';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
 import type { DesignSubmission } from '@/features/designer/types';
 
@@ -54,8 +55,13 @@ export default function AtelierRequestToast({
                         <p className="text-[11px] font-semibold text-white">
                             {t('atelierAdmin.toast.newDesign')}
                         </p>
-                        <p className="text-[10px] text-[#E8E0D5]/60 mt-0.5 line-clamp-2">
-                            <span className="font-medium text-[#C9A84C]">{design.title}</span>
+                        <p className="text-[10px] text-[#E8E0D5]/60 mt-0.5">
+                            <SmartClamp
+                                as="span"
+                                maxLines={2}
+                                className="font-medium text-[#C9A84C]"
+                                text={design.title}
+                            />
                         </p>
                         <p className="text-[9px] font-mono uppercase tracking-wider text-[#E8E0D5]/35 mt-0.5">
                             {design.category} · ${design.price.toLocaleString()}

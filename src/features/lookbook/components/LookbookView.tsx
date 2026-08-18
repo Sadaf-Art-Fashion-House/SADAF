@@ -14,6 +14,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { ArrowLeft, ArrowRight, Compass, Sparkles, Camera } from "lucide-react";
+import { SmartClamp } from "@/shared/ui/SmartClamp";
 import { DirectionalIcon } from "@/shared/ui/DirectionalIcon";
 import type { LookbookItem } from "@/shared/types";
 import { ROUTES } from "@/config/routes";
@@ -127,9 +128,12 @@ export default function LookbookView({ lookbookItems }: LookbookViewProps) {
                                         <span className="text-[8px] font-mono uppercase tracking-widest text-[#C9A84C] block mb-0.5">
                                             {t("fashion.campaignYear", { year: item.year })}
                                         </span>
-                                        <span className="text-[11px] font-serif text-white leading-tight line-clamp-2">
-                                            {localizedLookbookTitle(item, language)}
-                                        </span>
+                                        <SmartClamp
+                                            as="span"
+                                            maxLines={2}
+                                            className="text-[11px] font-serif text-white leading-tight"
+                                            text={localizedLookbookTitle(item, language)}
+                                        />
                                     </div>
                                 </div>
                             </button>
@@ -255,9 +259,12 @@ export default function LookbookView({ lookbookItems }: LookbookViewProps) {
                                 <h3 className="font-serif text-white text-lg group-hover:text-[#F0D080] transition-colors duration-300">
                                     {localizedLookbookTitle(item, language)}
                                 </h3>
-                                <p className="text-[10px] text-[#E8E0D5]/60 mt-1 font-sans line-clamp-1">
-                                    {localizedLookbookSubtitle(item, language)}
-                                </p>
+                                <SmartClamp
+                                    as="p"
+                                    maxLines={1}
+                                    className="text-[10px] text-[#E8E0D5]/60 mt-1 font-sans"
+                                    text={localizedLookbookSubtitle(item, language)}
+                                />
                             </div>
                         </motion.button>
                     ))}

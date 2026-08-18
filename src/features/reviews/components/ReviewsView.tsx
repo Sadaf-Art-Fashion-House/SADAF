@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Star, ThumbsUp, MessageSquare, Quote, ChevronDown, Filter, CheckCircle } from 'lucide-react';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Review, ReviewSortOption, ReviewRatingFilter } from '../types';
@@ -338,8 +339,8 @@ function ReviewCard({ review }: { review: Review }) {
             <div className="flex-1 min-w-0">
                 {/* Header: Product + Rating */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                    <Link href={review.productHref} className="text-xs font-mono text-[#4FC3F7] hover:text-[#C9A84C] transition-colors uppercase tracking-wider truncate">
-                        {review.productName}
+                    <Link href={review.productHref} className="text-xs font-mono text-[#4FC3F7] hover:text-[#C9A84C] transition-colors uppercase tracking-wider">
+                        <SmartClamp as="span" maxLines={1} text={review.productName} />
                     </Link>
                     <div className="flex gap-0.5 shrink-0">
                         {[1, 2, 3, 4, 5].map((star) => (

@@ -15,6 +15,7 @@ import {
     Palette,
     Shirt,
 } from 'lucide-react';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import SuccessToast from '@/shared/components/SuccessToast';
 import type { CartItem } from '@/shared/types';
@@ -215,9 +216,12 @@ export default function CartView({
                                                 <div>
                                                     <div className="flex justify-between items-start gap-2">
                                                         <div className="min-w-0">
-                                                            <h3 className="font-serif text-sm md:text-base text-white truncate">
-                                                                {getItemName(item, language, t)}
-                                                            </h3>
+                                                            <SmartClamp
+                                                                as="h3"
+                                                                maxLines={1}
+                                                                className="font-serif text-sm md:text-base text-white"
+                                                                text={getItemName(item, language, t)}
+                                                            />
                                                             <div className="flex items-center gap-2 mt-1">
                                                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-mono uppercase tracking-wider bg-[#C9A84C]/10 text-[#C9A84C] border border-[#C9A84C]/20">
                                                                     <ItemTypeIcon type={item.itemType} />

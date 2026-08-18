@@ -11,6 +11,7 @@ import {
     RefreshCw,
     ChevronDown,
     ArrowLeft,
+    ArrowRight,
     Clock,
     Globe,
     FileWarning,
@@ -421,7 +422,7 @@ export default function AdminErrorLogsPage() {
                                     href={ROUTES.DASHBOARD_EMAIL_SETTINGS}
                                     className="text-[#4FC3F7]/70 hover:text-[#4FC3F7] underline underline-offset-2"
                                 >
-                                    {t('errorLogs.configureEmail')} →
+                                    {t('errorLogs.configureEmail')} <DirectionalIcon icon={ArrowRight} size={10} className="inline" />
                                 </Link>
                             </p>
                         </motion.div>

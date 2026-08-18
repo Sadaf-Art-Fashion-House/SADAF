@@ -20,6 +20,7 @@ import {
     Shirt,
     AlertCircle,
 } from 'lucide-react';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import type { CartItem } from '@/shared/types';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
@@ -733,7 +734,7 @@ export default function CheckoutView({
                                                             ))}
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <p className="text-xs text-white truncate">{getItemName(item, language)}</p>
+                                                        <SmartClamp as="p" maxLines={1} className="text-xs text-white" text={getItemName(item, language)} />
                                                         <div className="flex items-center gap-2 text-[9px] font-mono text-[#E8E0D5]/50">
                                                             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#C9A84C]/10 text-[#C9A84C]">
                                                                 <ItemTypeIcon type={item.itemType} />

@@ -15,6 +15,7 @@ import {
     Heart,
     Star,
 } from 'lucide-react';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import type { Order, OrderStatus, OrderStatusEvent } from '@/features/orders/types';
 import type { RatingsByProduct } from '@/features/reviews/hooks/useAggregatedRatings';
@@ -212,7 +213,7 @@ export default function OrdersView({
                                                 <img src={item.image} alt={localizedOrderItemName(item, language)}
                                                     className="w-14 h-14 rounded-xl object-cover border border-white/10 shrink-0" />
                                                 <div className="flex-1 min-w-0">
-                                                    <h4 className="text-xs md:text-sm font-serif text-white font-semibold truncate">{localizedOrderItemName(item, language)}</h4>
+                                                    <SmartClamp as="h4" maxLines={1} className="text-xs md:text-sm font-serif text-white font-semibold" text={localizedOrderItemName(item, language)} />
                                                     <p className="text-[10px] font-mono text-slate-500 mt-0.5">
                                                         {t('orders.sizeQty', { size: item.size, qty: item.quantity })}
                                                     </p>

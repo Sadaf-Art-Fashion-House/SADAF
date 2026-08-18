@@ -20,6 +20,7 @@ import {
     Download,
     Hammer,
 } from 'lucide-react';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import Link from 'next/link';
 import type { FashionProduct, ArtPiece } from '@/shared/types';
 import { fashionDatabase, artDatabase, collections } from '@/data';
@@ -987,7 +988,7 @@ export default function AdminDashboardView({ onLogout }: AdminDashboardViewProps
                                                         />
                                                     )}
                                                     <div className="min-w-0">
-                                                        <h4 className="text-xs font-serif text-white font-semibold truncate">{localizedDesignName(draft.design, language)}</h4>
+                                                        <SmartClamp as="h4" maxLines={1} className="text-xs font-serif text-white font-semibold" text={localizedDesignName(draft.design, language)} />
                                                         <p className="text-[9px] font-mono text-slate-500">
                                                             {draft.design.clothingType} • {new Date(draft.savedAt).toLocaleDateString()}
                                                         </p>

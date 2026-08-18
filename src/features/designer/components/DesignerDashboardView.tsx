@@ -27,6 +27,7 @@ import {
     Users,
     User,
 } from 'lucide-react';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import type { DesignerDashboardData, NewDesignSubmission, DesignCategory, DesignCollaboration, DesignStatus } from '../types';
 import type { TranslationKey } from '@/features/i18n/dictionaries';
 import { DESIGN_CATEGORIES, DESIGN_STATUS_STYLES } from '../constants';
@@ -175,9 +176,12 @@ function PortfolioCard({
                         ${price.toLocaleString()}
                     </span>
                 </div>
-                <p className="text-[10px] text-[#E8E0D5]/50 leading-relaxed line-clamp-2 flex-1">
-                    {description}
-                </p>
+                <SmartClamp
+                    as="p"
+                    maxLines={2}
+                    className="text-[10px] text-[#E8E0D5]/50 leading-relaxed flex-1"
+                    text={description}
+                />
                 {adminNote && (
                     <p className="text-[9px] text-[#E8E0D5]/40 border-t border-white/5 pt-2 italic leading-relaxed">
                         {t('designer.portfolio.atelierNote', { note: adminNote })}
@@ -387,12 +391,12 @@ export default function DesignerDashboardView({
                                             {commissionBreakdown.map((item) => (
                                                 <li key={item.id} className="flex flex-col gap-0.5">
                                                     <div className="flex items-center justify-between gap-2">
-                                                        <span
-                                                            className="text-[10px] text-[#E8E0D5]/80 truncate min-w-0"
-                                                            title={item.title}
-                                                        >
-                                                            {item.title}
-                                                        </span>
+                                                        <SmartClamp
+                                                            as="span"
+                                                            maxLines={1}
+                                                            className="text-[10px] text-[#E8E0D5]/80 min-w-0"
+                                                            text={item.title}
+                                                        />
                                                         <span className="text-[10px] font-mono text-[#C9A84C] font-semibold shrink-0">
                                                             $
                                                             {item.pool.toLocaleString(undefined, {

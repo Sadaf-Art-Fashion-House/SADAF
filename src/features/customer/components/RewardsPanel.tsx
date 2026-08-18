@@ -19,6 +19,7 @@ import {
     ChevronDown,
     ArrowLeft,
 } from 'lucide-react';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import type { RewardsData } from '../types';
 import { TIER_COLORS, RANK_MEDALS } from '../constants/tierStyles';
@@ -274,9 +275,12 @@ export default function RewardsPanel({ data, loading, error, memberName, isLive 
                                             <span className="text-[#E8E0D5]/40">{entry.rank}</span>
                                         )}
                                     </span>
-                                    <span className={`flex-1 text-[11px] font-medium truncate ${isCurrentUser ? 'text-[#C9A84C] font-bold' : 'text-[#E8E0D5]/80'}`}>
-                                        {isCurrentUser ? `${memberName} ${t('lb.you')}` : entry.name}
-                                    </span>
+                                    <SmartClamp
+                                        as="span"
+                                        maxLines={1}
+                                        className={`flex-1 text-[11px] font-medium ${isCurrentUser ? 'text-[#C9A84C] font-bold' : 'text-[#E8E0D5]/80'}`}
+                                        text={isCurrentUser ? `${memberName} ${t('lb.you')}` : entry.name}
+                                    />
                                     <span className={`px-2 py-0.5 rounded-full text-[8px] font-mono uppercase border ${TIER_COLORS[entry.tier]}`}>
                                         {entry.tier}
                                     </span>

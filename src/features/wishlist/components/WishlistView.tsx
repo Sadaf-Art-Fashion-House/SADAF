@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import { Heart, ShoppingBag, Trash2, ArrowLeft, Sparkles } from 'lucide-react';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import type { FashionProduct } from '@/shared/types';
 import type { RatingsByProduct } from '@/features/reviews/hooks/useAggregatedRatings';
@@ -168,13 +169,20 @@ export default function WishlistView({
                                         <div>
                                             <Link
                                                 href={`${ROUTES.STORE}/${product.id}`}
-                                                className="font-serif text-[#E8E0D5] text-sm group-hover:text-[#F0D080] transition-colors duration-300 mb-1 leading-tight truncate hover:underline underline-offset-4"
+                                                className="font-serif text-[#E8E0D5] text-sm group-hover:text-[#F0D080] transition-colors duration-300 mb-1 leading-tight hover:underline underline-offset-4"
                                             >
-                                                {localizedProductName(product, language)}
+                                                <SmartClamp
+                                                    as="span"
+                                                    maxLines={1}
+                                                    text={localizedProductName(product, language)}
+                                                />
                                             </Link>
-                                            <p className="text-[10px] text-[#E8E0D5]/60 line-clamp-2 leading-relaxed mb-1">
-                                                {localizedProductFabric(product, language)}
-                                            </p>
+                                            <SmartClamp
+                                                as="p"
+                                                maxLines={2}
+                                                className="text-[10px] text-[#E8E0D5]/60 leading-relaxed mb-1"
+                                                text={localizedProductFabric(product, language)}
+                                            />
                                             {/* Aggregated rating (mock + user reviews), falls back to the catalog rating.
                                                 Pulses briefly when a live community review lands on this product. */}
                                             {product.rating && (

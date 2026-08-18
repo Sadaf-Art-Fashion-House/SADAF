@@ -10,6 +10,7 @@ import {
     ChevronRight,
     Globe,
 } from 'lucide-react';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
 import type { Notification } from '../types';
 import {
@@ -221,9 +222,12 @@ function NotificationItem({
                         {formatRelativeTime(notification.createdAt, language)}
                     </span>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed line-clamp-2">
-                    {message}
-                </p>
+                <SmartClamp
+                    as="p"
+                    maxLines={2}
+                    className="text-[11px] text-slate-400 mt-0.5 leading-relaxed"
+                    text={message}
+                />
 
                 {/* Bottom actions */}
                 <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">

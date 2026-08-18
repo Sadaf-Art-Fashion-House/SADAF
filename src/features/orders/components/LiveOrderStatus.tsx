@@ -8,6 +8,7 @@ import {
     Activity,
     RefreshCw,
 } from 'lucide-react';
+import { SmartClamp } from '@/shared/ui/SmartClamp';
 import type { Order, OrderStatus, OrderStatusEvent } from '../types';
 import type { TranslationKey } from '@/features/i18n/dictionaries';
 import { formatEventTime } from '@/utils/formatEventTime';
@@ -141,7 +142,7 @@ export default function LiveOrderStatus({
                                             />
                                         )}
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-[10px] font-serif text-white font-semibold truncate">{order.items[0]?.name ?? t('orders.orderLabel')}</p>
+                                            <SmartClamp as="p" maxLines={1} className="text-[10px] font-serif text-white font-semibold" text={order.items[0]?.name ?? t('orders.orderLabel')} />
                                             <p className="text-[8px] font-mono text-[#E8E0D5]/40">
                                                 {t('orders.total')} ${order.total.toLocaleString()}
                                                 {order.estimatedDelivery ? ` · ${t('orders.eta')}: ${order.estimatedDelivery}` : ''}
