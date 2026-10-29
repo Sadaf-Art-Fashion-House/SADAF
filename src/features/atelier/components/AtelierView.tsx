@@ -4,7 +4,7 @@ import { motion } from 'motion/react';
 import Link from 'next/link';
 import { Sparkles, Feather, Palette, Scissors, ArrowRight, Star, Shirt, Brush, Gem, Compass } from 'lucide-react';
 import { DirectionalIcon } from '@/shared/ui/DirectionalIcon';
-import { fabricsList, printingMethods } from '@/data';
+import { fabricsList, printingMethods } from '@/shared/constants/materials';
 import { useLanguage } from '@/features/i18n/LanguageProvider';
 import { localizedFabricName, localizedFabricDescription, localizedPrintingName, localizedPrintingDescription } from '@/features/i18n/productNames';
 

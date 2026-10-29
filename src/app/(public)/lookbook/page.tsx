@@ -1,13 +1,8 @@
 import type { Metadata } from "next";
 import LookbookPageClient from "@/features/lookbook/components/LookbookPageClient";
-import type { LookbookItem } from "@/shared/types";
-import { lookbookItems as staticLookbookItems } from "@/data";
+import { getLookbook } from "@/lib/api/catalog";
 
-// TODO: Replace with a Supabase/CMS query once lookbook content is managed
-// dynamically. For now, static data from @/data serves as the source of truth.
-async function getLookbookItems(): Promise<LookbookItem[]> {
-    return staticLookbookItems;
-}
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
     title: "Lookbook | SADAF Atelier",
@@ -16,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function LookbookPage() {
-    const lookbookItems = await getLookbookItems();
+    const lookbookItems = await getLookbook();
 
     return <LookbookPageClient lookbookItems={lookbookItems} />;
 }
