@@ -1,3 +1,11 @@
+/**
+ * MIGRATION SEED ONLY — not a runtime storefront catalog.
+ *
+ * The public catalog now reads live records from Odoo through
+ * `src/lib/api/catalog.ts`. This file is retained as the source snapshot used
+ * by `sadaf-backend/addons/sadaf_catalog/seed/import_catalog.py`; only the
+ * admin dashboards and AI publisher still reference it until their phase.
+ */
 import type { ArtPiece, FashionProduct, LookbookItem, Collection } from './types';
 
 export const collections: Collection[] = [

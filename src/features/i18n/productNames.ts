@@ -14,7 +14,7 @@
 
 import type { AIClothingDesign, ArtPiece, FashionProduct, LookbookItem } from '@/shared/types';
 import type { SiteLanguage } from '@/features/settings/store/usePreferencesStore';
-import { artDatabase, fashionDatabase, fabricsList, printingMethods } from '@/data';
+import { fabricsList, printingMethods } from '@/shared/constants/materials';
 import type { OrderItem } from '@/features/orders/types';
 import type { Review } from '@/features/reviews/types';
 
@@ -42,7 +42,7 @@ export function localizedProductDetails(product: FashionProduct, language: SiteL
     return language === 'ar' && product.detailsAr ? product.detailsAr : product.details;
 }
 
-/** The display title of an artwork for the active language (artDatabase pieces). */
+/** The display title of an artwork for the active language. */
 export function localizedArtTitle(art: ArtPiece, language: SiteLanguage): string {
     return language === 'ar' && art.titleAr ? art.titleAr : art.title;
 }
@@ -183,18 +183,13 @@ export function localizedAiItemName(clothingType: string, language: SiteLanguage
 }
 
 /**
- * Display name for an order line item. Old (mock) orders only stored the
- * English name captured at order time — when the item carries a catalog
- * `productId` we resolve the live product and localize it, falling back to
- * the saved name when the id is missing (e.g. AI custom designs) or the
- * product is no longer in the catalog.
+ * Display name for an order line item. Orders store the display name at
+ * checkout time; the catalog is no longer bundled into client code, so this
+ * helper deliberately falls back to that saved name instead of looking up a
+ * static product list.
  */
 export function localizedOrderItemName(item: OrderItem, language: SiteLanguage): string {
-    if (item.productId) {
-        const product = fashionDatabase.find((p) => p.id === item.productId);
-        if (product) return localizedProductName(product, language);
-        const art = artDatabase.find((a) => a.id === item.productId);
-        if (art) return localizedArtTitle(art, language);
-    }
+    // Kept for API compatibility with existing order/checkout call sites.
+    void language;
     return item.name;
 }
