@@ -1,18 +1,7 @@
 import FashionPageClient from "@/features/fashion/components/FashionPageClient";
-import type { FashionProduct, LookbookItem } from "@/shared/types";
-import { fashionDatabase, lookbookItems as staticLookbookItems } from "@/data";
+import { getFashionProducts, getLookbook } from "@/lib/api/catalog";
 
-// TODO: Replace with real Supabase query once the fashion data layer is wired.
-// The fashionDatabase import from @/data is the static fallback until then.
-async function getFashionProducts(): Promise<FashionProduct[]> {
-    return fashionDatabase;
-}
-
-// TODO: Replace with a Supabase/CMS query once lookbook content is managed dynamically.
-// For now, static data from @/data serves as the source of truth.
-async function getLookbookItems(): Promise<LookbookItem[]> {
-    return staticLookbookItems;
-}
+export const dynamic = "force-dynamic";
 
 export const metadata = {
     title: "Fashion Collection | SADAF Atelier",
@@ -29,7 +18,7 @@ export default async function FashionPage({ searchParams }: FashionPageProps) {
 
     const [products, lookbookItems] = await Promise.all([
         getFashionProducts(),
-        getLookbookItems(),
+        getLookbook(),
     ]);
 
     return (

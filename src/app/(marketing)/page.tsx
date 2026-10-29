@@ -1,23 +1,12 @@
 import HomePageClient from "@/features/home/components/HomePageClient";
-import type { Collection, ArtPiece, FashionProduct } from '@/shared/types';
-// Static fallback from the shared catalog until the Supabase data layer is
-// wired — same pattern as the Store/Fashion/Artworks pages.
-import { fashionDatabase, artDatabase, collections } from '@/data';
+import { getArtworks, getCollections, getFashionProducts } from "@/lib/api/catalog";
 
-async function getFeaturedProducts(): Promise<FashionProduct[]> {
-    return fashionDatabase;
-}
-async function getFeaturedArtwork(): Promise<ArtPiece[]> {
-    return artDatabase;
-}
-async function getCollections(): Promise<Collection[]> {
-    return collections;
-}
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
     const [featuredProducts, featuredArtwork, collections] = await Promise.all([
-        getFeaturedProducts(),
-        getFeaturedArtwork(),
+        getFashionProducts(),
+        getArtworks(),
         getCollections(),
     ]);
 
